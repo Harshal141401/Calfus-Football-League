@@ -1,0 +1,18 @@
+{
+  "name": "fifa-predictor-api",
+  "version": "1.0.0",
+  "description": "Backend for the FIFA Predictor dashboard — serves employees from MongoDB and proxies the football API.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.8.0"
+  }
+}

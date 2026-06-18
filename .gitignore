@@ -1,0 +1,8 @@
+# secrets — never commit
+.env
+
+# dependencies
+node_modules/
+
+# OS clutter
+.DS_Store
