@@ -6,3 +6,9 @@ node_modules/
 
 # OS clutter
 .DS_Store
+
+# generated: copies of the dashboard HTML the server serves (see server.js)
+public/
+
+# local tooling
+.claude/
