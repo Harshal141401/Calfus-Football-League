@@ -685,32 +685,49 @@ footer b{color:var(--muted)}
    Scoring: correct WIN +3 · correct DRAW +1 · correct LOSE -1 (per brief)
    Outcome is from Team A's perspective (win = Team A wins).
    ===================================================================== */
-const SCORE = { win: 3, draw: 1, lose: -1 };  // points for a CORRECT prediction of that outcome
-const STORE_KEY = "fifa-predictor-state-wc2026-v2";
+/* Scoring (matches the backend / the brief):
+   outcome correct +3, wrong -1 · optional exact score +5, given-but-wrong -2. */
+const SCORE = { correct: 3, wrong: -1, scoreExact: 5, scoreWrong: -2 };
+const TOKEN_KEY = "cfl-session-token";
 
-/* ---------- LIVE DATA SYNC (worldcup26.ir API) ----------
-   Pulls real results + standings from the free World Cup 2026 API and
-   auto-settles fixtures. Scheduling (date/time, IST) stays from the loaded
-   data; live sync overlays scores, finished status, team flags and standings.
-   NOTE: inside the claude.ai preview, cross-origin fetch is blocked by the
-   sandbox, so you'll see the seeded data here. Open/host the file and it
-   pulls live — provided /get/* is public (or paste a token below).        */
-const LIVE = {
-  enabled: true,
-  base: "https://worldcup26.ir",
-  token: "",          // if reads need auth: register once, paste JWT here
-  pollMs: 60000        // refresh cadence
-};
+/* ---------- BACKEND API ----------
+   The dashboard talks to server.js. When served by the server it's same-origin
+   (base ""). If the file is opened directly (file://) or from a different port,
+   fall back to the local server so login/data still work. */
+const API = { base: (location.protocol === "file:" || location.port === "5500") ? "http://localhost:4000" : "" };
 
-/* ---------- EMPLOYEE DATA from your backend (MongoDB) ----------
-   The browser can't talk to MongoDB directly, so this points at the small
-   Node/Express server (server.js). Set enabled:true and the base URL once
-   that server is running, and the leaderboard fills from your `promptWars`
-   collection instead of the demo names.                                    */
-const DATA = {
-  enabled: true,                  // flip to true once your backend is up
-  base: ""                        // same-origin: served by server.js, so no host needed
-};
+const ADMIN_TOKEN_KEY = "cfl-admin-token";
+let authToken = localStorage.getItem(TOKEN_KEY) || null;
+let adminToken = localStorage.getItem(ADMIN_TOKEN_KEY) || null;
+let currentUser = null;     // { id, name, email }
+let windowState = null;     // { open, opensAt, closesAt, coverageEnd, serverTime }
+
+/* Authenticated fetch wrapper. Adds the Bearer token; logs out on 401. */
+async function api(path, opts = {}) {
+  const headers = Object.assign({}, opts.headers || {});
+  if (opts.body) headers["Content-Type"] = "application/json";
+  if (authToken) headers.Authorization = "Bearer " + authToken;
+  const r = await fetch(API.base.replace(/\/$/, "") + path, { ...opts, headers });
+  if (r.status === 401) { logout(); throw new Error("Session expired — please sign in again."); }
+  return r;
+}
+async function apiJson(path, opts) { const r = await api(path, opts); if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || ("HTTP " + r.status)); return r.json(); }
+
+/* Admin fetch wrapper — uses the admin session token, clears it on 401/403. */
+async function adminApi(path, body) {
+  const r = await fetch(API.base.replace(/\/$/, "") + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + adminToken },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (r.status === 401 || r.status === 403) {
+    adminToken = null; localStorage.removeItem(ADMIN_TOKEN_KEY); renderAdmin();
+    throw new Error("Admin session expired — log in again.");
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || ("HTTP " + r.status));
+  return data;
+}
 
 /* ---------- tiny helpers ---------- */
 const $ = (s, r=document) => r.querySelector(s);
@@ -801,133 +818,59 @@ function seed(){
   };
 }
 
-/* ---------- persistence (shared so every screen sees the same board) ---------- */
+/* ---------- application state (the backend is the source of truth) ---------- */
 let state = null;
-async function loadState(){
-  try{
-    if(window.storage && window.storage.get){
-      const r = await window.storage.get(STORE_KEY, true);
-      if(r && r.value) return JSON.parse(r.value);
-    }
-  }catch(e){ /* missing key throws — fall through to seed */ }
-  return null;
+async function saveState(){ /* no-op: persistence now lives in MongoDB via the API */ }
+
+/* ---------- map backend payloads to the shapes the renderers expect ---------- */
+function mapTeam(t){ return { id:String(t.id), name:t.name, abbr:t.abbr||"?", flag:t.flag||"",
+  c1:t.c1||"#00FF88", c2:t.c2||"#FFD700", group:t.group||"" }; }
+function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
+  teamAId:String(f.teamA.id), teamBId:String(f.teamB.id),
+  date:f.date, time:f.time, kickoff:f.kickoff, round:f.round, group:f.group, md:f.md,
+  result:f.result||null, homeScore:f.homeScore, awayScore:f.awayScore,
+  predictable:!!f.predictable, locked:!!f.locked }; }
+function mapEmployee(e,i){ return { id:String(e.id), name:e.name, av:AVCOL[i%AVCOL.length] }; }
+
+/* ---------- load the whole board from the backend ---------- */
+async function loadData(){
+  const [teams, fixtures, preds, emps] = await Promise.all([
+    apiJson("/api/teams"), apiJson("/api/fixtures"),
+    apiJson("/api/predictions"), apiJson("/api/employees"),
+  ]);
+  state = {
+    teams: teams.map(mapTeam),
+    fixtures: fixtures.map(mapFixture),
+    predictions: preds,
+    employees: emps.map(mapEmployee),
+    currentUserId: currentUser.id,
+    meta: { tournamentName:"Calfus Football League", subtitle:"Office Tournament · Live" }
+  };
 }
-let saveTimer=null;
-async function saveState(){
-  if(!state) return;
-  state.meta.lastUpdated = Date.now();
-  try{
-    if(window.storage && window.storage.set){
-      await window.storage.set(STORE_KEY, JSON.stringify(state), true);
-    }
-  }catch(e){ console.warn("save failed",e); }
+/* refresh just the volatile bits (after a pick, or on a timer) */
+async function refreshBoard(){
+  const [fixtures, preds] = await Promise.all([apiJson("/api/fixtures"), apiJson("/api/predictions")]);
+  state.fixtures = fixtures.map(mapFixture);
+  state.predictions = preds;
+}
+/* current prediction-window status (drives the gating banner) */
+async function refreshWindow(){
+  try{ windowState = await apiJson("/api/window"); renderWindowBanner(); }catch(e){ /* keep last known */ }
+}
+/* create or update the caller's pick for a fixture, then reload the board */
+async function submitPrediction(fixtureId, choice, scoreHome, scoreAway){
+  const body = { fixtureId, choice };
+  if(scoreHome!=="" && scoreHome!=null && scoreAway!=="" && scoreAway!=null){
+    body.scoreHome = Number(scoreHome); body.scoreAway = Number(scoreAway);
+  }
+  await apiJson("/api/predictions", { method:"POST", body: JSON.stringify(body) });
+  await refreshBoard();
 }
 
 /* ---------- live sync from the World Cup 2026 API (worldcup26.ir) ---------- */
-let liveTimer=null;
-async function apiGet(path){
-  const headers = LIVE.token ? {Authorization:"Bearer "+LIVE.token} : {};
-  const r = await fetch(LIVE.base+path, {headers, mode:"cors"});
-  if(!r.ok) throw new Error("HTTP "+r.status);
-  return r.json();
-}
-function liveResult(g){                       // map a finished match to a home-perspective result
-  const fin = g.finished===true || g.finished==="true" || String(g.finished)==="1";
-  if(!fin) return null;
-  if(g.home_score==null || g.away_score==null || g.home_score==="" || g.away_score==="") return null;
-  const h=Number(g.home_score), a=Number(g.away_score);
-  if(Number.isNaN(h)||Number.isNaN(a)) return null;
-  return h>a ? "win" : (h===a ? "draw" : "lose");
-}
-function setLiveBadge(on){
-  const dot=$(".clock .live-dot");
-  if(dot){ dot.style.background = on? "var(--neon)" : "var(--gold)";
-           dot.title = on? "Live data connected · worldcup26.ir" : "Using cached data — live API unreachable"; }
-}
 function rerenderCurrent(){
   if(!$("#tv").hidden){ renderTV(); buildTicker(); return; }
   const v=($(".view.is-active")||{}).id; setActive(v? v.replace("view-",""):"home");
-}
-async function syncLive(){
-  if(!LIVE.enabled || !state) return false;
-  try{
-    const teams = await apiGet("/get/teams").catch(()=>null);
-    const games = await apiGet("/get/games");
-    if(!Array.isArray(games)) throw new Error("unexpected /get/games payload");
-
-    // refresh team names / flags / groups (e.g. once playoff slots resolve)
-    if(Array.isArray(teams) && teams.length){
-      const known = Object.fromEntries(state.teams.map(t=>[String(t.id),t]));
-      teams.forEach(t=>{
-        const id=String(t.id), tbd=(!t.fifa_code || t.fifa_code==="TBD");
-        const o = known[id] || {id, abbr:"TBD", c1:"#3a3f44", c2:"#23272b"};
-        o.name=t.name_en||o.name; o.abbr=tbd?(o.abbr||"TBD"):t.fifa_code;
-        o.group=t.groups||o.group; o.flag=(t.flag&&!tbd)?t.flag:(o.flag||"");
-        if(!tbd){ o.c1="#00FF88"; o.c2="#FFD700"; }
-        known[id]=o;
-      });
-      state.teams=Object.values(known);
-    }
-
-    // overlay live scores/results onto fixtures; append matches we don't have yet (knockouts)
-    const byApi = Object.fromEntries(state.fixtures.filter(f=>f.apiId).map(f=>[String(f.apiId),f]));
-    let changed=0;
-    games.forEach(g=>{
-      const id=String(g.id), res=liveResult(g);
-      let f=byApi[id];
-      if(!f){
-        f={ id:"wc-"+id, apiId:id, teamAId:String(g.home_team_id), teamBId:String(g.away_team_id),
-            date:"", time:"", group:g.group||"", md:Number(g.matchday)||0,
-            round:(g.type==="group"?`Group ${g.group} · Matchday ${g.matchday}`:(g.type?g.type[0].toUpperCase()+g.type.slice(1):"Knockout")),
-            result:null };
-        state.fixtures.push(f); byApi[id]=f; changed++;
-      }
-      if(f.result!==res){ f.result=res; changed++; }
-      f.homeScore = (g.home_score!=null && g.home_score!=="")? Number(g.home_score) : null;
-      f.awayScore = (g.away_score!=null && g.away_score!=="")? Number(g.away_score) : null;
-    });
-
-    setLiveBadge(true);
-    if(changed){ await saveState(); rerenderCurrent(); }
-    return true;
-  }catch(e){
-    console.warn("Live sync unavailable — showing cached/seeded data.", e.message);
-    setLiveBadge(false);
-    return false;
-  }
-}
-function startLiveSync(){
-  if(!LIVE.enabled) return;
-  syncLive();
-  clearInterval(liveTimer);
-  liveTimer=setInterval(syncLive, LIVE.pollMs);
-}
-
-/* ---------- pull real employees from the backend (MongoDB) ---------- */
-async function syncEmployees(){
-  if(!DATA.enabled || !state) return false;
-  try{
-    const r = await fetch(DATA.base.replace(/\/$/,"")+"/api/employees", {mode:"cors"});
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    const list = await r.json();
-    if(!Array.isArray(list) || !list.length) throw new Error("no employees returned");
-    // keep avatar colours stable per employee id
-    const prev = Object.fromEntries(state.employees.map(e=>[e.id,e.av]));
-    state.employees = list.map((e,i)=>({
-      id:String(e.id), name:e.name,
-      av: prev[String(e.id)] || AVCOL[i % AVCOL.length]
-    }));
-    // drop demo predictions that don't belong to a real employee
-    const ids = new Set(state.employees.map(e=>e.id));
-    state.predictions = state.predictions.filter(p=>ids.has(String(p.employeeId)));
-    if(!ids.has(String(state.currentUserId))) state.currentUserId = state.employees[0].id;
-    await saveState();
-    rerenderCurrent();
-    return true;
-  }catch(e){
-    console.warn("Employee sync unavailable — using current roster.", e.message);
-    return false;
-  }
 }
 
 /* ---------- scoring + leaderboard engine ---------- */
@@ -947,10 +890,13 @@ function computeLeaderboard(ignoreFixtureId){
     if(!settled) return;
     r.settled++;
     const ok = p.choice===f.result;
-    if(ok){
-      r.correct++; r.points += SCORE[f.result];
-      if(f.result==="draw") r.drawCorrect++;
-    } else { r.wrong++; }
+    if(ok){ r.correct++; r.points += SCORE.correct; } else { r.wrong++; r.points += SCORE.wrong; }
+    // optional exact-score bonus, independent of the outcome pick
+    if(p.scoreHome!=null && p.scoreAway!=null){
+      const exact = (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
+      r.points += exact ? SCORE.scoreExact : SCORE.scoreWrong;
+      if(exact) r.drawCorrect++;   // reuse this column as "exact-score hits"
+    }
     formBuckets[r.id].push({ when:fixtureDT(f).getTime(), letter: p.choice[0].toUpperCase(), ok, type:p.choice });
   });
   rows.forEach(r=>{
@@ -1018,7 +964,7 @@ function renderHome(){
   const head = `<div class="lb-headrow">
     <div>Rank</div><div>Player</div><div>Pts</div>
     <div style="text-align:center">Correct</div><div style="text-align:center">Wrong</div>
-    <div style="text-align:center">Draws</div><div style="text-align:right">Recent form</div></div>`;
+    <div style="text-align:center">Exact</div><div style="text-align:right">Recent form</div></div>`;
   const rows = lb.map((r,i)=>{
     const topCls = i<3 ? `top${i+1}` : "";
     const mv = r.move>0 ? `<span class="mv up">▲${r.move}</span>` : r.move<0 ? `<span class="mv down">▼${-r.move}</span>` : `<span class="mv same">–</span>`;
@@ -1056,16 +1002,41 @@ function countUpAll(root){
 /* =====================================================================
    RENDER — PREDICT
    ===================================================================== */
+function renderWindowBanner(){
+  const host = $("#openFixtures"); if(!host) return;
+  let el = $("#windowBanner");
+  if(!el){ el=document.createElement("div"); el.id="windowBanner";
+    el.style.cssText="text-align:center;font-family:var(--f-sport);font-weight:700;margin:0 0 12px;padding:10px;border-radius:10px;background:rgba(255,255,255,.04)";
+    host.parentNode.insertBefore(el, host); }
+  if(!windowState){ el.textContent="Checking prediction window…"; el.style.color="var(--muted)"; return; }
+  const fmt = iso=> iso? new Date(iso).toLocaleString([], {weekday:"short", hour:"2-digit", minute:"2-digit"}) : "—";
+  if(windowState.open){
+    el.innerHTML = `🟢 Predictions are OPEN — window closes ${fmt(windowState.closesAt)}. Each pick locks at its kickoff.`;
+    el.style.color="var(--neon)";
+  } else {
+    el.innerHTML = `🔒 Predictions are CLOSED — opens ${fmt(windowState.opensAt)} (Mondays &amp; Thursdays).`;
+    el.style.color="var(--gold)";
+  }
+}
 function renderPredict(){
   const sel = $("#userSel");
-  sel.innerHTML = state.employees.map(e=>`<option value="${e.id}" ${e.id===state.currentUserId?"selected":""}>${esc(e.name)}</option>`).join("");
+  if(sel){ sel.innerHTML = `<option>${esc(currentUser ? currentUser.name : "")}</option>`; sel.disabled = true; }
+  renderWindowBanner();
   const uidc = state.currentUserId;
   const sorted = [...state.fixtures].sort((a,b)=>fixtureDT(a)-fixtureDT(b));
-  const open = sorted.filter(f=>!f.result);
+  // Only show unsettled matches kicking off from now through the coverage horizon (next 3 days).
+  const now = windowState ? new Date(windowState.serverTime) : new Date();
+  const horizon = windowState ? new Date(windowState.coverageEnd) : null;
+  const open = sorted.filter(f=>{
+    if(f.result) return false;
+    const k = new Date(f.kickoff);
+    if(k <= now) return false;                       // already kicked off / past
+    return !horizon || k <= horizon;                 // within the next-3-days window
+  });
   const settled = sorted.filter(f=>f.result).reverse().slice(0,6);
 
   $("#openFixtures").innerHTML = open.length ? open.map(f=>fixtureCard(f,uidc,false)).join("")
-    : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No open fixtures to predict right now. The next matchday will appear here shortly.</div>`;
+    : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No matches in the next 3 days to predict right now. Check back when the next fixtures approach.</div>`;
   $("#settledFixtures").innerHTML = settled.length ? settled.map(f=>fixtureCard(f,uidc,true)).join("")
     : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No results yet.</div>`;
 }
@@ -1076,6 +1047,7 @@ function fixtureCard(f,empId,isSettled){
   const v=voteSplit(f.id);
   const pct=k=> v.total? (v[k]/v.total*100).toFixed(0):0;
   let bottom;
+  const labels={win:`${A.abbr} Win`,draw:"Draw",lose:`${A.abbr} Lose`};
   if(isSettled){
     const resTxt={win:`${A.abbr} Win`,draw:"Draw",lose:`${A.abbr} Loss`}[f.result];
     const hasScore = (f.homeScore!=null && f.awayScore!=null);
@@ -1083,21 +1055,36 @@ function fixtureCard(f,empId,isSettled){
     let pill="";
     if(pred){
       const ok=pred.choice===f.result;
-      pill=`<span class="settled-pill ${ok?"correct":"wrong"}">Your pick: ${pred.choice.toUpperCase()} · ${ok?`+${SCORE[f.result]>=0?SCORE[f.result]:SCORE[f.result]}`:"0"} pt</span>`;
+      let pts = ok? SCORE.correct : SCORE.wrong, extra="";
+      if(pred.scoreHome!=null && pred.scoreAway!=null){
+        const exact=(f.homeScore===pred.scoreHome && f.awayScore===pred.scoreAway);
+        pts += exact? SCORE.scoreExact : SCORE.scoreWrong;
+        extra = exact? ` · exact ${pred.scoreHome}–${pred.scoreAway} ✓` : ` · score ${pred.scoreHome}–${pred.scoreAway} ✗`;
+      }
+      const sign = pts>=0?`+${pts}`:`${pts}`;
+      pill=`<span class="settled-pill ${ok?"correct":"wrong"}">Your pick: ${labels[pred.choice]} · ${sign} pt${extra}</span>`;
     } else pill=`<span class="settled-pill">No pick</span>`;
     bottom=`<div class="fix-meta" style="margin:0 0 10px"><span>${scoreTxt?`Final · <b style="color:var(--gold)">${scoreTxt}</b>`:"Final result"}</span><span class="round">${resTxt}</span></div>${pill}`;
   } else {
+    const dis = f.predictable ? "" : "disabled";
     const picks=["win","draw","lose"].map(c=>{
-      const labels={win:`${A.abbr} Win`,draw:"Draw",lose:`${A.abbr} Lose`};
-      const pts={win:"+3",draw:"+1",lose:"-1"};
       const seld=pred&&pred.choice===c?"sel":"";
-      const dis=pred?"disabled":"";
-      return `<button class="pick ${c} ${seld}" ${dis} data-pick="${c}" data-fix="${f.id}">${labels[c]}<small>${pts[c]}</small></button>`;
+      return `<button class="pick ${c} ${seld}" ${dis} data-pick="${c}" data-fix="${f.id}">${labels[c]}<small>+3</small></button>`;
     }).join("");
-    const lock = pred? `<div class="locked">🔒 Locked — you picked <span style="color:#fff">&nbsp;${pred.choice.toUpperCase()}</span></div>` : "";
+    const sh = (pred&&pred.scoreHome!=null)?pred.scoreHome:"", sa=(pred&&pred.scoreAway!=null)?pred.scoreAway:"";
+    const scoreRow = `<div class="score-pred" style="display:flex;align-items:center;gap:8px;justify-content:center;margin:10px 0 4px">
+        <input type="number" min="0" class="sc-h" data-fix="${f.id}" value="${sh}" placeholder="–" ${dis} style="width:46px;text-align:center" aria-label="${esc(A.abbr)} goals">
+        <span style="color:var(--muted)">:</span>
+        <input type="number" min="0" class="sc-a" data-fix="${f.id}" value="${sa}" placeholder="–" ${dis} style="width:46px;text-align:center" aria-label="${esc(B.abbr)} goals">
+        <small style="color:var(--muted)">exact score (optional) · +5 / −2</small>
+      </div>`;
+    let action;
+    if(f.locked){ action = `<div class="locked">🔒 Kicked off — awaiting result</div>`; }
+    else if(!f.predictable){ action = `<div class="locked">🔒 ${windowState&&!windowState.open?"Window closed":"Opens in a later window"}${pred?` · your pick: ${labels[pred.choice]}`:""}</div>`; }
+    else { action = `<button class="btn btn-primary lockin" data-fix="${f.id}">${pred?"Update pick":"Lock in pick"}</button>`; }
     const votes = v.total? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-d" style="width:${pct("draw")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>
       <div class="vote-legend"><span>W ${pct("win")}%</span><span>D ${pct("draw")}%</span><span>L ${pct("lose")}%</span></div>` : "";
-    bottom=`<div class="pick-row">${picks}</div>${lock}${votes}`;
+    bottom=`<div class="pick-row">${picks}</div>${scoreRow}${action}${votes}`;
   }
   return `<div class="card fix-card">
     <div class="fix-meta"><span class="round">${esc(f.round||"Fixture")}</span><span>${fmtDay(d)} · ${f.time||"18:30"}</span></div>
@@ -1211,54 +1198,69 @@ function svgDonut(segs){
 /* =====================================================================
    RENDER — ADMIN
    ===================================================================== */
-let adminUnlocked=false;
+async function adminLogin(){
+  const pw=$("#admPass").value, err=$("#admErr");
+  if(err) err.textContent="";
+  try{
+    const r=await fetch(API.base.replace(/\/$/,"")+"/api/admin/login",
+      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(data.error||"Login failed");
+    adminToken=data.token; localStorage.setItem(ADMIN_TOKEN_KEY,adminToken);
+    toast("Admin unlocked 🔓"); renderAdmin();
+  }catch(ex){ if(err) err.textContent=ex.message; else toast(ex.message,"✕"); }
+}
+function settleRow(f){
+  const A=teamById(f.teamAId),B=teamById(f.teamBId),d=fixtureDT(f);
+  const settled = f.status==="settled" || f.result;
+  const hs = f.homeScore!=null?f.homeScore:"", as=f.awayScore!=null?f.awayScore:"";
+  const status = settled
+    ? `<span class="settled-pill correct">Settled ${f.homeScore}–${f.awayScore}</span>`
+    : (f.locked ? `<span class="settled-pill">Awaiting score</span>` : `<span class="settled-pill">Not started</span>`);
+  return `<div class="adm-fix" data-fix="${f.id}">
+    <div>${badge(A,28)}</div>
+    <div style="min-width:0">
+      <div class="when">${fmtDay(d)} · ${f.time||"18:30"} · ${esc(f.round||"")}</div>
+      <div class="teams">${esc(A.name)} <span style="color:var(--gold)">vs</span> ${esc(B.name)}</div>
+    </div>
+    <div class="adm-actions" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+      <input type="number" min="0" class="adm-h" value="${hs}" placeholder="–" style="width:42px;text-align:center" aria-label="${esc(A.abbr)} goals">
+      <span style="color:var(--muted)">:</span>
+      <input type="number" min="0" class="adm-a" value="${as}" placeholder="–" style="width:42px;text-align:center" aria-label="${esc(B.abbr)} goals">
+      <button class="btn btn-primary adm-settle" data-fix="${f.id}">${settled?"Update":"Settle"}</button>
+      ${settled?`<button class="btn btn-ghost adm-unsettle" data-fix="${f.id}">Clear</button>`:""}
+      ${status}
+    </div>
+  </div>`;
+}
 function renderAdmin(){
-  if(!adminUnlocked){
-    $("#adminGate").innerHTML = `<div class="card gate">
+  const gate=$("#adminGate"), panel=$("#adminPanel");
+  if(!adminToken){
+    panel.hidden=true; gate.hidden=false;
+    gate.innerHTML = `<div class="card gate">
       <svg class="ball" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#00FF88" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/></svg>
       <h3 style="font-family:var(--f-display);text-transform:uppercase;font-size:20px;margin:0 0 6px">Control Room</h3>
-      <p style="color:var(--muted);font-size:14px;margin:0 0 16px">Enter the admin PIN to manage fixtures, results and the leaderboard.</p>
-      <input type="text" id="pinInput" placeholder="PIN (demo: 1234)" style="width:100%;text-align:center;letter-spacing:.3em;margin-bottom:12px" />
-      <button class="btn btn-primary" id="pinBtn" style="width:100%">Unlock</button></div>`;
-    $("#adminGate").hidden=false; $("#adminPanel").hidden=true;
-    $("#pinBtn").onclick=()=>{ if($("#pinInput").value.trim()===state.meta.adminPin){adminUnlocked=true;renderAdmin();}
-      else toast("Wrong PIN","✕"); };
-    $("#pinInput").onkeydown=e=>{ if(e.key==="Enter") $("#pinBtn").click(); };
+      <p style="color:var(--muted);font-size:14px;margin:0 0 16px">Enter the admin password to record match results.</p>
+      <input type="password" id="admPass" placeholder="Admin password" style="width:100%;text-align:center;margin-bottom:8px" />
+      <div id="admErr" style="color:#EF4444;font-size:13px;min-height:1em;margin-bottom:8px"></div>
+      <button class="btn btn-primary" id="admLoginBtn" style="width:100%">Unlock</button></div>`;
+    $("#admLoginBtn").onclick=adminLogin;
+    $("#admPass").onkeydown=e=>{ if(e.key==="Enter") adminLogin(); };
     return;
   }
-  $("#adminGate").hidden=true; $("#adminPanel").hidden=false;
-
-  // team dropdowns
-  const opts=state.teams.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
-  if(!$("#editFixId").value){ $("#fTeamA").innerHTML=opts; $("#fTeamB").innerHTML=opts; if($("#fTeamB").options[1])$("#fTeamB").selectedIndex=1; }
-
-  // fixtures list
+  gate.hidden=true; panel.hidden=false;
   const sorted=[...state.fixtures].sort((a,b)=>fixtureDT(a)-fixtureDT(b));
-  $("#admFixList").innerHTML = sorted.map(f=>{
-    const A=teamById(f.teamAId),B=teamById(f.teamBId),d=fixtureDT(f);
-    const res=`<select class="res-select" data-res="${f.id}">
-      <option value="">— set result —</option>
-      <option value="win" ${f.result==="win"?"selected":""}>${A.abbr} Win</option>
-      <option value="draw" ${f.result==="draw"?"selected":""}>Draw</option>
-      <option value="lose" ${f.result==="lose"?"selected":""}>${A.abbr} Loss</option>
-    </select>`;
-    return `<div class="adm-fix">
-      <div>${badge(A,30)}</div>
-      <div>
-        <div class="when">${fmtDay(d)} · ${f.time||"18:30"} · ${esc(f.round||"")}</div>
-        <div class="teams">${esc(A.abbr)} <span style="color:var(--gold)">vs</span> ${esc(B.abbr)} ${res}</div>
-      </div>
-      <div class="adm-actions">
-        <button class="icon-btn" data-edit="${f.id}" title="Edit">✎</button>
-        <button class="icon-btn del" data-del="${f.id}" title="Delete">🗑</button>
-      </div>
-    </div>`;
-  }).join("");
-
-  // player chips
-  $("#playerChips").innerHTML = state.employees.map(e=>`<span class="pchip">
-    <span class="avatar" style="width:24px;height:24px;font-size:11px;background:${e.av}">${esc(initials(e.name))}</span>
-    ${esc(e.name)} <button class="x" data-delplayer="${e.id}" title="Remove">✕</button></span>`).join("");
+  panel.innerHTML = `
+    <div class="section-head">
+      <div><div class="eyebrow">Control Room</div><h2>Settle Scores</h2></div>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="admRefresh">↻ Refresh</button>
+      <button class="btn btn-ghost" id="admLogout">Logout admin</button>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin:-6px 0 14px">Enter the final score (Team A = home/left). Saving awards points to every prediction and updates the leaderboard for everyone.</p>
+    <div class="card panel"><div class="adm-list" id="admSettleList">${sorted.map(settleRow).join("")}</div></div>`;
+  $("#admRefresh").onclick=async()=>{ try{ await refreshBoard(); }catch(e){} renderAdmin(); };
+  $("#admLogout").onclick=()=>{ adminToken=null; localStorage.removeItem(ADMIN_TOKEN_KEY); renderAdmin(); };
 }
 
 /* =====================================================================
@@ -1274,7 +1276,7 @@ async function openTV(){
   tvScene=0; renderTV(); buildTicker();
   $("#tvDots").innerHTML = TV_SCENES.map((_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
   clearInterval(tvCycle); tvCycle=setInterval(()=>{ if(!tvPaused) nextScene(1); }, TV_INTERVAL);
-  clearInterval(tvRefresh); tvRefresh=setInterval(async()=>{ const fresh=await loadState(); if(fresh){state=fresh;} renderTV(); buildTicker(); }, 60000);
+  clearInterval(tvRefresh); tvRefresh=setInterval(async()=>{ try{ await refreshBoard(); }catch(e){} renderTV(); buildTicker(); }, 60000);
   clearInterval(tvClockT); tvClockT=setInterval(tickTVClock,1000); tickTVClock();
   clearInterval(tvCountdownT); tvCountdownT=setInterval(tickCountdown,1000);
   try{ await document.documentElement.requestFullscreen(); }catch(e){}
@@ -1424,61 +1426,54 @@ function wireEvents(){
   // nav
   $("#nav").addEventListener("click",e=>{ const b=e.target.closest("button[data-view]"); if(b) setActive(b.dataset.view); });
 
-  // user selector
-  $("#userSel").addEventListener("change",async e=>{ state.currentUserId=e.target.value; await saveState(); renderPredict(); });
-
-  // predictions (event delegation)
+  // predictions (event delegation): clicking a pick selects it; "Lock in" submits.
   $("#openFixtures").addEventListener("click",async e=>{
-    const btn=e.target.closest("button[data-pick]"); if(!btn) return;
-    const fixId=btn.dataset.fix, choice=btn.dataset.pick, emp=state.currentUserId;
-    if(userPrediction(emp,fixId)) return;
-    state.predictions.push({id:uid(),employeeId:emp,fixtureId:fixId,choice,ts:Date.now()});
-    await saveState();
-    const f=state.fixtures.find(x=>x.id===fixId); const A=teamById(f.teamAId);
-    const lbl={win:`${A.abbr} to win`,draw:"a draw",lose:`${A.abbr} to lose`}[choice];
-    toast(`Pick locked — ${lbl} 🔒`);
-    renderPredict();
+    const pickBtn=e.target.closest("button[data-pick]");
+    if(pickBtn && !pickBtn.disabled){
+      const card=pickBtn.closest(".fix-card");
+      card.querySelectorAll("button[data-pick]").forEach(b=>b.classList.remove("sel"));
+      pickBtn.classList.add("sel");
+      return;
+    }
+    const lockBtn=e.target.closest("button.lockin"); if(!lockBtn) return;
+    const fixId=lockBtn.dataset.fix;
+    const card=lockBtn.closest(".fix-card");
+    const sel=card.querySelector("button[data-pick].sel");
+    if(!sel){ toast("Pick an outcome first","✕"); return; }
+    const choice=sel.dataset.pick;
+    const sh=card.querySelector(".sc-h").value, sa=card.querySelector(".sc-a").value;
+    if((sh==="")!==(sa==="")){ toast("Enter both scores, or leave both blank","✕"); return; }
+    lockBtn.disabled=true; lockBtn.textContent="Saving…";
+    try{
+      await submitPrediction(fixId, choice, sh, sa);
+      const f=state.fixtures.find(x=>x.id===fixId); const A=teamById(f.teamAId);
+      const lbl={win:`${A.abbr} to win`,draw:"a draw",lose:`${A.abbr} to lose`}[choice];
+      toast(`Pick saved — ${lbl}${sh!==""?` (${sh}–${sa})`:""} ✅`);
+      renderPredict(); renderHome();
+    }catch(err){ toast(err.message||"Could not save pick","✕"); renderPredict(); }
   });
 
-  // admin gate + panel buttons
-  $("#exportBtn").addEventListener("click",exportCSV);
-  $("#resetBtn").addEventListener("click",()=>confirmModal(
-    "Reset tournament?",
-    "This clears every prediction and result but keeps your players and fixtures. This cannot be undone.",
-    async()=>{ state.fixtures.forEach(f=>f.result=null); state.predictions=[]; await saveState();
-      toast("Tournament reset"); renderAdmin(); }));
-
-  $("#saveFixBtn").addEventListener("click",saveFixture);
-  $("#cancelEditBtn").addEventListener("click",()=>{ resetFixForm(); });
-
-  $("#admFixList").addEventListener("change",async e=>{
-    const sel=e.target.closest("select[data-res]"); if(!sel) return;
-    const f=state.fixtures.find(x=>x.id===sel.dataset.res); f.result=sel.value||null; await saveState();
-    toast(sel.value?"Result saved · leaderboard updated":"Result cleared"); renderAdmin();
-  });
-  $("#admFixList").addEventListener("click",e=>{
-    const ed=e.target.closest("[data-edit]"); const del=e.target.closest("[data-del]");
-    if(ed) startEditFixture(ed.dataset.edit);
-    if(del) confirmModal("Delete fixture?","The fixture and its predictions will be removed.",
-      async()=>{ state.fixtures=state.fixtures.filter(f=>f.id!==del.dataset.del);
-        state.predictions=state.predictions.filter(p=>p.fixtureId!==del.dataset.del);
-        await saveState(); toast("Fixture deleted"); renderAdmin(); });
-  });
-
-  $("#addPlayerBtn").addEventListener("click",async()=>{
-    const n=$("#newPlayer").value.trim(); if(!n) return;
-    state.employees.push({id:uid(),name:n,av:AVCOL[state.employees.length%AVCOL.length]});
-    $("#newPlayer").value=""; await saveState(); toast(`${n} added`); renderAdmin();
-  });
-  $("#newPlayer").addEventListener("keydown",e=>{ if(e.key==="Enter")$("#addPlayerBtn").click(); });
-  $("#playerChips").addEventListener("click",e=>{
-    const x=e.target.closest("[data-delplayer]"); if(!x) return;
-    const emp=state.employees.find(p=>p.id===x.dataset.delplayer);
-    confirmModal("Remove player?",`Remove ${emp.name} and all their predictions?`,
-      async()=>{ state.employees=state.employees.filter(p=>p.id!==x.dataset.delplayer);
-        state.predictions=state.predictions.filter(p=>p.employeeId!==x.dataset.delplayer);
-        if(state.currentUserId===x.dataset.delplayer && state.employees[0]) state.currentUserId=state.employees[0].id;
-        await saveState(); toast("Player removed"); renderAdmin(); });
+  // admin: settle / unsettle scores (delegated; #adminPanel is a stable container)
+  $("#adminPanel").addEventListener("click",async e=>{
+    const setBtn=e.target.closest(".adm-settle"), clrBtn=e.target.closest(".adm-unsettle");
+    if(setBtn){
+      const row=setBtn.closest(".adm-fix");
+      const h=row.querySelector(".adm-h").value, a=row.querySelector(".adm-a").value;
+      if(h===""||a===""){ toast("Enter both scores","✕"); return; }
+      setBtn.disabled=true; const old=setBtn.textContent; setBtn.textContent="Saving…";
+      try{
+        const res=await adminApi(`/api/admin/fixtures/${setBtn.dataset.fix}/settle`,{homeScore:Number(h),awayScore:Number(a)});
+        await refreshBoard();
+        toast(`Settled ${h}–${a} · ${res.predictionsScored} prediction${res.predictionsScored===1?"":"s"} scored ✅`);
+        renderAdmin();
+      }catch(err){ toast(err.message,"✕"); setBtn.disabled=false; setBtn.textContent=old; }
+    } else if(clrBtn){
+      clrBtn.disabled=true;
+      try{
+        await adminApi(`/api/admin/fixtures/${clrBtn.dataset.fix}/unsettle`,null);
+        await refreshBoard(); toast("Result cleared"); renderAdmin();
+      }catch(err){ toast(err.message,"✕"); clrBtn.disabled=false; }
+    }
   });
 
   // TV controls
@@ -1534,25 +1529,100 @@ function tickClock(){
 }
 
 /* ---------- boot ---------- */
-async function init(){
-  const loaded=await loadState();
-  state = loaded || seed();
-  // migrate legacy tournament name saved in the browser before the rename
-  if(state.meta && state.meta.tournamentName === "FIFA Predictor Cup"){
-    state.meta.tournamentName = "Calfus Football League";
-    await saveState();
+/* ---------- login / identity ---------- */
+function ensureLoginEl(){
+  if($("#loginOverlay")) return;
+  const el=document.createElement("div");
+  el.id="loginOverlay";
+  el.style.cssText="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(8,10,14,.92);backdrop-filter:blur(4px)";
+  el.innerHTML=`<form id="loginForm" class="card panel" style="width:min(92vw,380px);padding:26px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;font-size:20px;color:var(--neon)">Sign in to play</div>
+      <div style="color:var(--muted);font-size:13px">Use your Calfus name and work email.</div>
+      <input id="loginName" type="text" placeholder="Full name" autocomplete="name" required style="padding:11px;border-radius:9px">
+      <input id="loginEmail" type="email" placeholder="Work email" autocomplete="email" required style="padding:11px;border-radius:9px">
+      <div id="loginErr" style="color:#EF4444;font-size:13px;min-height:1em"></div>
+      <button type="submit" class="btn btn-primary" id="loginBtn">Enter</button>
+    </form>`;
+  document.body.appendChild(el);
+  $("#loginForm").addEventListener("submit", onLoginSubmit);
+}
+function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex"; }
+function hideLogin(){ const el=$("#loginOverlay"); if(el) el.style.display="none"; }
+async function onLoginSubmit(e){
+  e.preventDefault();
+  const name=$("#loginName").value.trim(), email=$("#loginEmail").value.trim();
+  const btn=$("#loginBtn"), err=$("#loginErr");
+  err.textContent=""; btn.disabled=true; btn.textContent="Checking…";
+  try{
+    const r=await fetch(API.base.replace(/\/$/,"")+"/api/auth/login",
+      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(data.error||"Login failed");
+    authToken=data.token; currentUser=data.user; localStorage.setItem(TOKEN_KEY,authToken);
+    await startSession();
+  }catch(ex){
+    const net = ex instanceof TypeError;   // fetch network failure
+    err.textContent = net
+      ? `Cannot reach the server (${API.base||location.origin}). Make sure it's running and open the app at http://localhost:4000.`
+      : ex.message;
   }
-  if(!loaded) await saveState();
-  $("#brandName").innerHTML = renderBrand(state.meta.tournamentName);
-  $("#brandSub").textContent = state.meta.subtitle || "Office Tournament · Live";
-  $("#footNote").innerHTML = `<b>${esc(state.meta.tournamentName)}</b> · self-contained prototype · data persists live on this screen · scoring: Win +3 · Draw +1 · Lose −1`;
-  resetFixForm();
+  finally{ btn.disabled=false; btn.textContent="Enter"; }
+}
+function logout(){
+  authToken=null; currentUser=null; localStorage.removeItem(TOKEN_KEY);
+  showLogin(); setIdentity();
+}
+function setIdentity(){
+  let box=$("#identity");
+  if(!box){
+    const clock=$(".clock"); if(!clock) return;
+    box=document.createElement("div"); box.id="identity";
+    box.style.cssText="display:flex;align-items:center;gap:8px;margin-left:14px;font-family:var(--f-sport);font-weight:700";
+    clock.parentNode.insertBefore(box, clock.nextSibling);
+  }
+  box.innerHTML = currentUser
+    ? `<span title="${esc(currentUser.email||"")}">👤 ${esc(currentUser.name)}</span>
+       <button id="logoutBtn" class="btn" style="padding:4px 10px;font-size:12px">Logout</button>`
+    : "";
+  const lb=$("#logoutBtn"); if(lb) lb.onclick=logout;
+}
+
+/* ---------- boot ---------- */
+async function init(){
+  $("#brandName").innerHTML = renderBrand("Calfus Football League");
+  $("#brandSub").textContent = "Office Tournament · Live";
+  $("#footNote").innerHTML = `<b>Calfus Football League</b> · scoring: correct +3 · wrong −1 · exact score +5 / −2 · predictions open Mon &amp; Thu`;
   buildSparks();
   wireEvents();
   tickClock(); setInterval(tickClock,1000);
+  if(!authToken){ showLogin(); return; }
+  await startSession();
+}
+/* Poll the board so settled results / new picks reflect on every open dashboard. */
+function startBoardPolling(){
+  clearInterval(window._boardTimer);
+  window._boardTimer=setInterval(async()=>{
+    if(document.hidden) return;
+    if(!$("#tv").hidden) return;                 // TV mode has its own refresh
+    const v=($(".view.is-active")||{}).id;
+    if(v==="view-admin") return;                 // don't yank the admin's inputs mid-edit
+    try{ await refreshBoard(); }catch(e){ return; }
+    if(v==="view-home") renderHome();
+    else if(v==="view-stats") renderStats();
+    else if(v==="view-predict") renderPredict();
+  }, 30000);
+}
+async function startSession(){
+  try{ const me=await apiJson("/api/auth/me"); currentUser=me.user; }
+  catch(e){ showLogin(); return; }
+  try{ await loadData(); }
+  catch(e){ toast("Could not reach the server. Is it running?","✕"); console.error(e); showLogin(); return; }
+  hideLogin();
+  setIdentity();
   setActive("home");
-  await syncEmployees();     // load real employees from MongoDB backend (if enabled)
-  startLiveSync();           // pull live results/standings; falls back to cached data on failure
+  await refreshWindow();
+  clearInterval(window._winTimer); window._winTimer=setInterval(refreshWindow, 60000);
+  startBoardPolling();
 }
 function renderBrand(name){
   // neon-highlight the middle word if there are 3, else highlight "Predictor"-ish
