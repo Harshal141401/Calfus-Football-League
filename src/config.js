@@ -38,17 +38,26 @@ const config = {
   // Password for the in-browser admin login. Falls back to ADMIN_KEY if unset.
   ADMIN_PASSWORD: env.ADMIN_PASSWORD || "",
 
-  // --- Prediction window (timezone-aware) ---
-  WINDOW_TZ: env.WINDOW_TZ || "Asia/Kolkata",
-  WINDOW_START: env.WINDOW_START || "10:00",        // HH:mm, inclusive
-  WINDOW_END: env.WINDOW_END || "18:00",            // HH:mm, exclusive
-  PREDICTION_DAYS: parseDays(env.PREDICTION_DAYS, [1, 4]),     // Mon, Thu
-  // Coverage runs until the NEXT prediction day at this "early morning" cutoff (IST).
-  // So Monday covers matches up to Thursday COVERAGE_END_TIME; Thursday up to Monday.
-  COVERAGE_END_TIME: env.COVERAGE_END_TIME || "06:00",
+  // --- Prediction polls (per-office, timezone-aware) ---
+  // Two polls a week (Mon & Thu), held in EACH office's own local noon–5pm session.
+  // A poll covers the matches that kick off AFTER it closes, until the next poll —
+  // so every covered match is still in the future while its poll runs. The hard lock
+  // is each match's own kickoff (see windows.hasKickedOff), identical for both offices.
+  POLL_DAYS: parseDays(env.POLL_DAYS, [1, 4]),       // Mon, Thu (luxon weekday numbers)
+  POLL_OPEN: env.POLL_OPEN || "12:00",               // HH:mm, poll session opens (office-local)
+  POLL_CLOSE: env.POLL_CLOSE || "17:00",             // HH:mm, poll session closes (office-local)
+
+  // Office → IANA timezone. India is IST; everyone else (US/USA/Canada/blank) is US Pacific.
+  IST_TZ: env.IST_TZ || "Asia/Kolkata",
+  US_TZ: env.US_TZ || "America/Los_Angeles",
 
   // Fixtures (date+time strings) are kickoff-in-IST per the dashboard data.
   FIXTURE_TZ: env.FIXTURE_TZ || "Asia/Kolkata",
+
+  // --- DEPRECATED (replaced by per-office polls above; kept only for reference) ---
+  // WINDOW_TZ / WINDOW_START / WINDOW_END / COVERAGE_END_TIME were a single global
+  // clock window. Predictability is now per-(office, fixture); see src/windows.js.
+  WINDOW_TZ: env.WINDOW_TZ || "Asia/Kolkata",
 
   // --- Scoring ---
   POINTS: {
@@ -68,4 +77,11 @@ if (!config.MONGODB_URI) {
   process.exit(1);
 }
 
+/** Resolve an employee's Location to their poll timezone.
+ *  India → IST; everyone else (US / USA / Canada / blank) → US Pacific. */
+function officeTzFor(location) {
+  return /india/i.test(String(location || "")) ? config.IST_TZ : config.US_TZ;
+}
+
 module.exports = config;
+module.exports.officeTzFor = officeTzFor;

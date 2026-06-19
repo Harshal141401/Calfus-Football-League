@@ -1,0 +1,722 @@
+[
+  {
+    "apiId": "1",
+    "teamAId": "1",
+    "teamBId": "2",
+    "date": "2026-06-12",
+    "time": "00:30",
+    "round": "Group A · Matchday 1",
+    "group": "A",
+    "md": 1
+  },
+  {
+    "apiId": "2",
+    "teamAId": "3",
+    "teamBId": "4",
+    "date": "2026-06-12",
+    "time": "07:30",
+    "round": "Group A · Matchday 1",
+    "group": "A",
+    "md": 1
+  },
+  {
+    "apiId": "3",
+    "teamAId": "5",
+    "teamBId": "6",
+    "date": "2026-06-13",
+    "time": "00:30",
+    "round": "Group B · Matchday 1",
+    "group": "B",
+    "md": 1
+  },
+  {
+    "apiId": "4",
+    "teamAId": "13",
+    "teamBId": "14",
+    "date": "2026-06-13",
+    "time": "06:30",
+    "round": "Group D · Matchday 1",
+    "group": "D",
+    "md": 1
+  },
+  {
+    "apiId": "5",
+    "teamAId": "7",
+    "teamBId": "8",
+    "date": "2026-06-14",
+    "time": "00:30",
+    "round": "Group B · Matchday 1",
+    "group": "B",
+    "md": 1
+  },
+  {
+    "apiId": "6",
+    "teamAId": "9",
+    "teamBId": "10",
+    "date": "2026-06-14",
+    "time": "03:30",
+    "round": "Group C · Matchday 1",
+    "group": "C",
+    "md": 1
+  },
+  {
+    "apiId": "7",
+    "teamAId": "11",
+    "teamBId": "12",
+    "date": "2026-06-14",
+    "time": "06:30",
+    "round": "Group C · Matchday 1",
+    "group": "C",
+    "md": 1
+  },
+  {
+    "apiId": "8",
+    "teamAId": "15",
+    "teamBId": "16",
+    "date": "2026-06-14",
+    "time": "09:30",
+    "round": "Group D · Matchday 1",
+    "group": "D",
+    "md": 1
+  },
+  {
+    "apiId": "9",
+    "teamAId": "17",
+    "teamBId": "18",
+    "date": "2026-06-14",
+    "time": "22:30",
+    "round": "Group E · Matchday 1",
+    "group": "E",
+    "md": 1
+  },
+  {
+    "apiId": "10",
+    "teamAId": "21",
+    "teamBId": "22",
+    "date": "2026-06-15",
+    "time": "01:30",
+    "round": "Group F · Matchday 1",
+    "group": "F",
+    "md": 1
+  },
+  {
+    "apiId": "11",
+    "teamAId": "19",
+    "teamBId": "20",
+    "date": "2026-06-15",
+    "time": "04:30",
+    "round": "Group E · Matchday 1",
+    "group": "E",
+    "md": 1
+  },
+  {
+    "apiId": "12",
+    "teamAId": "23",
+    "teamBId": "24",
+    "date": "2026-06-15",
+    "time": "07:30",
+    "round": "Group F · Matchday 1",
+    "group": "F",
+    "md": 1
+  },
+  {
+    "apiId": "13",
+    "teamAId": "29",
+    "teamBId": "30",
+    "date": "2026-06-15",
+    "time": "21:30",
+    "round": "Group H · Matchday 1",
+    "group": "H",
+    "md": 1
+  },
+  {
+    "apiId": "14",
+    "teamAId": "25",
+    "teamBId": "26",
+    "date": "2026-06-16",
+    "time": "00:30",
+    "round": "Group G · Matchday 1",
+    "group": "G",
+    "md": 1
+  },
+  {
+    "apiId": "15",
+    "teamAId": "31",
+    "teamBId": "32",
+    "date": "2026-06-16",
+    "time": "03:30",
+    "round": "Group H · Matchday 1",
+    "group": "H",
+    "md": 1
+  },
+  {
+    "apiId": "16",
+    "teamAId": "27",
+    "teamBId": "28",
+    "date": "2026-06-16",
+    "time": "06:30",
+    "round": "Group G · Matchday 1",
+    "group": "G",
+    "md": 1
+  },
+  {
+    "apiId": "17",
+    "teamAId": "33",
+    "teamBId": "34",
+    "date": "2026-06-17",
+    "time": "00:30",
+    "round": "Group I · Matchday 1",
+    "group": "I",
+    "md": 1
+  },
+  {
+    "apiId": "18",
+    "teamAId": "35",
+    "teamBId": "36",
+    "date": "2026-06-17",
+    "time": "03:30",
+    "round": "Group I · Matchday 1",
+    "group": "I",
+    "md": 1
+  },
+  {
+    "apiId": "19",
+    "teamAId": "37",
+    "teamBId": "38",
+    "date": "2026-06-17",
+    "time": "06:30",
+    "round": "Group J · Matchday 1",
+    "group": "J",
+    "md": 1
+  },
+  {
+    "apiId": "20",
+    "teamAId": "39",
+    "teamBId": "40",
+    "date": "2026-06-17",
+    "time": "09:30",
+    "round": "Group J · Matchday 1",
+    "group": "J",
+    "md": 1
+  },
+  {
+    "apiId": "21",
+    "teamAId": "41",
+    "teamBId": "42",
+    "date": "2026-06-17",
+    "time": "22:30",
+    "round": "Group K · Matchday 1",
+    "group": "K",
+    "md": 1
+  },
+  {
+    "apiId": "22",
+    "teamAId": "45",
+    "teamBId": "46",
+    "date": "2026-06-18",
+    "time": "01:30",
+    "round": "Group L · Matchday 1",
+    "group": "L",
+    "md": 1
+  },
+  {
+    "apiId": "23",
+    "teamAId": "47",
+    "teamBId": "48",
+    "date": "2026-06-18",
+    "time": "04:30",
+    "round": "Group L · Matchday 1",
+    "group": "L",
+    "md": 1
+  },
+  {
+    "apiId": "24",
+    "teamAId": "43",
+    "teamBId": "44",
+    "date": "2026-06-18",
+    "time": "07:30",
+    "round": "Group K · Matchday 1",
+    "group": "K",
+    "md": 1
+  },
+  {
+    "apiId": "25",
+    "teamAId": "4",
+    "teamBId": "2",
+    "date": "2026-06-18",
+    "time": "21:30",
+    "round": "Group A · Matchday 2",
+    "group": "A",
+    "md": 2
+  },
+  {
+    "apiId": "26",
+    "teamAId": "8",
+    "teamBId": "6",
+    "date": "2026-06-19",
+    "time": "00:30",
+    "round": "Group B · Matchday 2",
+    "group": "B",
+    "md": 2
+  },
+  {
+    "apiId": "27",
+    "teamAId": "5",
+    "teamBId": "7",
+    "date": "2026-06-19",
+    "time": "03:30",
+    "round": "Group B · Matchday 2",
+    "group": "B",
+    "md": 2
+  },
+  {
+    "apiId": "28",
+    "teamAId": "1",
+    "teamBId": "3",
+    "date": "2026-06-19",
+    "time": "06:30",
+    "round": "Group A · Matchday 2",
+    "group": "A",
+    "md": 2
+  },
+  {
+    "apiId": "29",
+    "teamAId": "13",
+    "teamBId": "15",
+    "date": "2026-06-20",
+    "time": "00:30",
+    "round": "Group D · Matchday 2",
+    "group": "D",
+    "md": 2
+  },
+  {
+    "apiId": "30",
+    "teamAId": "12",
+    "teamBId": "10",
+    "date": "2026-06-20",
+    "time": "03:30",
+    "round": "Group C · Matchday 2",
+    "group": "C",
+    "md": 2
+  },
+  {
+    "apiId": "31",
+    "teamAId": "9",
+    "teamBId": "11",
+    "date": "2026-06-20",
+    "time": "06:00",
+    "round": "Group C · Matchday 2",
+    "group": "C",
+    "md": 2
+  },
+  {
+    "apiId": "32",
+    "teamAId": "16",
+    "teamBId": "14",
+    "date": "2026-06-20",
+    "time": "08:30",
+    "round": "Group D · Matchday 2",
+    "group": "D",
+    "md": 2
+  },
+  {
+    "apiId": "33",
+    "teamAId": "21",
+    "teamBId": "23",
+    "date": "2026-06-20",
+    "time": "22:30",
+    "round": "Group F · Matchday 2",
+    "group": "F",
+    "md": 2
+  },
+  {
+    "apiId": "34",
+    "teamAId": "17",
+    "teamBId": "19",
+    "date": "2026-06-21",
+    "time": "01:30",
+    "round": "Group E · Matchday 2",
+    "group": "E",
+    "md": 2
+  },
+  {
+    "apiId": "35",
+    "teamAId": "20",
+    "teamBId": "18",
+    "date": "2026-06-21",
+    "time": "05:30",
+    "round": "Group E · Matchday 2",
+    "group": "E",
+    "md": 2
+  },
+  {
+    "apiId": "36",
+    "teamAId": "24",
+    "teamBId": "22",
+    "date": "2026-06-21",
+    "time": "09:30",
+    "round": "Group F · Matchday 2",
+    "group": "F",
+    "md": 2
+  },
+  {
+    "apiId": "37",
+    "teamAId": "29",
+    "teamBId": "31",
+    "date": "2026-06-21",
+    "time": "21:30",
+    "round": "Group H · Matchday 2",
+    "group": "H",
+    "md": 2
+  },
+  {
+    "apiId": "38",
+    "teamAId": "25",
+    "teamBId": "27",
+    "date": "2026-06-22",
+    "time": "00:30",
+    "round": "Group G · Matchday 2",
+    "group": "G",
+    "md": 2
+  },
+  {
+    "apiId": "39",
+    "teamAId": "32",
+    "teamBId": "30",
+    "date": "2026-06-22",
+    "time": "03:30",
+    "round": "Group H · Matchday 2",
+    "group": "H",
+    "md": 2
+  },
+  {
+    "apiId": "40",
+    "teamAId": "28",
+    "teamBId": "26",
+    "date": "2026-06-22",
+    "time": "06:30",
+    "round": "Group G · Matchday 2",
+    "group": "G",
+    "md": 2
+  },
+  {
+    "apiId": "41",
+    "teamAId": "37",
+    "teamBId": "39",
+    "date": "2026-06-22",
+    "time": "22:30",
+    "round": "Group J · Matchday 2",
+    "group": "J",
+    "md": 2
+  },
+  {
+    "apiId": "42",
+    "teamAId": "33",
+    "teamBId": "35",
+    "date": "2026-06-23",
+    "time": "02:30",
+    "round": "Group I · Matchday 2",
+    "group": "I",
+    "md": 2
+  },
+  {
+    "apiId": "43",
+    "teamAId": "36",
+    "teamBId": "34",
+    "date": "2026-06-23",
+    "time": "05:30",
+    "round": "Group I · Matchday 2",
+    "group": "I",
+    "md": 2
+  },
+  {
+    "apiId": "44",
+    "teamAId": "40",
+    "teamBId": "38",
+    "date": "2026-06-23",
+    "time": "08:30",
+    "round": "Group J · Matchday 2",
+    "group": "J",
+    "md": 2
+  },
+  {
+    "apiId": "45",
+    "teamAId": "41",
+    "teamBId": "43",
+    "date": "2026-06-23",
+    "time": "22:30",
+    "round": "Group K · Matchday 2",
+    "group": "K",
+    "md": 2
+  },
+  {
+    "apiId": "46",
+    "teamAId": "45",
+    "teamBId": "47",
+    "date": "2026-06-24",
+    "time": "01:30",
+    "round": "Group L · Matchday 2",
+    "group": "L",
+    "md": 2
+  },
+  {
+    "apiId": "47",
+    "teamAId": "48",
+    "teamBId": "46",
+    "date": "2026-06-24",
+    "time": "04:30",
+    "round": "Group L · Matchday 2",
+    "group": "L",
+    "md": 2
+  },
+  {
+    "apiId": "48",
+    "teamAId": "44",
+    "teamBId": "42",
+    "date": "2026-06-24",
+    "time": "07:30",
+    "round": "Group K · Matchday 2",
+    "group": "K",
+    "md": 2
+  },
+  {
+    "apiId": "49",
+    "teamAId": "8",
+    "teamBId": "5",
+    "date": "2026-06-25",
+    "time": "00:30",
+    "round": "Group B · Matchday 3",
+    "group": "B",
+    "md": 3
+  },
+  {
+    "apiId": "50",
+    "teamAId": "6",
+    "teamBId": "7",
+    "date": "2026-06-25",
+    "time": "00:30",
+    "round": "Group B · Matchday 3",
+    "group": "B",
+    "md": 3
+  },
+  {
+    "apiId": "51",
+    "teamAId": "10",
+    "teamBId": "11",
+    "date": "2026-06-25",
+    "time": "03:30",
+    "round": "Group C · Matchday 3",
+    "group": "C",
+    "md": 3
+  },
+  {
+    "apiId": "52",
+    "teamAId": "12",
+    "teamBId": "9",
+    "date": "2026-06-25",
+    "time": "03:30",
+    "round": "Group C · Matchday 3",
+    "group": "C",
+    "md": 3
+  },
+  {
+    "apiId": "53",
+    "teamAId": "2",
+    "teamBId": "3",
+    "date": "2026-06-25",
+    "time": "06:30",
+    "round": "Group A · Matchday 3",
+    "group": "A",
+    "md": 3
+  },
+  {
+    "apiId": "54",
+    "teamAId": "4",
+    "teamBId": "1",
+    "date": "2026-06-25",
+    "time": "06:30",
+    "round": "Group A · Matchday 3",
+    "group": "A",
+    "md": 3
+  },
+  {
+    "apiId": "55",
+    "teamAId": "18",
+    "teamBId": "19",
+    "date": "2026-06-26",
+    "time": "01:30",
+    "round": "Group E · Matchday 3",
+    "group": "E",
+    "md": 3
+  },
+  {
+    "apiId": "56",
+    "teamAId": "20",
+    "teamBId": "17",
+    "date": "2026-06-26",
+    "time": "01:30",
+    "round": "Group E · Matchday 3",
+    "group": "E",
+    "md": 3
+  },
+  {
+    "apiId": "57",
+    "teamAId": "24",
+    "teamBId": "21",
+    "date": "2026-06-26",
+    "time": "04:30",
+    "round": "Group F · Matchday 3",
+    "group": "F",
+    "md": 3
+  },
+  {
+    "apiId": "58",
+    "teamAId": "22",
+    "teamBId": "23",
+    "date": "2026-06-26",
+    "time": "04:30",
+    "round": "Group F · Matchday 3",
+    "group": "F",
+    "md": 3
+  },
+  {
+    "apiId": "59",
+    "teamAId": "16",
+    "teamBId": "13",
+    "date": "2026-06-26",
+    "time": "07:30",
+    "round": "Group D · Matchday 3",
+    "group": "D",
+    "md": 3
+  },
+  {
+    "apiId": "60",
+    "teamAId": "14",
+    "teamBId": "15",
+    "date": "2026-06-26",
+    "time": "07:30",
+    "round": "Group D · Matchday 3",
+    "group": "D",
+    "md": 3
+  },
+  {
+    "apiId": "61",
+    "teamAId": "36",
+    "teamBId": "33",
+    "date": "2026-06-27",
+    "time": "00:30",
+    "round": "Group I · Matchday 3",
+    "group": "I",
+    "md": 3
+  },
+  {
+    "apiId": "62",
+    "teamAId": "34",
+    "teamBId": "35",
+    "date": "2026-06-27",
+    "time": "00:30",
+    "round": "Group I · Matchday 3",
+    "group": "I",
+    "md": 3
+  },
+  {
+    "apiId": "63",
+    "teamAId": "30",
+    "teamBId": "31",
+    "date": "2026-06-27",
+    "time": "05:30",
+    "round": "Group H · Matchday 3",
+    "group": "H",
+    "md": 3
+  },
+  {
+    "apiId": "64",
+    "teamAId": "32",
+    "teamBId": "29",
+    "date": "2026-06-27",
+    "time": "05:30",
+    "round": "Group H · Matchday 3",
+    "group": "H",
+    "md": 3
+  },
+  {
+    "apiId": "65",
+    "teamAId": "26",
+    "teamBId": "27",
+    "date": "2026-06-27",
+    "time": "08:30",
+    "round": "Group G · Matchday 3",
+    "group": "G",
+    "md": 3
+  },
+  {
+    "apiId": "66",
+    "teamAId": "28",
+    "teamBId": "25",
+    "date": "2026-06-27",
+    "time": "08:30",
+    "round": "Group G · Matchday 3",
+    "group": "G",
+    "md": 3
+  },
+  {
+    "apiId": "67",
+    "teamAId": "48",
+    "teamBId": "45",
+    "date": "2026-06-28",
+    "time": "02:30",
+    "round": "Group L · Matchday 3",
+    "group": "L",
+    "md": 3
+  },
+  {
+    "apiId": "68",
+    "teamAId": "46",
+    "teamBId": "47",
+    "date": "2026-06-28",
+    "time": "02:30",
+    "round": "Group L · Matchday 3",
+    "group": "L",
+    "md": 3
+  },
+  {
+    "apiId": "69",
+    "teamAId": "44",
+    "teamBId": "41",
+    "date": "2026-06-28",
+    "time": "05:00",
+    "round": "Group K · Matchday 3",
+    "group": "K",
+    "md": 3
+  },
+  {
+    "apiId": "70",
+    "teamAId": "42",
+    "teamBId": "43",
+    "date": "2026-06-28",
+    "time": "05:00",
+    "round": "Group K · Matchday 3",
+    "group": "K",
+    "md": 3
+  },
+  {
+    "apiId": "71",
+    "teamAId": "38",
+    "teamBId": "39",
+    "date": "2026-06-28",
+    "time": "07:30",
+    "round": "Group J · Matchday 3",
+    "group": "J",
+    "md": 3
+  },
+  {
+    "apiId": "72",
+    "teamAId": "40",
+    "teamBId": "37",
+    "date": "2026-06-28",
+    "time": "07:30",
+    "round": "Group J · Matchday 3",
+    "group": "J",
+    "md": 3
+  }
+]

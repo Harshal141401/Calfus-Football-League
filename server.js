@@ -25,7 +25,9 @@ const path = require("path");
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+// index:false so the "/" route below always serves the canonical source file
+// (not a possibly-stale public/index.html copy).
+app.use(express.static("public", { index: false }));
 // Serve the dashboard at the root so it's same-origin with the API.
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "fifa-prediction-dashboard.html")));
 

@@ -24,10 +24,13 @@ async function findEmployee(name, email) {
   // Trust-based: require the email to exist; require name to match if one is stored.
   if (docName && norm(docName) !== norm(name)) return null;
 
+  const location = doc.Location || doc.location || doc.office || "";
   return {
     id: String(doc._id),
     name: docName || name,
     email: doc.Email || doc.email,
+    location,
+    tz: config.officeTzFor(location),   // IST for India, US Pacific otherwise
   };
 }
 
@@ -37,7 +40,7 @@ function escapeRegex(s) {
 
 function issueToken(emp) {
   return jwt.sign(
-    { sub: emp.id, name: emp.name, email: emp.email },
+    { sub: emp.id, name: emp.name, email: emp.email, loc: emp.location, tz: emp.tz },
     config.SESSION_SECRET,
     { expiresIn: `${config.SESSION_TTL_HOURS}h` }
   );
@@ -50,7 +53,12 @@ function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ error: "Missing session token" });
   try {
     const payload = jwt.verify(token, config.SESSION_SECRET);
-    req.user = { id: payload.sub, name: payload.name, email: payload.email };
+    req.user = {
+      id: payload.sub, name: payload.name, email: payload.email,
+      location: payload.loc || "",
+      // Fall back to deriving tz if an older token predates the tz claim.
+      tz: payload.tz || config.officeTzFor(payload.loc),
+    };
     next();
   } catch {
     return res.status(401).json({ error: "Invalid or expired session" });

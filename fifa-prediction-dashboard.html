@@ -58,10 +58,12 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .bg-pitch{
   position:fixed;inset:0;z-index:-3;
   background:
-    repeating-linear-gradient(90deg,
-      rgba(0,128,55,.05) 0 60px,
-      rgba(0,128,55,.0) 60px 120px),
-    radial-gradient(120% 80% at 50% -10%, #2c3c4f 0%, #212c3a 45%, #19222d 100%);
+    /* mown turf stripes (horizontal bands) */
+    repeating-linear-gradient(180deg,
+      rgba(0,128,55,.085) 0 7vh,
+      rgba(0,60,26,.085) 7vh 14vh),
+    /* stadium depth */
+    radial-gradient(125% 85% at 50% -10%, #2c3c4f 0%, #212c3a 45%, #19222d 100%);
 }
 .bg-lights{
   position:fixed;inset:0;z-index:-2;pointer-events:none;
@@ -79,7 +81,8 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .bg-lights::before{left:6%}
 .bg-lights::after{right:6%;animation-delay:-7s}
 @keyframes sweep{0%,100%{opacity:.25;transform:skewX(-12deg) translateX(-12px)}50%{opacity:.6;transform:skewX(-12deg) translateX(14px)}}
-.bg-circle{position:fixed;inset:0;margin:auto;width:min(70vw,720px);z-index:-2;opacity:.05;pointer-events:none}
+.bg-circle{position:fixed;inset:0;margin:auto;width:min(82vw,780px);z-index:-2;opacity:.12;pointer-events:none;
+  filter:drop-shadow(0 0 16px rgba(0,255,136,.14))}
 .bg-vignette{position:fixed;inset:0;z-index:-1;pointer-events:none;
   box-shadow:inset 0 0 200px 50px rgba(0,0,0,.42)}
 
@@ -293,6 +296,25 @@ select{appearance:none;padding-right:30px;
 .vote-legend{display:flex;justify-content:space-between;font-family:var(--f-sport);font-weight:600;
   font-size:11px;letter-spacing:.04em;color:var(--muted);margin-top:5px}
 
+/* ---- score predictor (scoreboard style) ---- */
+.score-pred{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 4px}
+.score-pred .sp-cap{font-family:var(--f-sport);font-weight:700;font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--muted)}
+.sp-board{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:13px;
+  background:linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,.22));
+  border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.sp-board .sp-team{font-family:var(--f-display);font-size:14px;letter-spacing:.04em;color:var(--muted);min-width:34px;text-align:center}
+.sp-board input{width:48px;height:48px;text-align:center;border-radius:10px;
+  font-family:var(--f-display);font-size:24px;line-height:1;color:var(--neon);
+  background:radial-gradient(120% 120% at 50% 0%,rgba(0,255,136,.10),rgba(255,255,255,.03));
+  border:1px solid var(--line-2);transition:.15s;-moz-appearance:textfield;appearance:textfield}
+.sp-board input::-webkit-outer-spin-button,.sp-board input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.sp-board input::placeholder{color:var(--muted-2);font-size:22px}
+.sp-board input:focus{outline:none;border-color:var(--neon);box-shadow:0 0 16px rgba(0,255,136,.35);background:rgba(0,255,136,.12)}
+.sp-board .sp-colon{font-family:var(--f-display);font-size:24px;color:var(--gold);text-shadow:0 0 12px rgba(255,215,0,.4)}
+.score-pred.is-locked{opacity:.55}
+.score-pred.is-locked .sp-board input{color:var(--muted);border-color:var(--line)}
+
 /* ===================== ADMIN ===================== */
 .adm-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start}
 .panel{padding:18px}
@@ -345,10 +367,12 @@ select{appearance:none;padding-right:30px;
 .tv-overlay[hidden]{display:none}
 .tv-bg{position:absolute;inset:0;z-index:0;
   background:
-    repeating-linear-gradient(90deg,rgba(0,128,55,.05) 0 80px,transparent 80px 160px),
+    repeating-linear-gradient(90deg,rgba(0,128,55,.08) 0 9vw,rgba(0,60,26,.08) 9vw 18vw),
     radial-gradient(60% 60% at 50% 0%,rgba(0,255,136,.12),transparent 70%),
     radial-gradient(70% 60% at 50% 120%,rgba(0,128,55,.22),transparent 70%),#19222d}
 .tv-bg::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
+.tv-field{position:absolute;inset:0;margin:auto;height:min(86vh,820px);width:auto;
+  opacity:.11;pointer-events:none;filter:drop-shadow(0 0 18px rgba(0,255,136,.14))}
 .tv-top{position:relative;z-index:3;display:flex;align-items:center;gap:20px;padding:20px 36px;
   border-bottom:1px solid var(--line)}
 .tv-top .brand-name{font-size:30px}
@@ -380,16 +404,16 @@ select{appearance:none;padding-right:30px;
   box-shadow:0 0 50px rgba(255,215,0,.18)}
 .tvlb-row.r2{border-color:rgba(200,208,218,.35)}
 .tvlb-row.r3{border-color:rgba(224,147,90,.35)}
-.tvlb-rank{font-family:var(--f-display);font-size:clamp(30px,4vw,62px);line-height:1;color:rgba(255,255,255,.2)}
+.tvlb-rank{font-family:var(--f-display);font-size:clamp(24px,3.1vw,46px);line-height:1;color:rgba(255,255,255,.2)}
 .r1 .tvlb-rank{color:var(--gold)} .r2 .tvlb-rank{color:var(--silver)} .r3 .tvlb-rank{color:var(--bronze)}
-.tvlb-name{display:flex;align-items:center;gap:clamp(10px,1.6vw,22px);min-width:0}
-.tvlb-name .avatar{width:clamp(40px,4vw,64px);height:clamp(40px,4vw,64px);font-size:clamp(16px,2vw,26px)}
-.tvlb-name .nm{font-family:var(--f-display);font-size:clamp(22px,3vw,48px);text-transform:uppercase;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
+.tvlb-name{display:flex;align-items:center;gap:clamp(10px,1.5vw,20px);min-width:0}
+.tvlb-name .avatar{width:clamp(34px,3.2vw,50px);height:clamp(34px,3.2vw,50px);font-size:clamp(14px,1.6vw,22px)}
+.tvlb-name .nm{font-family:var(--f-sport);font-weight:700;font-size:clamp(17px,2vw,32px);text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.05em}
 .tvlb-form{display:flex;gap:6px}
-.tvlb-form .chip{width:clamp(26px,2.4vw,40px);height:clamp(26px,2.4vw,40px);font-size:clamp(12px,1.4vw,20px)}
-.tvlb-pts{font-family:var(--f-display);font-size:clamp(30px,4.4vw,68px);color:var(--neon);
-  text-shadow:0 0 24px rgba(0,255,136,.4);min-width:clamp(70px,8vw,150px);text-align:right}
+.tvlb-form .chip{width:clamp(24px,2.2vw,36px);height:clamp(24px,2.2vw,36px);font-size:clamp(11px,1.3vw,18px)}
+.tvlb-pts{font-family:var(--f-display);font-size:clamp(26px,3.6vw,54px);color:var(--neon);
+  text-shadow:0 0 24px rgba(0,255,136,.4);min-width:clamp(64px,7vw,130px);text-align:right}
 
 /* TV fixtures */
 .tvfix-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(14px,2vw,28px);flex:1;
@@ -508,11 +532,23 @@ footer b{color:var(--muted)}
 <body>
 <div class="bg-pitch"></div>
 <div class="bg-lights"></div>
-<svg class="bg-circle" viewBox="0 0 400 600" fill="none" stroke="#00FF88" stroke-width="2" aria-hidden="true">
-  <rect x="2" y="2" width="396" height="596" rx="4"/><line x1="2" y1="300" x2="398" y2="300"/>
-  <circle cx="200" cy="300" r="70"/><circle cx="200" cy="300" r="3" fill="#00FF88"/>
-  <rect x="120" y="2" width="160" height="90"/><rect x="120" y="508" width="160" height="90"/>
-  <rect x="165" y="2" width="70" height="36"/><rect x="165" y="562" width="70" height="36"/>
+<svg class="bg-circle" viewBox="0 0 400 600" fill="none" stroke="#00FF88" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+  <rect x="3" y="3" width="394" height="594" rx="6"/>
+  <line x1="3" y1="300" x2="397" y2="300"/>
+  <circle cx="200" cy="300" r="64"/><circle cx="200" cy="300" r="3" fill="#00FF88" stroke="none"/>
+  <!-- top half -->
+  <rect x="110" y="3" width="180" height="96"/>
+  <rect x="160" y="3" width="80" height="40"/>
+  <circle cx="200" cy="66" r="2.5" fill="#00FF88" stroke="none"/>
+  <path d="M155 99 A56 56 0 0 0 245 99"/>
+  <!-- bottom half -->
+  <rect x="110" y="501" width="180" height="96"/>
+  <rect x="160" y="557" width="80" height="40"/>
+  <circle cx="200" cy="534" r="2.5" fill="#00FF88" stroke="none"/>
+  <path d="M155 501 A56 56 0 0 1 245 501"/>
+  <!-- corner arcs -->
+  <path d="M3 17 A14 14 0 0 0 17 3"/><path d="M383 3 A14 14 0 0 0 397 17"/>
+  <path d="M3 583 A14 14 0 0 1 17 597"/><path d="M383 597 A14 14 0 0 1 397 583"/>
 </svg>
 <div class="sparks" id="sparks" aria-hidden="true"></div>
 <div class="bg-vignette"></div>
@@ -523,7 +559,6 @@ footer b{color:var(--muted)}
       <svg class="ball" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#00FF88" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/><path d="M31 14l8 2 .8 8-7 3-4.5-6.2zM17 14l-8 2-.8 8 7 3 4.5-6.2zM19.7 30.3h8.6l2.7 8-7 4.2-7-4.2z" fill="#0c0f12" stroke="#fff" stroke-width="1.2"/></svg>
       <div>
         <div class="brand-name" id="brandName">Calfus <span>Football</span> League</div>
-        <div class="brand-sub" id="brandSub">Office Tournament · Live</div>
       </div>
     </div>
     <nav class="nav" id="nav">
@@ -560,12 +595,6 @@ footer b{color:var(--muted)}
         <h2>Make Your Picks</h2>
       </div>
       <div class="spacer"></div>
-    </div>
-    <div class="userbar">
-      <label for="userSel">Predicting as</label>
-      <select id="userSel"></select>
-      <span style="color:var(--muted);font-family:var(--f-sport);font-weight:600;font-size:13px">
-        One pick per match · locks on submit</span>
     </div>
     <h3 style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;font-size:18px;margin:18px 0 12px;color:var(--neon)">Open Fixtures</h3>
     <div class="fix-grid" id="openFixtures"></div>
@@ -655,7 +684,26 @@ footer b{color:var(--muted)}
 
 <!-- ============ TV MODE ============ -->
 <div class="tv-overlay" id="tv" hidden>
-  <div class="tv-bg"></div>
+  <div class="tv-bg">
+    <svg class="tv-field" viewBox="0 0 600 380" fill="none" stroke="#00FF88" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <rect x="3" y="3" width="594" height="374" rx="6"/>
+      <line x1="300" y1="3" x2="300" y2="377"/>
+      <circle cx="300" cy="190" r="58"/><circle cx="300" cy="190" r="3" fill="#00FF88" stroke="none"/>
+      <!-- left half -->
+      <rect x="3" y="95" width="92" height="190"/>
+      <rect x="3" y="140" width="38" height="100"/>
+      <circle cx="62" cy="190" r="2.5" fill="#00FF88" stroke="none"/>
+      <path d="M95 145 A52 52 0 0 1 95 235"/>
+      <!-- right half -->
+      <rect x="505" y="95" width="92" height="190"/>
+      <rect x="559" y="140" width="38" height="100"/>
+      <circle cx="538" cy="190" r="2.5" fill="#00FF88" stroke="none"/>
+      <path d="M505 145 A52 52 0 0 0 505 235"/>
+      <!-- corner arcs -->
+      <path d="M3 17 A14 14 0 0 0 17 3"/><path d="M583 3 A14 14 0 0 0 597 17"/>
+      <path d="M3 363 A14 14 0 0 1 17 377"/><path d="M583 377 A14 14 0 0 1 597 363"/>
+    </svg>
+  </div>
   <div class="tv-top">
     <svg class="ball" style="width:38px;height:38px;animation:spin 9s linear infinite" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#00FF88" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/></svg>
     <div class="brand-name" id="tvBrand">Calfus <span>Football</span> League</div>
@@ -760,7 +808,83 @@ function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.get
 const TEAMS = [{"id":"1","name":"Mexico","abbr":"MEX","group":"A","flag":"https://flagcdn.com/w80/mx.png","c1":"#00FF88","c2":"#FFD700"},{"id":"2","name":"South Africa","abbr":"RSA","group":"A","flag":"https://flagcdn.com/w80/za.png","c1":"#00FF88","c2":"#FFD700"},{"id":"3","name":"South Korea","abbr":"KOR","group":"A","flag":"https://flagcdn.com/w80/kr.png","c1":"#00FF88","c2":"#FFD700"},{"id":"4","name":"Czech Republic","abbr":"CZE","group":"A","flag":"https://flagcdn.com/w80/cz.png","c1":"#00FF88","c2":"#FFD700"},{"id":"5","name":"Canada","abbr":"CAN","group":"B","flag":"https://flagcdn.com/w80/ca.png","c1":"#00FF88","c2":"#FFD700"},{"id":"6","name":"Bosnia and Herzegovina","abbr":"BIH","group":"B","flag":"https://flagcdn.com/w80/ba.png","c1":"#00FF88","c2":"#FFD700"},{"id":"7","name":"Qatar","abbr":"QAT","group":"B","flag":"https://flagcdn.com/w80/qa.png","c1":"#00FF88","c2":"#FFD700"},{"id":"8","name":"Switzerland","abbr":"SUI","group":"B","flag":"https://flagcdn.com/w80/ch.png","c1":"#00FF88","c2":"#FFD700"},{"id":"9","name":"Brazil","abbr":"BRA","group":"C","flag":"https://flagcdn.com/w80/br.png","c1":"#00FF88","c2":"#FFD700"},{"id":"10","name":"Morocco","abbr":"MAR","group":"C","flag":"https://flagcdn.com/w80/ma.png","c1":"#00FF88","c2":"#FFD700"},{"id":"11","name":"Haiti","abbr":"HAI","group":"C","flag":"https://flagcdn.com/w80/ht.png","c1":"#00FF88","c2":"#FFD700"},{"id":"12","name":"Scotland","abbr":"SCO","group":"C","flag":"https://flagcdn.com/w80/gb-sct.png","c1":"#00FF88","c2":"#FFD700"},{"id":"13","name":"United States","abbr":"USA","group":"D","flag":"https://flagcdn.com/w80/us.png","c1":"#00FF88","c2":"#FFD700"},{"id":"14","name":"Paraguay","abbr":"PAR","group":"D","flag":"https://flagcdn.com/w80/py.png","c1":"#00FF88","c2":"#FFD700"},{"id":"15","name":"Australia","abbr":"AUS","group":"D","flag":"https://flagcdn.com/w80/au.png","c1":"#00FF88","c2":"#FFD700"},{"id":"16","name":"Turkey","abbr":"TUR","group":"D","flag":"https://flagcdn.com/w80/tr.png","c1":"#00FF88","c2":"#FFD700"},{"id":"17","name":"Germany","abbr":"GER","group":"E","flag":"https://flagcdn.com/w80/de.png","c1":"#00FF88","c2":"#FFD700"},{"id":"18","name":"Curaçao","abbr":"CUW","group":"E","flag":"https://flagcdn.com/w80/cw.png","c1":"#00FF88","c2":"#FFD700"},{"id":"19","name":"Ivory Coast","abbr":"CIV","group":"E","flag":"https://flagcdn.com/w80/ci.png","c1":"#00FF88","c2":"#FFD700"},{"id":"20","name":"Ecuador","abbr":"ECU","group":"E","flag":"https://flagcdn.com/w80/ec.png","c1":"#00FF88","c2":"#FFD700"},{"id":"21","name":"Netherlands","abbr":"NED","group":"F","flag":"https://flagcdn.com/w80/nl.png","c1":"#00FF88","c2":"#FFD700"},{"id":"22","name":"Japan","abbr":"JPN","group":"F","flag":"https://flagcdn.com/w80/jp.png","c1":"#00FF88","c2":"#FFD700"},{"id":"23","name":"Sweden","abbr":"SWE","group":"F","flag":"https://flagcdn.com/w80/se.png","c1":"#00FF88","c2":"#FFD700"},{"id":"24","name":"Tunisia","abbr":"TUN","group":"F","flag":"https://flagcdn.com/w80/tn.png","c1":"#00FF88","c2":"#FFD700"},{"id":"25","name":"Belgium","abbr":"BEL","group":"G","flag":"https://flagcdn.com/w80/be.png","c1":"#00FF88","c2":"#FFD700"},{"id":"26","name":"Egypt","abbr":"EGY","group":"G","flag":"https://flagcdn.com/w80/eg.png","c1":"#00FF88","c2":"#FFD700"},{"id":"27","name":"Iran","abbr":"IRN","group":"G","flag":"https://flagcdn.com/w80/ir.png","c1":"#00FF88","c2":"#FFD700"},{"id":"28","name":"New Zealand","abbr":"NZL","group":"G","flag":"https://flagcdn.com/w80/nz.png","c1":"#00FF88","c2":"#FFD700"},{"id":"29","name":"Spain","abbr":"ESP","group":"H","flag":"https://flagcdn.com/w80/es.png","c1":"#00FF88","c2":"#FFD700"},{"id":"30","name":"Cape Verde","abbr":"CPV","group":"H","flag":"https://flagcdn.com/w80/cv.png","c1":"#00FF88","c2":"#FFD700"},{"id":"31","name":"Saudi Arabia","abbr":"KSA","group":"H","flag":"https://flagcdn.com/w80/sa.png","c1":"#00FF88","c2":"#FFD700"},{"id":"32","name":"Uruguay","abbr":"URU","group":"H","flag":"https://flagcdn.com/w80/uy.png","c1":"#00FF88","c2":"#FFD700"},{"id":"33","name":"France","abbr":"FRA","group":"I","flag":"https://flagcdn.com/w80/fr.png","c1":"#00FF88","c2":"#FFD700"},{"id":"34","name":"Senegal","abbr":"SEN","group":"I","flag":"https://flagcdn.com/w80/sn.png","c1":"#00FF88","c2":"#FFD700"},{"id":"35","name":"Iraq","abbr":"IRQ","group":"I","flag":"https://flagcdn.com/w80/iq.png","c1":"#00FF88","c2":"#FFD700"},{"id":"36","name":"Norway","abbr":"NOR","group":"I","flag":"https://flagcdn.com/w80/no.png","c1":"#00FF88","c2":"#FFD700"},{"id":"37","name":"Argentina","abbr":"ARG","group":"J","flag":"https://flagcdn.com/w80/ar.png","c1":"#00FF88","c2":"#FFD700"},{"id":"38","name":"Algeria","abbr":"ALG","group":"J","flag":"https://flagcdn.com/w80/dz.png","c1":"#00FF88","c2":"#FFD700"},{"id":"39","name":"Austria","abbr":"AUT","group":"J","flag":"https://flagcdn.com/w80/at.png","c1":"#00FF88","c2":"#FFD700"},{"id":"40","name":"Jordan","abbr":"JOR","group":"J","flag":"https://flagcdn.com/w80/jo.png","c1":"#00FF88","c2":"#FFD700"},{"id":"41","name":"Portugal","abbr":"POR","group":"K","flag":"https://flagcdn.com/w80/pt.png","c1":"#00FF88","c2":"#FFD700"},{"id":"42","name":"Democratic Republic of the Congo","abbr":"COD","group":"K","flag":"https://flagcdn.com/w80/cd.png","c1":"#00FF88","c2":"#FFD700"},{"id":"43","name":"Uzbekistan","abbr":"UZB","group":"K","flag":"https://flagcdn.com/w80/uz.png","c1":"#00FF88","c2":"#FFD700"},{"id":"44","name":"Colombia","abbr":"COL","group":"K","flag":"https://flagcdn.com/w80/co.png","c1":"#00FF88","c2":"#FFD700"},{"id":"45","name":"England","abbr":"ENG","group":"L","flag":"https://flagcdn.com/w80/gb-eng.png","c1":"#00FF88","c2":"#FFD700"},{"id":"46","name":"Croatia","abbr":"CRO","group":"L","flag":"https://flagcdn.com/w80/hr.png","c1":"#00FF88","c2":"#FFD700"},{"id":"47","name":"Ghana","abbr":"GHA","group":"L","flag":"https://flagcdn.com/w80/gh.png","c1":"#00FF88","c2":"#FFD700"},{"id":"48","name":"Panama","abbr":"PAN","group":"L","flag":"https://flagcdn.com/w80/pa.png","c1":"#00FF88","c2":"#FFD700"}];
 
 /* ---- WORLD CUP 2026 group-stage fixtures (kickoff in IST) ---- */
-const WC_FIXTURES = [{"apiId":"1","teamAId":"1","teamBId":"2","date":"2026-06-12","time":"00:30","round":"Group A · Matchday 1","group":"A","md":1},{"apiId":"2","teamAId":"3","teamBId":"4","date":"2026-06-12","time":"07:30","round":"Group A · Matchday 1","group":"A","md":1},{"apiId":"3","teamAId":"5","teamBId":"6","date":"2026-06-13","time":"00:30","round":"Group B · Matchday 1","group":"B","md":1},{"apiId":"4","teamAId":"13","teamBId":"14","date":"2026-06-13","time":"06:30","round":"Group D · Matchday 1","group":"D","md":1},{"apiId":"5","teamAId":"11","teamBId":"12","date":"2026-06-14","time":"06:30","round":"Group C · Matchday 1","group":"C","md":1},{"apiId":"6","teamAId":"15","teamBId":"16","date":"2026-06-14","time":"09:30","round":"Group D · Matchday 1","group":"D","md":1},{"apiId":"7","teamAId":"9","teamBId":"10","date":"2026-06-14","time":"03:30","round":"Group C · Matchday 1","group":"C","md":1},{"apiId":"8","teamAId":"7","teamBId":"8","date":"2026-06-14","time":"00:30","round":"Group B · Matchday 1","group":"B","md":1},{"apiId":"9","teamAId":"19","teamBId":"20","date":"2026-06-15","time":"04:30","round":"Group E · Matchday 1","group":"E","md":1},{"apiId":"10","teamAId":"17","teamBId":"18","date":"2026-06-14","time":"22:30","round":"Group E · Matchday 1","group":"E","md":1},{"apiId":"11","teamAId":"21","teamBId":"22","date":"2026-06-15","time":"01:30","round":"Group F · Matchday 1","group":"F","md":1},{"apiId":"12","teamAId":"23","teamBId":"24","date":"2026-06-15","time":"07:30","round":"Group F · Matchday 1","group":"F","md":1},{"apiId":"13","teamAId":"27","teamBId":"28","date":"2026-06-16","time":"06:30","round":"Group G · Matchday 1","group":"G","md":1},{"apiId":"14","teamAId":"29","teamBId":"30","date":"2026-06-15","time":"21:30","round":"Group H · Matchday 1","group":"H","md":1},{"apiId":"15","teamAId":"25","teamBId":"26","date":"2026-06-16","time":"00:30","round":"Group G · Matchday 1","group":"G","md":1},{"apiId":"16","teamAId":"31","teamBId":"32","date":"2026-06-16","time":"03:30","round":"Group H · Matchday 1","group":"H","md":1},{"apiId":"17","teamAId":"33","teamBId":"34","date":"2026-06-17","time":"00:30","round":"Group I · Matchday 1","group":"I","md":1},{"apiId":"18","teamAId":"35","teamBId":"36","date":"2026-06-17","time":"03:30","round":"Group I · Matchday 1","group":"I","md":1},{"apiId":"19","teamAId":"37","teamBId":"38","date":"2026-06-17","time":"06:30","round":"Group J · Matchday 1","group":"J","md":1},{"apiId":"20","teamAId":"39","teamBId":"40","date":"2026-06-17","time":"09:30","round":"Group J · Matchday 1","group":"J","md":1},{"apiId":"21","teamAId":"41","teamBId":"42","date":"2026-06-17","time":"22:30","round":"Group K · Matchday 1","group":"K","md":1},{"apiId":"22","teamAId":"45","teamBId":"46","date":"2026-06-18","time":"01:30","round":"Group L · Matchday 1","group":"L","md":1},{"apiId":"23","teamAId":"43","teamBId":"44","date":"2026-06-18","time":"07:30","round":"Group K · Matchday 1","group":"K","md":1},{"apiId":"24","teamAId":"47","teamBId":"48","date":"2026-06-18","time":"04:30","round":"Group L · Matchday 1","group":"L","md":1},{"apiId":"25","teamAId":"1","teamBId":"3","date":"2026-06-19","time":"06:30","round":"Group A · Matchday 2","group":"A","md":2},{"apiId":"26","teamAId":"8","teamBId":"6","date":"2026-06-19","time":"00:30","round":"Group B · Matchday 2","group":"B","md":2},{"apiId":"27","teamAId":"5","teamBId":"7","date":"2026-06-19","time":"03:30","round":"Group B · Matchday 2","group":"B","md":2},{"apiId":"28","teamAId":"4","teamBId":"2","date":"2026-06-18","time":"21:30","round":"Group A · Matchday 2","group":"A","md":2},{"apiId":"29","teamAId":"9","teamBId":"11","date":"2026-06-20","time":"06:00","round":"Group C · Matchday 2","group":"C","md":2},{"apiId":"30","teamAId":"12","teamBId":"10","date":"2026-06-20","time":"03:30","round":"Group C · Matchday 2","group":"C","md":2},{"apiId":"31","teamAId":"13","teamBId":"15","date":"2026-06-20","time":"00:30","round":"Group D · Matchday 2","group":"D","md":2},{"apiId":"32","teamAId":"16","teamBId":"14","date":"2026-06-20","time":"08:30","round":"Group D · Matchday 2","group":"D","md":2},{"apiId":"33","teamAId":"17","teamBId":"19","date":"2026-06-21","time":"01:30","round":"Group E · Matchday 2","group":"E","md":2},{"apiId":"34","teamAId":"20","teamBId":"18","date":"2026-06-21","time":"05:30","round":"Group E · Matchday 2","group":"E","md":2},{"apiId":"35","teamAId":"21","teamBId":"23","date":"2026-06-20","time":"22:30","round":"Group F · Matchday 2","group":"F","md":2},{"apiId":"36","teamAId":"24","teamBId":"22","date":"2026-06-21","time":"09:30","round":"Group F · Matchday 2","group":"F","md":2},{"apiId":"37","teamAId":"25","teamBId":"27","date":"2026-06-22","time":"00:30","round":"Group G · Matchday 2","group":"G","md":2},{"apiId":"38","teamAId":"28","teamBId":"26","date":"2026-06-22","time":"06:30","round":"Group G · Matchday 2","group":"G","md":2},{"apiId":"39","teamAId":"29","teamBId":"31","date":"2026-06-21","time":"21:30","round":"Group H · Matchday 2","group":"H","md":2},{"apiId":"40","teamAId":"32","teamBId":"30","date":"2026-06-22","time":"03:30","round":"Group H · Matchday 2","group":"H","md":2},{"apiId":"41","teamAId":"33","teamBId":"35","date":"2026-06-23","time":"02:30","round":"Group I · Matchday 2","group":"I","md":2},{"apiId":"42","teamAId":"36","teamBId":"34","date":"2026-06-23","time":"05:30","round":"Group I · Matchday 2","group":"I","md":2},{"apiId":"43","teamAId":"37","teamBId":"39","date":"2026-06-22","time":"22:30","round":"Group J · Matchday 2","group":"J","md":2},{"apiId":"44","teamAId":"40","teamBId":"38","date":"2026-06-23","time":"08:30","round":"Group J · Matchday 2","group":"J","md":2},{"apiId":"45","teamAId":"41","teamBId":"43","date":"2026-06-23","time":"22:30","round":"Group K · Matchday 2","group":"K","md":2},{"apiId":"46","teamAId":"48","teamBId":"46","date":"2026-06-24","time":"04:30","round":"Group L · Matchday 2","group":"L","md":2},{"apiId":"47","teamAId":"44","teamBId":"42","date":"2026-06-24","time":"07:30","round":"Group K · Matchday 2","group":"K","md":2},{"apiId":"48","teamAId":"45","teamBId":"47","date":"2026-06-24","time":"01:30","round":"Group L · Matchday 2","group":"L","md":2},{"apiId":"49","teamAId":"12","teamBId":"9","date":"2026-06-25","time":"03:30","round":"Group C · Matchday 3","group":"C","md":3},{"apiId":"50","teamAId":"10","teamBId":"11","date":"2026-06-25","time":"03:30","round":"Group C · Matchday 3","group":"C","md":3},{"apiId":"51","teamAId":"2","teamBId":"3","date":"2026-06-25","time":"06:30","round":"Group A · Matchday 3","group":"A","md":3},{"apiId":"52","teamAId":"4","teamBId":"1","date":"2026-06-25","time":"06:30","round":"Group A · Matchday 3","group":"A","md":3},{"apiId":"53","teamAId":"8","teamBId":"5","date":"2026-06-25","time":"00:30","round":"Group B · Matchday 3","group":"B","md":3},{"apiId":"54","teamAId":"6","teamBId":"7","date":"2026-06-25","time":"00:30","round":"Group B · Matchday 3","group":"B","md":3},{"apiId":"55","teamAId":"18","teamBId":"19","date":"2026-06-26","time":"01:30","round":"Group E · Matchday 3","group":"E","md":3},{"apiId":"56","teamAId":"20","teamBId":"17","date":"2026-06-26","time":"01:30","round":"Group E · Matchday 3","group":"E","md":3},{"apiId":"57","teamAId":"14","teamBId":"15","date":"2026-06-26","time":"07:30","round":"Group D · Matchday 3","group":"D","md":3},{"apiId":"58","teamAId":"16","teamBId":"13","date":"2026-06-26","time":"07:30","round":"Group D · Matchday 3","group":"D","md":3},{"apiId":"59","teamAId":"22","teamBId":"23","date":"2026-06-26","time":"04:30","round":"Group F · Matchday 3","group":"F","md":3},{"apiId":"60","teamAId":"24","teamBId":"21","date":"2026-06-26","time":"04:30","round":"Group F · Matchday 3","group":"F","md":3},{"apiId":"61","teamAId":"34","teamBId":"35","date":"2026-06-27","time":"00:30","round":"Group I · Matchday 3","group":"I","md":3},{"apiId":"62","teamAId":"36","teamBId":"33","date":"2026-06-27","time":"00:30","round":"Group I · Matchday 3","group":"I","md":3},{"apiId":"63","teamAId":"26","teamBId":"27","date":"2026-06-27","time":"08:30","round":"Group G · Matchday 3","group":"G","md":3},{"apiId":"64","teamAId":"28","teamBId":"25","date":"2026-06-27","time":"08:30","round":"Group G · Matchday 3","group":"G","md":3},{"apiId":"65","teamAId":"30","teamBId":"31","date":"2026-06-27","time":"05:30","round":"Group H · Matchday 3","group":"H","md":3},{"apiId":"66","teamAId":"32","teamBId":"29","date":"2026-06-27","time":"05:30","round":"Group H · Matchday 3","group":"H","md":3},{"apiId":"67","teamAId":"48","teamBId":"45","date":"2026-06-28","time":"02:30","round":"Group L · Matchday 3","group":"L","md":3},{"apiId":"68","teamAId":"46","teamBId":"47","date":"2026-06-28","time":"02:30","round":"Group L · Matchday 3","group":"L","md":3},{"apiId":"69","teamAId":"38","teamBId":"39","date":"2026-06-28","time":"07:30","round":"Group J · Matchday 3","group":"J","md":3},{"apiId":"70","teamAId":"40","teamBId":"37","date":"2026-06-28","time":"07:30","round":"Group J · Matchday 3","group":"J","md":3},{"apiId":"71","teamAId":"44","teamBId":"41","date":"2026-06-28","time":"05:00","round":"Group K · Matchday 3","group":"K","md":3},{"apiId":"72","teamAId":"42","teamBId":"43","date":"2026-06-28","time":"05:00","round":"Group K · Matchday 3","group":"K","md":3}];
+const WC_FIXTURES = [
+  /* ── MATCHDAY 1 ── */
+  /* 1  */ {"apiId":"1","teamAId":"1","teamBId":"2","date":"2026-06-12","time":"00:30","round":"Group A · Matchday 1","group":"A","md":1},
+  /* 2  */ {"apiId":"2","teamAId":"3","teamBId":"4","date":"2026-06-12","time":"07:30","round":"Group A · Matchday 1","group":"A","md":1},
+  /* 3  */ {"apiId":"3","teamAId":"5","teamBId":"6","date":"2026-06-13","time":"00:30","round":"Group B · Matchday 1","group":"B","md":1},
+  /* 4  */ {"apiId":"4","teamAId":"13","teamBId":"14","date":"2026-06-13","time":"06:30","round":"Group D · Matchday 1","group":"D","md":1},
+  /* 5  */ {"apiId":"5","teamAId":"7","teamBId":"8","date":"2026-06-14","time":"00:30","round":"Group B · Matchday 1","group":"B","md":1},
+  /* 6  */ {"apiId":"6","teamAId":"9","teamBId":"10","date":"2026-06-14","time":"03:30","round":"Group C · Matchday 1","group":"C","md":1},
+  /* 7  */ {"apiId":"7","teamAId":"11","teamBId":"12","date":"2026-06-14","time":"06:30","round":"Group C · Matchday 1","group":"C","md":1},
+  /* 8  */ {"apiId":"8","teamAId":"15","teamBId":"16","date":"2026-06-14","time":"09:30","round":"Group D · Matchday 1","group":"D","md":1},
+  /* 9  */ {"apiId":"9","teamAId":"17","teamBId":"18","date":"2026-06-14","time":"22:30","round":"Group E · Matchday 1","group":"E","md":1},
+  /* 10 */ {"apiId":"10","teamAId":"21","teamBId":"22","date":"2026-06-15","time":"01:30","round":"Group F · Matchday 1","group":"F","md":1},
+  /* 11 */ {"apiId":"11","teamAId":"19","teamBId":"20","date":"2026-06-15","time":"04:30","round":"Group E · Matchday 1","group":"E","md":1},
+  /* 12 */ {"apiId":"12","teamAId":"23","teamBId":"24","date":"2026-06-15","time":"07:30","round":"Group F · Matchday 1","group":"F","md":1},
+  /* 13 */ {"apiId":"13","teamAId":"29","teamBId":"30","date":"2026-06-15","time":"21:30","round":"Group H · Matchday 1","group":"H","md":1},
+  /* 14 */ {"apiId":"14","teamAId":"25","teamBId":"26","date":"2026-06-16","time":"00:30","round":"Group G · Matchday 1","group":"G","md":1},
+  /* 15 */ {"apiId":"15","teamAId":"31","teamBId":"32","date":"2026-06-16","time":"03:30","round":"Group H · Matchday 1","group":"H","md":1},
+  /* 16 */ {"apiId":"16","teamAId":"27","teamBId":"28","date":"2026-06-16","time":"06:30","round":"Group G · Matchday 1","group":"G","md":1},
+  /* 17 */ {"apiId":"17","teamAId":"33","teamBId":"34","date":"2026-06-17","time":"00:30","round":"Group I · Matchday 1","group":"I","md":1},
+  /* 18 */ {"apiId":"18","teamAId":"35","teamBId":"36","date":"2026-06-17","time":"03:30","round":"Group I · Matchday 1","group":"I","md":1},
+  /* 19 */ {"apiId":"19","teamAId":"37","teamBId":"38","date":"2026-06-17","time":"06:30","round":"Group J · Matchday 1","group":"J","md":1},
+  /* 20 */ {"apiId":"20","teamAId":"39","teamBId":"40","date":"2026-06-17","time":"09:30","round":"Group J · Matchday 1","group":"J","md":1},
+  /* 21 */ {"apiId":"21","teamAId":"41","teamBId":"42","date":"2026-06-17","time":"22:30","round":"Group K · Matchday 1","group":"K","md":1},
+  /* 22 */ {"apiId":"22","teamAId":"45","teamBId":"46","date":"2026-06-18","time":"01:30","round":"Group L · Matchday 1","group":"L","md":1},
+  /* 23 */ {"apiId":"23","teamAId":"47","teamBId":"48","date":"2026-06-18","time":"04:30","round":"Group L · Matchday 1","group":"L","md":1},
+  /* 24 */ {"apiId":"24","teamAId":"43","teamBId":"44","date":"2026-06-18","time":"07:30","round":"Group K · Matchday 1","group":"K","md":1},
+  /* ── MATCHDAY 2 ── */
+  /* 25 */ {"apiId":"25","teamAId":"4","teamBId":"2","date":"2026-06-18","time":"21:30","round":"Group A · Matchday 2","group":"A","md":2},
+  /* 26 */ {"apiId":"26","teamAId":"8","teamBId":"6","date":"2026-06-19","time":"00:30","round":"Group B · Matchday 2","group":"B","md":2},
+  /* 27 */ {"apiId":"27","teamAId":"5","teamBId":"7","date":"2026-06-19","time":"03:30","round":"Group B · Matchday 2","group":"B","md":2},
+  /* 28 */ {"apiId":"28","teamAId":"1","teamBId":"3","date":"2026-06-19","time":"06:30","round":"Group A · Matchday 2","group":"A","md":2},
+  /* 29 */ {"apiId":"29","teamAId":"13","teamBId":"15","date":"2026-06-20","time":"00:30","round":"Group D · Matchday 2","group":"D","md":2},
+  /* 30 */ {"apiId":"30","teamAId":"12","teamBId":"10","date":"2026-06-20","time":"03:30","round":"Group C · Matchday 2","group":"C","md":2},
+  /* 31 */ {"apiId":"31","teamAId":"9","teamBId":"11","date":"2026-06-20","time":"06:00","round":"Group C · Matchday 2","group":"C","md":2},
+  /* 32 */ {"apiId":"32","teamAId":"16","teamBId":"14","date":"2026-06-20","time":"08:30","round":"Group D · Matchday 2","group":"D","md":2},
+  /* 33 */ {"apiId":"33","teamAId":"21","teamBId":"23","date":"2026-06-20","time":"22:30","round":"Group F · Matchday 2","group":"F","md":2},
+  /* 34 */ {"apiId":"34","teamAId":"17","teamBId":"19","date":"2026-06-21","time":"01:30","round":"Group E · Matchday 2","group":"E","md":2},
+  /* 35 */ {"apiId":"35","teamAId":"20","teamBId":"18","date":"2026-06-21","time":"05:30","round":"Group E · Matchday 2","group":"E","md":2},
+  /* 36 */ {"apiId":"36","teamAId":"24","teamBId":"22","date":"2026-06-21","time":"09:30","round":"Group F · Matchday 2","group":"F","md":2},
+  /* 37 */ {"apiId":"37","teamAId":"29","teamBId":"31","date":"2026-06-21","time":"21:30","round":"Group H · Matchday 2","group":"H","md":2},
+  /* 38 */ {"apiId":"38","teamAId":"25","teamBId":"27","date":"2026-06-22","time":"00:30","round":"Group G · Matchday 2","group":"G","md":2},
+  /* 39 */ {"apiId":"39","teamAId":"32","teamBId":"30","date":"2026-06-22","time":"03:30","round":"Group H · Matchday 2","group":"H","md":2},
+  /* 40 */ {"apiId":"40","teamAId":"28","teamBId":"26","date":"2026-06-22","time":"06:30","round":"Group G · Matchday 2","group":"G","md":2},
+  /* 41 */ {"apiId":"41","teamAId":"37","teamBId":"39","date":"2026-06-22","time":"22:30","round":"Group J · Matchday 2","group":"J","md":2},
+  /* 42 */ {"apiId":"42","teamAId":"33","teamBId":"35","date":"2026-06-23","time":"02:30","round":"Group I · Matchday 2","group":"I","md":2},
+  /* 43 */ {"apiId":"43","teamAId":"36","teamBId":"34","date":"2026-06-23","time":"05:30","round":"Group I · Matchday 2","group":"I","md":2},
+  /* 44 */ {"apiId":"44","teamAId":"40","teamBId":"38","date":"2026-06-23","time":"08:30","round":"Group J · Matchday 2","group":"J","md":2},
+  /* 45 */ {"apiId":"45","teamAId":"41","teamBId":"43","date":"2026-06-23","time":"22:30","round":"Group K · Matchday 2","group":"K","md":2},
+  /* 46 */ {"apiId":"46","teamAId":"45","teamBId":"47","date":"2026-06-24","time":"01:30","round":"Group L · Matchday 2","group":"L","md":2},
+  /* 47 */ {"apiId":"47","teamAId":"48","teamBId":"46","date":"2026-06-24","time":"04:30","round":"Group L · Matchday 2","group":"L","md":2},
+  /* 48 */ {"apiId":"48","teamAId":"44","teamBId":"42","date":"2026-06-24","time":"07:30","round":"Group K · Matchday 2","group":"K","md":2},
+  /* ── MATCHDAY 3 ── */
+  /* 49 */ {"apiId":"49","teamAId":"8","teamBId":"5","date":"2026-06-25","time":"00:30","round":"Group B · Matchday 3","group":"B","md":3},
+  /* 50 */ {"apiId":"50","teamAId":"6","teamBId":"7","date":"2026-06-25","time":"00:30","round":"Group B · Matchday 3","group":"B","md":3},
+  /* 51 */ {"apiId":"51","teamAId":"10","teamBId":"11","date":"2026-06-25","time":"03:30","round":"Group C · Matchday 3","group":"C","md":3},
+  /* 52 */ {"apiId":"52","teamAId":"12","teamBId":"9","date":"2026-06-25","time":"03:30","round":"Group C · Matchday 3","group":"C","md":3},
+  /* 53 */ {"apiId":"53","teamAId":"2","teamBId":"3","date":"2026-06-25","time":"06:30","round":"Group A · Matchday 3","group":"A","md":3},
+  /* 54 */ {"apiId":"54","teamAId":"4","teamBId":"1","date":"2026-06-25","time":"06:30","round":"Group A · Matchday 3","group":"A","md":3},
+  /* 55 */ {"apiId":"55","teamAId":"18","teamBId":"19","date":"2026-06-26","time":"01:30","round":"Group E · Matchday 3","group":"E","md":3},
+  /* 56 */ {"apiId":"56","teamAId":"20","teamBId":"17","date":"2026-06-26","time":"01:30","round":"Group E · Matchday 3","group":"E","md":3},
+  /* 57 */ {"apiId":"57","teamAId":"24","teamBId":"21","date":"2026-06-26","time":"04:30","round":"Group F · Matchday 3","group":"F","md":3},
+  /* 58 */ {"apiId":"58","teamAId":"22","teamBId":"23","date":"2026-06-26","time":"04:30","round":"Group F · Matchday 3","group":"F","md":3},
+  /* 59 */ {"apiId":"59","teamAId":"16","teamBId":"13","date":"2026-06-26","time":"07:30","round":"Group D · Matchday 3","group":"D","md":3},
+  /* 60 */ {"apiId":"60","teamAId":"14","teamBId":"15","date":"2026-06-26","time":"07:30","round":"Group D · Matchday 3","group":"D","md":3},
+  /* 61 */ {"apiId":"61","teamAId":"36","teamBId":"33","date":"2026-06-27","time":"00:30","round":"Group I · Matchday 3","group":"I","md":3},
+  /* 62 */ {"apiId":"62","teamAId":"34","teamBId":"35","date":"2026-06-27","time":"00:30","round":"Group I · Matchday 3","group":"I","md":3},
+  /* 63 */ {"apiId":"63","teamAId":"30","teamBId":"31","date":"2026-06-27","time":"05:30","round":"Group H · Matchday 3","group":"H","md":3},
+  /* 64 */ {"apiId":"64","teamAId":"32","teamBId":"29","date":"2026-06-27","time":"05:30","round":"Group H · Matchday 3","group":"H","md":3},
+  /* 65 */ {"apiId":"65","teamAId":"26","teamBId":"27","date":"2026-06-27","time":"08:30","round":"Group G · Matchday 3","group":"G","md":3},
+  /* 66 */ {"apiId":"66","teamAId":"28","teamBId":"25","date":"2026-06-27","time":"08:30","round":"Group G · Matchday 3","group":"G","md":3},
+  /* 67 */ {"apiId":"67","teamAId":"48","teamBId":"45","date":"2026-06-28","time":"02:30","round":"Group L · Matchday 3","group":"L","md":3},
+  /* 68 */ {"apiId":"68","teamAId":"46","teamBId":"47","date":"2026-06-28","time":"02:30","round":"Group L · Matchday 3","group":"L","md":3},
+  /* 69 */ {"apiId":"69","teamAId":"44","teamBId":"41","date":"2026-06-28","time":"05:00","round":"Group K · Matchday 3","group":"K","md":3},
+  /* 70 */ {"apiId":"70","teamAId":"42","teamBId":"43","date":"2026-06-28","time":"05:00","round":"Group K · Matchday 3","group":"K","md":3},
+  /* 71 */ {"apiId":"71","teamAId":"38","teamBId":"39","date":"2026-06-28","time":"07:30","round":"Group J · Matchday 3","group":"J","md":3},
+  /* 72 */ {"apiId":"72","teamAId":"40","teamBId":"37","date":"2026-06-28","time":"07:30","round":"Group J · Matchday 3","group":"J","md":3}
+];
 const teamById = id => state.teams.find(t=>t.id===id) || {name:"?",abbr:"?",c1:"#444",c2:"#222"};
 function badge(team,size){
   const s = size? `--bsz:${size}px;` : "";
@@ -823,7 +947,7 @@ function seed(){
   return {
     teams, employees, fixtures, predictions,
     currentUserId: employees[0].id,
-    meta:{ tournamentName:"Calfus Football League", subtitle:"Office Tournament · Live",
+    meta:{ tournamentName:"Calfus Football League",
            adminPin:"1234", createdAt: now, lastUpdated: now }
   };
 }
@@ -854,7 +978,7 @@ async function loadData(){
     predictions: preds,
     employees: emps.map(mapEmployee),
     currentUserId: currentUser.id,
-    meta: { tournamentName:"Calfus Football League", subtitle:"Office Tournament · Live" }
+    meta: { tournamentName:"Calfus Football League"}
   };
 }
 /* refresh just the volatile bits (after a pick, or on a timer) */
@@ -1018,13 +1142,14 @@ function renderWindowBanner(){
   if(!el){ el=document.createElement("div"); el.id="windowBanner";
     el.style.cssText="text-align:center;font-family:var(--f-sport);font-weight:700;margin:0 0 12px;padding:10px;border-radius:10px;background:rgba(255,255,255,.04)";
     host.parentNode.insertBefore(el, host); }
-  if(!windowState){ el.textContent="Checking prediction window…"; el.style.color="var(--muted)"; return; }
-  const fmt = iso=> iso? new Date(iso).toLocaleString([], {weekday:"short", hour:"2-digit", minute:"2-digit"}) : "—";
-  if(windowState.open){
-    el.innerHTML = `🟢 Predictions are OPEN — window closes ${fmt(windowState.closesAt)}. Each pick locks at its kickoff.`;
+  if(!windowState){ el.textContent="Checking prediction poll…"; el.style.color="var(--muted)"; return; }
+  const tzLabel = windowState.tz==="Asia/Kolkata" ? "IST" : "PT";
+  const fmt = iso=> iso? new Date(iso).toLocaleString([], {weekday:"short", hour:"2-digit", minute:"2-digit", timeZone:windowState.tz}) : "—";
+  if(windowState.sessionOpen){
+    el.innerHTML = `🟢 Predictions are OPEN — your poll closes ${fmt(windowState.closesAt)} ${tzLabel}. Pick now; each locks at its match's kickoff.`;
     el.style.color="var(--neon)";
   } else {
-    el.innerHTML = `🔒 Predictions are CLOSED — opens ${fmt(windowState.opensAt)} (Mondays &amp; Thursdays).`;
+    el.innerHTML = `🔒 Predictions are CLOSED — voting is open <b>Mon &amp; Thu ${windowState.pollOpen}–${windowState.pollClose} ${tzLabel}</b>. Next poll: ${fmt(windowState.nextOpen)} ${tzLabel}.`;
     el.style.color="var(--gold)";
   }
 }
@@ -1040,19 +1165,21 @@ function renderPredict(){
   renderWindowBanner();
   const uidc = state.currentUserId;
   const sorted = [...state.fixtures].sort((a,b)=>fixtureDT(a)-fixtureDT(b));
-  // Only show unsettled matches kicking off from now through the coverage horizon (next 3 days).
+  // Show upcoming unsettled matches (next ~6 days). Each card shows whether it's open
+  // for your office's poll now, or when your poll opens for it — driven per-fixture by
+  // the API's `predictable`/`opensAt` flags, so India and US can differ correctly.
   const now = windowState ? new Date(windowState.serverTime) : new Date();
-  const horizon = windowState ? new Date(windowState.coverageEnd) : null;
+  const horizon = now.getTime() + 6*864e5;
   const open = sorted.filter(f=>{
-    if(f.result) return false;
-    const k = new Date(f.kickoff);
-    if(k <= now) return false;                       // already kicked off / past
-    return !horizon || k <= horizon;                 // within the next-3-days window
+    if(f.result || f.locked) return false;
+    const k = new Date(f.kickoff).getTime();
+    if(k <= now.getTime()) return false;             // already kicked off / past
+    return k <= horizon;                             // upcoming window
   });
   const settled = sorted.filter(f=>f.result).reverse().slice(0,6);
 
   $("#openFixtures").innerHTML = open.length ? open.map(f=>fixtureCard(f,uidc,false)).join("")
-    : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No matches in the next 3 days to predict right now. Check back when the next fixtures approach.</div>`;
+    : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No upcoming matches to predict right now. Check back when your next poll opens.</div>`;
   $("#settledFixtures").innerHTML = settled.length ? settled.map(f=>fixtureCard(f,uidc,true)).join("")
     : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No results yet.</div>`;
 }
@@ -1063,7 +1190,7 @@ function fixtureCard(f,empId,isSettled){
   const v=voteSplit(f.id);
   const pct=k=> v.total? (v[k]/v.total*100).toFixed(0):0;
   let bottom;
-  const labels={win:`${A.abbr} Win`,draw:"Draw",lose:`${A.abbr} Lose`};
+  const labels={win:outcomeLabel("win",A,B),draw:"Draw",lose:outcomeLabel("lose",A,B)};
   if(isSettled){
     const resTxt=outcomeLabel(f.result,A,B);
     const hasScore = (f.homeScore!=null && f.awayScore!=null);
@@ -1085,18 +1212,30 @@ function fixtureCard(f,empId,isSettled){
     const dis = f.predictable ? "" : "disabled";
     const picks=["win","draw","lose"].map(c=>{
       const seld=pred&&pred.choice===c?"sel":"";
-      return `<button class="pick ${c} ${seld}" ${dis} data-pick="${c}" data-fix="${f.id}">${labels[c]}<small>+3</small></button>`;
+      return `<button class="pick ${c} ${seld}" ${dis} data-pick="${c}" data-fix="${f.id}">${labels[c]}</button>`;
     }).join("");
     const sh = (pred&&pred.scoreHome!=null)?pred.scoreHome:"", sa=(pred&&pred.scoreAway!=null)?pred.scoreAway:"";
-    const scoreRow = `<div class="score-pred" style="display:flex;align-items:center;gap:8px;justify-content:center;margin:10px 0 4px">
-        <input type="number" min="0" class="sc-h" data-fix="${f.id}" value="${sh}" placeholder="–" ${dis} style="width:46px;text-align:center" aria-label="${esc(A.abbr)} goals">
-        <span style="color:var(--muted)">:</span>
-        <input type="number" min="0" class="sc-a" data-fix="${f.id}" value="${sa}" placeholder="–" ${dis} style="width:46px;text-align:center" aria-label="${esc(B.abbr)} goals">
-        <small style="color:var(--muted)">exact score (optional) · +5 / −2</small>
+    const scoreRow = `<div class="score-pred ${dis?'is-locked':''}">
+        <span class="sp-cap">Predict the score</span>
+        <div class="sp-board">
+          <span class="sp-team">${esc(A.abbr)}</span>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" class="sc-h" data-fix="${f.id}" value="${sh}" placeholder="–" ${dis} aria-label="${esc(A.abbr)} goals">
+          <span class="sp-colon">:</span>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" class="sc-a" data-fix="${f.id}" value="${sa}" placeholder="–" ${dis} aria-label="${esc(B.abbr)} goals">
+          <span class="sp-team">${esc(B.abbr)}</span>
+        </div>
       </div>`;
     let action;
+    const tzLabel = windowState && windowState.tz==="Asia/Kolkata" ? "IST" : "PT";
+    const nowMs = windowState ? new Date(windowState.serverTime).getTime() : Date.now();
+    const fmtOpen = iso=> iso ? new Date(iso).toLocaleString([], {weekday:"short", hour:"2-digit", minute:"2-digit", timeZone:windowState?windowState.tz:undefined}) : "";
+    const yourPick = pred?` · your pick: ${labels[pred.choice]}`:"";
     if(f.locked){ action = `<div class="locked">🔒 Kicked off — awaiting result</div>`; }
-    else if(!f.predictable){ action = `<div class="locked">🔒 ${windowState&&!windowState.open?"Window closed":"Opens in a later window"}${pred?` · your pick: ${labels[pred.choice]}`:""}</div>`; }
+    else if(!f.predictable){
+      const opensMs = f.opensAt ? new Date(f.opensAt).getTime() : null;
+      const msg = (opensMs && opensMs > nowMs) ? `Opens ${fmtOpen(f.opensAt)} ${tzLabel}` : "Poll closed";
+      action = `<div class="locked">🔒 ${msg}${yourPick}</div>`;
+    }
     else { action = `<button class="btn btn-primary lockin" data-fix="${f.id}">${pred?"Update pick":"Lock in pick"}</button>`; }
     const votes = v.total? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-d" style="width:${pct("draw")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>
       <div class="vote-legend"><span>W ${pct("win")}%</span><span>D ${pct("draw")}%</span><span>L ${pct("lose")}%</span></div>` : "";
@@ -1442,6 +1581,15 @@ function wireEvents(){
   // nav
   $("#nav").addEventListener("click",e=>{ const b=e.target.closest("button[data-view]"); if(b) setActive(b.dataset.view); });
 
+  // score inputs: digits only (0–99), strip anything else as it's typed/pasted
+  document.addEventListener("input",e=>{
+    const t=e.target;
+    if(t.classList && (t.classList.contains("sc-h")||t.classList.contains("sc-a"))){
+      const clean=t.value.replace(/[^0-9]/g,"").slice(0,2);
+      if(clean!==t.value) t.value=clean;
+    }
+  });
+
   // predictions (event delegation): clicking a pick selects it; "Lock in" submits.
   $("#openFixtures").addEventListener("click",async e=>{
     const pickBtn=e.target.closest("button[data-pick]");
@@ -1606,7 +1754,6 @@ function setIdentity(){
 /* ---------- boot ---------- */
 async function init(){
   $("#brandName").innerHTML = renderBrand("Calfus Football League");
-  $("#brandSub").textContent = "Office Tournament · Live";
   $("#footNote").innerHTML = `<b>Calfus Football League</b> · scoring: correct +3 · wrong −1 · exact score +5 / −2 · predictions open Mon &amp; Thu`;
   buildSparks();
   wireEvents();

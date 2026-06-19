@@ -15,7 +15,10 @@ const { connect, collections, client } = require("../src/db");
 
 const ROOT = path.join(__dirname, "..");
 const TEAMS_CSV = path.join(ROOT, "worldcup2026.teams.csv");
-const GAMES_CSV = path.join(ROOT, "worldcup2026.games.csv");
+// Authoritative kickoff schedule in IST (Asia/Kolkata). The worldcup2026.games.csv
+// `date` column is mis-offset (~9h30m behind real kickoff), so we drive fixture
+// dates/times/pairings from this verified IST schedule instead. Keyed by apiId.
+const IST_SCHEDULE = path.join(ROOT, "worldcup2026.schedule.ist.json");
 
 // --- minimal CSV parser (handles quoted fields with commas) ---
 function parseCSV(text) {
@@ -65,7 +68,8 @@ async function main() {
   const resetResults = process.argv.includes("--reset-results");
 
   const teams = parseCSV(fs.readFileSync(TEAMS_CSV, "utf8"));
-  const games = parseCSV(fs.readFileSync(GAMES_CSV, "utf8"));
+  // Verified IST schedule (authoritative for dates/times/pairings).
+  const schedule = JSON.parse(fs.readFileSync(IST_SCHEDULE, "utf8"));
 
   await connect();
 
@@ -96,21 +100,20 @@ async function main() {
   console.log(`Seeded ${teamN} teams (${withFlags} with flags, ${teamN - withFlags} undecided slots)`);
 
   // --- fixtures ---
+  // Driven by the verified IST schedule. Each entry's date/time is the real
+  // kickoff in Asia/Kolkata; kickoff (UTC ISO) is computed from that — the source
+  // of truth for prediction windows and "upcoming" filtering on the client.
   let inserted = 0, updated = 0;
-  for (const g of games) {
-    const kickoff = DateTime.fromISO(g.date, { zone: "utc" });          // CSV date is UTC
-    const ist = kickoff.setZone(config.FIXTURE_TZ);
-    const round = g.type === "group"
-      ? `Group ${g.group} · Matchday ${g.matchday}`
-      : (g.type ? g.type[0].toUpperCase() + g.type.slice(1) : "Knockout");
+  for (const g of schedule) {
+    const ist = DateTime.fromISO(`${g.date}T${g.time}`, { zone: config.FIXTURE_TZ });
     const base = {
-      apiId: String(g.id),
-      teamAId: String(g.home_team_id),
-      teamBId: String(g.away_team_id),
-      date: ist.toFormat("yyyy-LL-dd"),
-      time: ist.toFormat("HH:mm"),
-      kickoff: kickoff.toISO(),
-      round, group: g.group || "", md: Number(g.matchday) || 0,
+      apiId: String(g.apiId),
+      teamAId: String(g.teamAId),
+      teamBId: String(g.teamBId),
+      date: g.date,
+      time: g.time,
+      kickoff: ist.toUTC().toISO(),
+      round: g.round, group: g.group || "", md: Number(g.md) || 0,
     };
     const existing = await collections.fixtures().findOne({ apiId: base.apiId });
     if (!existing) {

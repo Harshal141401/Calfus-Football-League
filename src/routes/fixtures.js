@@ -1,11 +1,13 @@
 const express = require("express");
 const { collections } = require("../db");
+const { requireAuth } = require("../auth");
 const windows = require("../windows");
+const config = require("../config");
 
 const router = express.Router();
 
-/** Join a fixture with team info and add predictable/locked flags. */
-function enrich(fixture, teamsById) {
+/** Join a fixture with team info and add predictable/locked flags for office `tz`. */
+function enrich(fixture, teamsById, tz = config.IST_TZ) {
   const A = teamsById[fixture.teamAId] || {};
   const B = teamsById[fixture.teamBId] || {};
   const locked = windows.hasKickedOff(fixture.kickoff);
@@ -24,7 +26,8 @@ function enrich(fixture, teamsById) {
     result: fixture.result || null,
     homeScore: fixture.homeScore ?? null,
     awayScore: fixture.awayScore ?? null,
-    predictable: !locked && windows.isFixturePredictable(fixture.kickoff),
+    predictable: !locked && windows.isFixturePredictable(fixture.kickoff, tz),
+    opensAt: windows.owningPollOpen(fixture.kickoff, tz)?.toISO() || null,
     locked,
   };
 }
@@ -34,17 +37,19 @@ async function teamMap() {
   return Object.fromEntries(teams.map(t => [t.id, t]));
 }
 
-// GET /api/window -> window state for the client to show countdowns / gating
-router.get("/window", (_req, res) => {
-  res.json({ serverTime: windows.now().toISO(), ...windows.windowStatus() });
+// GET /api/window -> the caller's office poll state (for banner / countdowns)
+router.get("/window", requireAuth, (req, res) => {
+  const tz = req.user.tz || config.IST_TZ;
+  res.json({ serverTime: windows.now(tz).toISO(), ...windows.pollStatus(tz) });
 });
 
-// GET /api/fixtures -> all fixtures, enriched
-router.get("/fixtures", async (_req, res) => {
+// GET /api/fixtures -> all fixtures, enriched for the caller's office timezone
+router.get("/fixtures", requireAuth, async (req, res) => {
   try {
+    const tz = req.user.tz || config.IST_TZ;
     const tmap = await teamMap();
     const docs = await collections.fixtures().find({}).sort({ kickoff: 1 }).toArray();
-    res.json(docs.map(f => enrich(f, tmap)));
+    res.json(docs.map(f => enrich(f, tmap, tz)));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
