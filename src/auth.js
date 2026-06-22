@@ -65,9 +65,14 @@ function requireAuth(req, res, next) {
   }
 }
 
-/** Mint an admin session token (role=admin), used by the browser admin login. */
+/** Mint an admin token that ALSO works as a session (so /api/auth/me + data loads
+    succeed). Carries a pseudo-identity plus role=admin. */
 function issueAdminToken() {
-  return jwt.sign({ role: "admin" }, config.SESSION_SECRET, { expiresIn: `${config.SESSION_TTL_HOURS}h` });
+  return jwt.sign(
+    { sub: "admin", name: "Admin", email: "admin@calfus.com", tz: config.IST_TZ, role: "admin" },
+    config.SESSION_SECRET,
+    { expiresIn: `${config.SESSION_TTL_HOURS}h` }
+  );
 }
 
 /** Validate an admin password against ADMIN_PASSWORD (or ADMIN_KEY fallback). */

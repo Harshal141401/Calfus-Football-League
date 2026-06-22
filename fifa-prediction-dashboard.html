@@ -1388,6 +1388,12 @@ function settleRow(f){
     </div>
   </div>`;
 }
+// Re-render a single admin row in place (after settle/clear) so the list doesn't jump to top.
+function updateAdminRow(fixId, rowEl){
+  const f = state.fixtures.find(x=>x.id===fixId);
+  if(f && rowEl && rowEl.parentNode){ rowEl.outerHTML = settleRow(f); }
+  else { renderAdmin(); }   // fallback if the row vanished
+}
 function renderAdmin(){
   const gate=$("#adminGate"), panel=$("#adminPanel");
   if(!adminToken){
@@ -1621,21 +1627,23 @@ function wireEvents(){
   $("#adminPanel").addEventListener("click",async e=>{
     const setBtn=e.target.closest(".adm-settle"), clrBtn=e.target.closest(".adm-unsettle");
     if(setBtn){
-      const row=setBtn.closest(".adm-fix");
+      const fixId=setBtn.dataset.fix, row=setBtn.closest(".adm-fix");
       const h=row.querySelector(".adm-h").value, a=row.querySelector(".adm-a").value;
       if(h===""||a===""){ toast("Enter both scores","✕"); return; }
       setBtn.disabled=true; const old=setBtn.textContent; setBtn.textContent="Saving…";
       try{
-        const res=await adminApi(`/api/admin/fixtures/${setBtn.dataset.fix}/settle`,{homeScore:Number(h),awayScore:Number(a)});
+        const res=await adminApi(`/api/admin/fixtures/${fixId}/settle`,{homeScore:Number(h),awayScore:Number(a)});
         await refreshBoard();
         toast(`Settled ${h}–${a} · ${res.predictionsScored} prediction${res.predictionsScored===1?"":"s"} scored ✅`);
-        renderAdmin();
+        updateAdminRow(fixId, row);   // refresh just this row — keeps scroll position
       }catch(err){ toast(err.message,"✕"); setBtn.disabled=false; setBtn.textContent=old; }
     } else if(clrBtn){
+      const fixId=clrBtn.dataset.fix, row=clrBtn.closest(".adm-fix");
       clrBtn.disabled=true;
       try{
-        await adminApi(`/api/admin/fixtures/${clrBtn.dataset.fix}/unsettle`,null);
-        await refreshBoard(); toast("Result cleared"); renderAdmin();
+        await adminApi(`/api/admin/fixtures/${fixId}/unsettle`,null);
+        await refreshBoard(); toast("Result cleared");
+        updateAdminRow(fixId, row);
       }catch(err){ toast(err.message,"✕"); clrBtn.disabled=false; }
     }
   });
@@ -1704,6 +1712,7 @@ function ensureLoginEl(){
       <div style="color:var(--muted);font-size:13px">Use your Calfus name and work email.</div>
       <input id="loginName" type="text" placeholder="Full name" autocomplete="name" required style="padding:11px;border-radius:9px">
       <input id="loginEmail" type="email" placeholder="Work email" autocomplete="email" required style="padding:11px;border-radius:9px">
+      <input id="loginPw" type="password" placeholder="Admin password" autocomplete="current-password" style="display:none;padding:11px;border-radius:9px">
       <div id="loginErr" style="color:#EF4444;font-size:13px;min-height:1em"></div>
       <button type="submit" class="btn btn-primary" id="loginBtn">Enter</button>
     </form>`;
@@ -1712,28 +1721,62 @@ function ensureLoginEl(){
 }
 function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex"; }
 function hideLogin(){ const el=$("#loginOverlay"); if(el) el.style.display="none"; }
+const ADMIN_EMAIL = "admin@calfus.com";
 async function onLoginSubmit(e){
   e.preventDefault();
   const name=$("#loginName").value.trim(), email=$("#loginEmail").value.trim();
-  const btn=$("#loginBtn"), err=$("#loginErr");
-  err.textContent=""; btn.disabled=true; btn.textContent="Checking…";
+  const btn=$("#loginBtn"), err=$("#loginErr"), pw=$("#loginPw");
+  const isAdmin = email.toLowerCase()===ADMIN_EMAIL;
+  err.textContent="";
+
+  // Admin path: reveal the password field first, then authenticate against the admin login.
+  if(isAdmin && pw.style.display==="none"){
+    pw.style.display="block"; pw.focus(); btn.textContent="Enter as admin"; return;
+  }
+
+  btn.disabled=true; const label=isAdmin?"Enter as admin":"Enter"; btn.textContent="Checking…";
   try{
-    const r=await fetch(API.base.replace(/\/$/,"")+"/api/auth/login",
-      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email})});
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(data.error||"Login failed");
-    authToken=data.token; currentUser=data.user; localStorage.setItem(TOKEN_KEY,authToken);
-    await startSession();
+    if(isAdmin){
+      const r=await fetch(API.base.replace(/\/$/,"")+"/api/admin/login",
+        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw.value})});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(data.error||"Admin login failed");
+      // Admin token doubles as the session — use it for both reads and admin actions.
+      authToken=data.token; adminToken=data.token;
+      localStorage.setItem(TOKEN_KEY,authToken); localStorage.setItem(ADMIN_TOKEN_KEY,adminToken);
+      await startSession();
+    } else {
+      const r=await fetch(API.base.replace(/\/$/,"")+"/api/auth/login",
+        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email})});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(data.error||"Login failed");
+      authToken=data.token; currentUser=data.user; localStorage.setItem(TOKEN_KEY,authToken);
+      await startSession();
+    }
   }catch(ex){
     const net = ex instanceof TypeError;   // fetch network failure
     err.textContent = net
       ? `Cannot reach the server (${API.base||location.origin}). Make sure it's running and open the app at http://localhost:4000.`
       : ex.message;
   }
-  finally{ btn.disabled=false; btn.textContent="Enter"; }
+  finally{ btn.disabled=false; btn.textContent=label; }
+}
+const isCurrentUserAdmin = () => !!currentUser && String(currentUser.email||"").toLowerCase()===ADMIN_EMAIL;
+function applyAdminVisibility(){
+  const admin=isCurrentUserAdmin();
+  const adminBtn=document.querySelector('#nav button[data-view="admin"]');
+  if(adminBtn) adminBtn.style.display = admin ? "" : "none";
+  // The admin account isn't a real player — hide Predict so it can't submit picks.
+  const predictBtn=document.querySelector('#nav button[data-view="predict"]');
+  if(predictBtn) predictBtn.style.display = admin ? "none" : "";
 }
 function logout(){
-  authToken=null; currentUser=null; localStorage.removeItem(TOKEN_KEY);
+  authToken=null; adminToken=null; currentUser=null;
+  localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(ADMIN_TOKEN_KEY);
+  applyAdminVisibility();
+  // reset the login form back to player mode
+  const pw=$("#loginPw"); if(pw){ pw.style.display="none"; pw.value=""; }
+  const lb=$("#loginBtn"); if(lb) lb.textContent="Enter";
   showLogin(); setIdentity();
 }
 function setIdentity(){
@@ -1758,6 +1801,7 @@ async function init(){
   buildSparks();
   wireEvents();
   tickClock(); setInterval(tickClock,1000);
+  applyAdminVisibility();          // hidden until an admin logs in
   if(!authToken){ showLogin(); return; }
   await startSession();
 }
@@ -1782,7 +1826,8 @@ async function startSession(){
   catch(e){ toast("Could not reach the server. Is it running?","✕"); console.error(e); showLogin(); return; }
   hideLogin();
   setIdentity();
-  setActive("home");
+  applyAdminVisibility();
+  setActive(isCurrentUserAdmin() ? "admin" : "home");
   await refreshWindow();
   clearInterval(window._winTimer); window._winTimer=setInterval(refreshWindow, 60000);
   startBoardPolling();
