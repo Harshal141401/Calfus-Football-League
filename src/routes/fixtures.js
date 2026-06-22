@@ -6,11 +6,12 @@ const config = require("../config");
 
 const router = express.Router();
 
-/** Join a fixture with team info and add predictable/locked flags for office `tz`. */
-function enrich(fixture, teamsById, tz = config.IST_TZ) {
+/** Join a fixture with team info and add predictable/locked flags.
+    Predictions close LOCK_BEFORE_MIN minutes before kickoff (see windows.js). */
+function enrich(fixture, teamsById) {
   const A = teamsById[fixture.teamAId] || {};
   const B = teamsById[fixture.teamBId] || {};
-  const locked = windows.hasKickedOff(fixture.kickoff);
+  const locked = windows.isLocked(fixture.kickoff);
   return {
     id: String(fixture._id),
     apiId: fixture.apiId,
@@ -26,8 +27,8 @@ function enrich(fixture, teamsById, tz = config.IST_TZ) {
     result: fixture.result || null,
     homeScore: fixture.homeScore ?? null,
     awayScore: fixture.awayScore ?? null,
-    predictable: !locked && windows.isFixturePredictable(fixture.kickoff, tz),
-    opensAt: windows.owningPollOpen(fixture.kickoff, tz)?.toISO() || null,
+    predictable: !locked,
+    lockAt: windows.lockTime(fixture.kickoff).toISO(),
     locked,
   };
 }
@@ -37,19 +38,17 @@ async function teamMap() {
   return Object.fromEntries(teams.map(t => [t.id, t]));
 }
 
-// GET /api/window -> the caller's office poll state (for banner / countdowns)
-router.get("/window", requireAuth, (req, res) => {
-  const tz = req.user.tz || config.IST_TZ;
-  res.json({ serverTime: windows.now(tz).toISO(), ...windows.pollStatus(tz) });
+// GET /api/window -> simple status (predictions are always open; per-fixture lock).
+router.get("/window", requireAuth, (_req, res) => {
+  res.json({ serverTime: windows.now().toISO(), open: true, lockBeforeMin: config.LOCK_BEFORE_MIN });
 });
 
-// GET /api/fixtures -> all fixtures, enriched for the caller's office timezone
-router.get("/fixtures", requireAuth, async (req, res) => {
+// GET /api/fixtures -> all fixtures, enriched
+router.get("/fixtures", requireAuth, async (_req, res) => {
   try {
-    const tz = req.user.tz || config.IST_TZ;
     const tmap = await teamMap();
     const docs = await collections.fixtures().find({}).sort({ kickoff: 1 }).toArray();
-    res.json(docs.map(f => enrich(f, tmap, tz)));
+    res.json(docs.map(f => enrich(f, tmap)));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

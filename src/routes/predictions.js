@@ -33,19 +33,11 @@ router.post("/predictions", requireAuth, async (req, res) => {
     const fixture = await collections.fixtures().findOne({ _id });
     if (!fixture) return res.status(404).json({ error: "Fixture not found" });
 
-    // --- gating (per the caller's own office poll) ---
-    const tz = req.user.tz;
-    if (windows.hasKickedOff(fixture.kickoff)) {
-      return res.status(409).json({ error: "Match has started — predictions are locked." });
-    }
-    if (!windows.isFixturePredictable(fixture.kickoff, tz)) {
-      const opensAt = windows.owningPollOpen(fixture.kickoff, tz);
+    // --- gating: predictions close LOCK_BEFORE_MIN minutes before kickoff ---
+    if (windows.isLocked(fixture.kickoff)) {
       return res.status(409).json({
-        error: opensAt
-          ? "This match isn't open for predictions yet — your poll opens before it."
-          : "Predictions for this match are closed.",
-        opensAt: opensAt ? opensAt.toISO() : null,
-        poll: windows.pollStatus(tz),
+        error: "Predictions for this match are closed (they lock 30 minutes before kickoff).",
+        lockAt: windows.lockTime(fixture.kickoff).toISO(),
       });
     }
 

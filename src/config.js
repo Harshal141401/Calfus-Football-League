@@ -54,6 +54,9 @@ const config = {
   // Fixtures (date+time strings) are kickoff-in-IST per the dashboard data.
   FIXTURE_TZ: env.FIXTURE_TZ || "Asia/Kolkata",
 
+  // Predictions are open all the time; each fixture locks this many minutes before kickoff.
+  LOCK_BEFORE_MIN: parseInt(env.LOCK_BEFORE_MIN || "30", 10),
+
   // --- DEPRECATED (replaced by per-office polls above; kept only for reference) ---
   // WINDOW_TZ / WINDOW_START / WINDOW_END / COVERAGE_END_TIME were a single global
   // clock window. Predictability is now per-(office, fixture); see src/windows.js.
