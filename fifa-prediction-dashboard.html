@@ -57,14 +57,50 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 /* ---------- atmosphere layers ---------- */
 .bg-pitch{
   position:fixed;inset:0;z-index:-3;
+  /* match TV mode's pitch background everywhere (vertical turf stripes + glows) */
   background:
-    /* mown turf stripes (horizontal bands) */
-    repeating-linear-gradient(180deg,
-      rgba(0,128,55,.085) 0 7vh,
-      rgba(0,60,26,.085) 7vh 14vh),
-    /* stadium depth */
-    radial-gradient(125% 85% at 50% -10%, #2c3c4f 0%, #212c3a 45%, #19222d 100%);
+    repeating-linear-gradient(90deg,rgba(0,128,55,.08) 0 9vw,rgba(0,60,26,.08) 9vw 18vw),
+    radial-gradient(60% 60% at 50% 0%,rgba(0,255,136,.12),transparent 70%),
+    radial-gradient(70% 60% at 50% 120%,rgba(0,128,55,.22),transparent 70%),#19222d;
 }
+.bg-pitch::after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
+/* football pitch line markings — overlaid on the turf background everywhere */
+.pitch-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+
+/* ===================== LANDING / INTRO ===================== */
+.landing{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;padding:0 5vw 6vh;overflow-y:auto;
+  background:
+    repeating-linear-gradient(90deg,rgba(0,128,55,.08) 0 9vw,rgba(0,60,26,.08) 9vw 18vw),
+    radial-gradient(60% 60% at 50% 0%,rgba(0,255,136,.12),transparent 70%),
+    radial-gradient(70% 60% at 50% 120%,rgba(0,128,55,.22),transparent 70%),#19222d}
+.landing[hidden]{display:none}
+.landing::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
+.landing-title{position:relative;z-index:1;margin-top:40vh;text-align:center;font-family:var(--f-display);text-transform:uppercase;
+  letter-spacing:.04em;line-height:1.04;font-size:clamp(40px,9vw,92px);color:var(--ink);
+  transition:margin-top .8s cubic-bezier(.4,0,.2,1),font-size .8s cubic-bezier(.4,0,.2,1)}
+.landing-title span{color:var(--neon)}
+.landing-sub{position:relative;z-index:1;margin-top:10px;color:var(--gold);font-family:var(--f-sport);font-weight:700;
+  font-size:clamp(13px,1.6vw,18px);text-align:center;opacity:0;transition:opacity .5s ease .2s}
+.landing-body{position:relative;z-index:1;margin-top:26px;max-width:860px;width:100%;opacity:0;transform:translateY(22px);
+  transition:opacity .6s ease .3s,transform .6s ease .3s}
+.landing.revealed .landing-title{margin-top:5vh;font-size:clamp(26px,4.6vw,48px)}
+.landing.revealed .landing-sub,.landing.revealed .landing-body{opacity:1;transform:none}
+.lnd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:22px}
+.lnd-card{background:linear-gradient(180deg,rgba(34,45,58,.92),rgba(27,36,48,.72));
+  border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px}
+.lnd-card h3{margin:0 0 10px;font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;
+  font-size:15px;color:var(--neon)}
+.lnd-card p,.lnd-card li{color:var(--muted);font-size:14px;line-height:1.5;margin:6px 0}
+.lnd-card ul{margin:6px 0;padding-left:18px}
+.lnd-card b{color:var(--ink)}
+.lnd-score{display:flex;gap:10px;flex-wrap:wrap}
+.lnd-pill{font-family:var(--f-sport);font-weight:700;font-size:13px;padding:5px 11px;border-radius:999px}
+.lnd-pos{background:rgba(0,255,136,.16);color:var(--neon)}
+.lnd-neg{background:rgba(239,68,68,.16);color:#ff7676}
+.landing-go{align-self:center;margin:4px auto 0;display:block}
 .bg-lights{
   position:fixed;inset:0;z-index:-2;pointer-events:none;
   background:
@@ -1428,11 +1464,12 @@ function renderAdmin(){
    TV MODE
    ===================================================================== */
 let tvScene=0, tvCycle=null, tvRefresh=null, tvClockT=null, tvCountdownT=null, tvPaused=false;
-const TV_SCENES = ["leaderboard","fixtures","today","performers","movers"];
+const TV_SCENES = ["leaderboard","fixtures","results","today","performers","movers"];
 const TV_INTERVAL = 12000;
 
 async function openTV(){
   $("#tv").hidden=false; document.body.style.overflow="hidden";
+  paintPitchLines(".tv-bg");       // pitch markings in TV mode too
   $("#tvBrand").innerHTML = $("#brandName").innerHTML;
   tvScene=0; renderTV(); buildTicker();
   $("#tvDots").innerHTML = TV_SCENES.map((_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
@@ -1467,6 +1504,7 @@ function renderTV(){
   const scenes={
     leaderboard: tvLeaderboard(lb),
     fixtures: tvFixtures(),
+    results: tvResults(),
     today: tvToday(),
     performers: tvPerformers(lb),
     movers: tvMovers(lb),
@@ -1499,6 +1537,17 @@ function tvFixtures(){
       <div class="vs">VS</div>
       <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; }).join("");
   return tvHead("Schedule","Upcoming Fixtures",true)+`<div class="tvfix-grid">${cards}</div>`;
+}
+function tvResults(){
+  const done=[...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a)).slice(0,6);
+  if(!done.length) return tvHead("Full-time","Recent Results",false)+`<div class="tv-empty">No results yet</div>`;
+  const cards=done.map(f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId);
+    const hs=f.homeScore!=null?f.homeScore:"–", as=f.awayScore!=null?f.awayScore:"–";
+    return `<div class="tvfix"><div class="when">${fmtDayStr(f.date)} · ${esc(f.round||"")}</div>
+      <div class="team">${badge(A)}<span class="tname">${esc(A.abbr)}</span></div>
+      <div class="vs" style="color:var(--gold);font-family:var(--f-display);font-size:clamp(18px,2.4vw,30px)">${hs}–${as}</div>
+      <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; }).join("");
+  return tvHead("Full-time","Recent Results",false)+`<div class="tvfix-grid">${cards}</div>`;
 }
 function tvToday(){
   const today=ymd(istNow());
@@ -1613,6 +1662,15 @@ function wireEvents(){
     const choice=sel.dataset.pick;
     const sh=card.querySelector(".sc-h").value, sa=card.querySelector(".sc-a").value;
     if((sh==="")!==(sa==="")){ toast("Enter both scores, or leave both blank","✕"); return; }
+    if(sh!=="" && sa!==""){
+      const h=Number(sh), a=Number(sa);
+      const implied = h>a?"win":h<a?"lose":"draw";
+      if(implied!==choice){
+        const A=teamById(state.fixtures.find(x=>x.id===fixId).teamAId);
+        const want={win:`${A.abbr} to win (home > away)`,draw:"a draw (equal score)",lose:`${A.abbr} to lose (home < away)`}[choice];
+        toast(`Your score doesn't match your pick — you picked ${want}`,"✕"); return;
+      }
+    }
     lockBtn.disabled=true; lockBtn.textContent="Saving…";
     try{
       await submitPrediction(fixId, choice, sh, sa);
@@ -1702,6 +1760,61 @@ function tickClock(){
 
 /* ---------- boot ---------- */
 /* ---------- login / identity ---------- */
+/* ---------- pitch line markings (reused on bg, landing, TV) ---------- */
+const PITCH_SVG = `<svg class="pitch-svg" viewBox="0 0 150 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="0.4"><rect x="2" y="2" width="146" height="96"/><line x1="75" y1="2" x2="75" y2="98"/><circle cx="75" cy="50" r="12"/><rect x="2" y="32" width="18" height="36"/><rect x="130" y="32" width="18" height="36"/><rect x="2" y="42" width="6" height="16"/><rect x="142" y="42" width="6" height="16"/></g><circle cx="75" cy="50" r="0.9" fill="#ffffff" fill-opacity="0.22"/></svg>`;
+function paintPitchLines(sel){ const el=$(sel); if(el && !el.querySelector(".pitch-svg")) el.insertAdjacentHTML("afterbegin", PITCH_SVG); }
+
+/* ---------- landing / intro ---------- */
+function ensureLandingEl(){
+  if($("#landingOverlay")) return;
+  const el=document.createElement("div");
+  el.id="landingOverlay"; el.className="landing"; el.hidden=true;
+  el.innerHTML=`
+    ${PITCH_SVG}
+    <div class="landing-title">Calfus <span>Football</span> League</div>
+    <div class="landing-sub">🏆 The office World Cup 2026 prediction game</div>
+    <div class="landing-body">
+      <div class="lnd-grid">
+        <div class="lnd-card">
+          <h3>How to play</h3>
+          <ul>
+            <li>Sign in with your <b>name</b> and <b>Calfus email</b>.</li>
+            <li>For each fixture, pick the result: <b>Team A win</b>, <b>Draw</b>, or <b>Team A lose</b>.</li>
+            <li>Optionally predict the <b>exact score</b> for bonus points.</li>
+            <li>Climb the <b>leaderboard</b> as results come in!</li>
+          </ul>
+        </div>
+        <div class="lnd-card">
+          <h3>Scoring</h3>
+          <p>Match outcome (required):</p>
+          <div class="lnd-score"><span class="lnd-pill lnd-pos">Correct +3</span><span class="lnd-pill lnd-neg">Wrong −1</span></div>
+          <p style="margin-top:12px">Exact score (optional):</p>
+          <div class="lnd-score"><span class="lnd-pill lnd-pos">Exact +5</span><span class="lnd-pill lnd-neg">Given &amp; wrong −2</span><span class="lnd-pill" style="background:rgba(255,255,255,.08);color:var(--muted)">Skipped 0</span></div>
+          <p style="margin-top:10px">A spot-on win nets you <b>+8</b>!</p>
+        </div>
+        <div class="lnd-card">
+          <h3>When to predict</h3>
+          <ul>
+            <li>Predictions open in <b>two sessions a week</b> — <b>Monday</b> &amp; <b>Thursday</b>.</li>
+            <li>The window is your <b>office's local time</b> (India and US each get their own).</li>
+            <li>Every pick <b>locks at that match's kick-off</b> — predict early!</li>
+          </ul>
+        </div>
+      </div>
+      <button class="btn btn-primary landing-go" id="landingGo">Let's go →</button>
+    </div>`;
+  document.body.appendChild(el);
+  $("#landingGo").addEventListener("click", ()=>{ hideLanding(); showLogin(); });
+}
+function showLanding(){
+  ensureLandingEl();
+  const el=$("#landingOverlay");
+  el.hidden=false; el.classList.remove("revealed");
+  // let the centered title paint, then glide it up and reveal the instructions
+  setTimeout(()=>{ el.classList.add("revealed"); }, 1100);
+}
+function hideLanding(){ const el=$("#landingOverlay"); if(el) el.hidden=true; }
+
 function ensureLoginEl(){
   if($("#loginOverlay")) return;
   const el=document.createElement("div");
@@ -1799,10 +1912,11 @@ async function init(){
   $("#brandName").innerHTML = renderBrand("Calfus Football League");
   $("#footNote").innerHTML = `<b>Calfus Football League</b> · scoring: correct +3 · wrong −1 · exact score +5 / −2 · predictions open Mon &amp; Thu`;
   buildSparks();
+  paintPitchLines(".bg-pitch");    // pitch markings on the global background
   wireEvents();
   tickClock(); setInterval(tickClock,1000);
   applyAdminVisibility();          // hidden until an admin logs in
-  if(!authToken){ showLogin(); return; }
+  if(!authToken){ showLanding(); return; }   // intro -> "Let's go" -> login
   await startSession();
 }
 /* Poll the board so settled results / new picks reflect on every open dashboard. */

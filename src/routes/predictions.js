@@ -58,6 +58,13 @@ router.post("/predictions", requireAuth, async (req, res) => {
     if ((scoreHome === null) !== (scoreAway === null)) {
       return res.status(400).json({ error: "Provide both scoreHome and scoreAway, or neither." });
     }
+    // The predicted scoreline must agree with the outcome pick (no "win" with a 0–0 draw).
+    if (scoreHome !== null) {
+      const implied = scoreHome > scoreAway ? "win" : scoreHome < scoreAway ? "lose" : "draw";
+      if (implied !== choice) {
+        return res.status(400).json({ error: "Your predicted score doesn't match your pick (e.g. a win can't be a draw scoreline)." });
+      }
+    }
 
     const now = new Date();
     await collections.predictions().updateOne(
