@@ -57,7 +57,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 /* ---------- atmosphere layers ---------- */
 .bg-pitch{
   position:fixed;inset:0;z-index:-3;
-  /* match TV mode's pitch background everywhere (vertical turf stripes + glows) */
+  /* identical to TV-mode background */
   background:
     repeating-linear-gradient(90deg,rgba(0,128,55,.08) 0 9vw,rgba(0,60,26,.08) 9vw 18vw),
     radial-gradient(60% 60% at 50% 0%,rgba(0,255,136,.12),transparent 70%),
@@ -65,8 +65,6 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 }
 .bg-pitch::after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
   box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
-/* football pitch line markings — overlaid on the turf background everywhere */
-.pitch-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 
 /* ===================== LANDING / INTRO ===================== */
 .landing{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;
@@ -134,9 +132,9 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
   background:linear-gradient(180deg,rgba(34,45,58,.92),rgba(27,36,48,.72));
   border-bottom:1px solid var(--line);
   backdrop-filter:blur(12px);}
-.topbar-inner{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;
-  gap:18px;padding:12px 20px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.topbar-inner{width:100%;display:flex;align-items:center;
+  gap:18px;padding:12px 28px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 0}
 .brand .ball{width:34px;height:34px;flex:none;animation:spin 9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .brand-name{font-family:var(--f-display);font-size:22px;letter-spacing:.06em;line-height:.9;
@@ -144,7 +142,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .brand-name span{color:var(--neon);text-shadow:0 0 18px rgba(0,255,136,.55)}
 .brand-sub{font-family:var(--f-sport);font-weight:600;font-size:11px;letter-spacing:.32em;
   color:var(--muted);text-transform:uppercase;margin-top:2px}
-.nav{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.nav{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .nav button{font-family:var(--f-sport);font-weight:600;font-size:14px;letter-spacing:.08em;
   text-transform:uppercase;padding:9px 14px;border-radius:10px;color:var(--muted);
   border:1px solid transparent;transition:.18s}
@@ -153,8 +151,23 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
   box-shadow:0 0 22px rgba(0,255,136,.5)}
 .nav .tv-btn{color:var(--gold);border:1px solid rgba(255,215,0,.4)}
 .nav .tv-btn:hover{background:rgba(255,215,0,.12);color:var(--gold)}
-.clock{font-family:var(--f-sport);font-weight:700;font-size:15px;letter-spacing:.06em;
-  color:var(--neon);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:16px;flex:1 1 0;justify-content:flex-end}
+.clock{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-weight:700;font-size:13px;letter-spacing:.01em;
+  color:var(--neon);display:flex;align-items:center;gap:8px;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+#identity{position:relative}
+.acct-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+  font-family:var(--f-sport);font-weight:800;font-size:13px;letter-spacing:.02em;
+  color:var(--pitch);background:var(--neon);border:0;box-shadow:0 0 16px rgba(0,255,136,.4)}
+.acct-btn:hover{filter:brightness(1.08)}
+.acct-menu{position:absolute;right:0;top:48px;min-width:200px;z-index:60;padding:14px;border-radius:12px;
+  background:linear-gradient(180deg,#222d3a,#1a232f);border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.5)}
+.acct-menu[hidden]{display:none}
+.acct-name{font-family:var(--f-sport);font-weight:700;color:var(--ink);font-size:15px}
+.acct-email{font-size:12px;color:var(--muted);margin:3px 0 12px;word-break:break-all}
+.acct-menu #logoutBtn{width:100%;padding:9px;font-size:13px;border-radius:9px;color:var(--ink);
+  border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.acct-menu #logoutBtn:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);color:#ff8a8a}
 .live-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);
   box-shadow:0 0 0 0 rgba(255,84,104,.7);animation:pulse 1.6s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,84,104,.6)}70%{box-shadow:0 0 0 10px rgba(255,84,104,0)}100%{box-shadow:0 0 0 0 rgba(255,84,104,0)}}
@@ -431,7 +444,21 @@ select{appearance:none;padding-right:30px;
   line-height:.9;text-shadow:0 0 30px rgba(255,215,0,.4)}
 
 /* TV leaderboard */
-.tvlb{display:flex;flex-direction:column;gap:clamp(6px,1vh,12px);flex:1}
+.tvlb{display:flex;flex-direction:column;gap:clamp(5px,.8vh,10px);flex:1;overflow-y:auto;min-height:0;padding-right:6px}
+.tvlb::-webkit-scrollbar{width:8px}
+.tvlb::-webkit-scrollbar-thumb{background:rgba(0,255,136,.4);border-radius:99px}
+.tvlb::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:99px}
+/* two-column leaderboard for TV — fits ~20 names on one screen */
+.tvlb-2col{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.1vw,18px);flex:1;min-height:0}
+.tvlb-2col .tvlb{overflow:hidden;gap:clamp(3px,.45vh,6px)}
+.tvlb-2col .tvlb-row{grid-template-columns:clamp(24px,1.7vw,36px) 1fr auto;gap:clamp(6px,.9vw,12px);
+  padding:clamp(3px,.5vh,6px) clamp(9px,1vw,15px)}
+.tvlb-2col .tvlb-rank{font-size:clamp(14px,1.5vw,22px)}
+.tvlb-2col .tvlb-form{display:none}
+.tvlb-2col .tvlb-name{gap:clamp(6px,.9vw,12px)}
+.tvlb-2col .tvlb-name .avatar{width:clamp(24px,1.9vw,32px);height:clamp(24px,1.9vw,32px);font-size:clamp(10px,1.1vw,15px)}
+.tvlb-2col .tvlb-name .nm{font-size:clamp(12px,1.3vw,19px)}
+.tvlb-2col .tvlb-pts{font-size:clamp(17px,2vw,30px)}
 .tvlb-row{display:grid;grid-template-columns:clamp(60px,7vw,110px) 1fr auto auto;align-items:center;
   gap:clamp(12px,2vw,28px);padding:clamp(8px,1.4vh,18px) clamp(16px,2vw,30px);border-radius:14px;
   background:var(--glass);border:1px solid var(--line);animation:tvrow .6s both}
@@ -452,11 +479,20 @@ select{appearance:none;padding-right:30px;
   text-shadow:0 0 24px rgba(0,255,136,.4);min-width:clamp(64px,7vw,130px);text-align:right}
 
 /* TV fixtures */
-.tvfix-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(14px,2vw,28px);flex:1;
+.tvfix-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.4vw,20px);flex:1;
   align-content:start;overflow-y:auto;padding:2px 10px 2px 2px;min-height:0}
 .tvfix-grid::-webkit-scrollbar{width:8px}
 .tvfix-grid::-webkit-scrollbar-thumb{background:rgba(0,255,136,.4);border-radius:99px}
 .tvfix-grid::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:99px}
+.tvstat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,28px);flex:1;
+  align-content:center;min-height:0}
+.tvstat{padding:clamp(16px,3vh,38px);border-radius:18px;background:var(--glass);border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.tvstat-val{font-family:var(--f-display);font-size:clamp(32px,5vw,66px);line-height:1;color:var(--ink)}
+.tvstat-val.neon{color:var(--neon)}
+.tvstat-val.gold{color:var(--gold)}
+.tvstat-label{margin-top:10px;font-family:var(--f-sport);font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);font-size:clamp(11px,1.3vw,17px)}
 .tvfix{padding:clamp(16px,2.4vh,30px);border-radius:18px;background:var(--glass);border:1px solid var(--line);
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(10px,2vw,24px)}
 .tvfix .when{grid-column:1/-1;text-align:center;font-family:var(--f-sport);font-weight:700;
@@ -543,7 +579,8 @@ footer b{color:var(--muted)}
 @media(max-width:880px){
   .adm-grid{grid-template-columns:1fr}
   .chart-grid{grid-template-columns:1fr}
-  .tvfix-grid{grid-template-columns:1fr}
+  .tvfix-grid{grid-template-columns:1fr 1fr}
+  .tvlb-2col{grid-template-columns:1fr}
 }
 @media(max-width:680px){
   .lb-headrow{display:none}
@@ -568,24 +605,6 @@ footer b{color:var(--muted)}
 <body>
 <div class="bg-pitch"></div>
 <div class="bg-lights"></div>
-<svg class="bg-circle" viewBox="0 0 400 600" fill="none" stroke="#00FF88" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-  <rect x="3" y="3" width="394" height="594" rx="6"/>
-  <line x1="3" y1="300" x2="397" y2="300"/>
-  <circle cx="200" cy="300" r="64"/><circle cx="200" cy="300" r="3" fill="#00FF88" stroke="none"/>
-  <!-- top half -->
-  <rect x="110" y="3" width="180" height="96"/>
-  <rect x="160" y="3" width="80" height="40"/>
-  <circle cx="200" cy="66" r="2.5" fill="#00FF88" stroke="none"/>
-  <path d="M155 99 A56 56 0 0 0 245 99"/>
-  <!-- bottom half -->
-  <rect x="110" y="501" width="180" height="96"/>
-  <rect x="160" y="557" width="80" height="40"/>
-  <circle cx="200" cy="534" r="2.5" fill="#00FF88" stroke="none"/>
-  <path d="M155 501 A56 56 0 0 1 245 501"/>
-  <!-- corner arcs -->
-  <path d="M3 17 A14 14 0 0 0 17 3"/><path d="M383 3 A14 14 0 0 0 397 17"/>
-  <path d="M3 583 A14 14 0 0 1 17 597"/><path d="M383 597 A14 14 0 0 1 397 583"/>
-</svg>
 <div class="sparks" id="sparks" aria-hidden="true"></div>
 <div class="bg-vignette"></div>
 
@@ -604,7 +623,9 @@ footer b{color:var(--muted)}
       <button data-view="admin">Admin</button>
       <button data-view="tv" class="tv-btn">▶ TV Mode</button>
     </nav>
-    <div class="clock"><span class="live-dot"></span><span id="clock">--:--</span></div>
+    <div class="topbar-right">
+      <div class="clock"><span class="live-dot"></span><span id="clock">--:--</span></div>
+    </div>
   </div>
 </header>
 
@@ -1291,8 +1312,32 @@ function fixtureCard(f,empId,isSettled){
 /* =====================================================================
    RENDER — STATS  (hand-drawn SVG charts, fully self-contained)
    ===================================================================== */
+/* Net points a single prediction earned on a settled fixture (matches the
+   leaderboard scoring): outcome +3/-1, plus optional exact-score +5/-2. */
+function predPoints(p, f){
+  if(!f || !f.result) return 0;
+  let pts = (p.choice===f.result) ? SCORE.correct : SCORE.wrong;
+  if(p.scoreHome!=null && p.scoreAway!=null){
+    pts += (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway) ? SCORE.scoreExact : SCORE.scoreWrong;
+  }
+  return pts;
+}
+/* Exact-score accuracy: of the score-lines players entered for settled matches,
+   how many matched exactly. (Outcome accuracy is separate — see renderStats.) */
+function scoreAccuracy(){
+  let given=0, exact=0;
+  state.predictions.forEach(p=>{
+    if(p.scoreHome==null || p.scoreAway==null) return;
+    const f=state.fixtures.find(x=>x.id===p.fixtureId);
+    if(!f || !f.result || f.homeScore==null || f.awayScore==null) return;
+    given++;
+    if(f.homeScore===p.scoreHome && f.awayScore===p.scoreAway) exact++;
+  });
+  return { given, exact, pct: given ? Math.round(exact/given*100) : 0 };
+}
 function renderStats(){
   const lb = computeLeaderboard();
+  const sa = scoreAccuracy();
   const totalPreds=state.predictions.length;
   const settledPreds=lb.reduce((s,r)=>s+r.settled,0);
   const correct=lb.reduce((s,r)=>s+r.correct,0);
@@ -1320,8 +1365,8 @@ function renderStats(){
   const weekTotals={}; // week -> total pts
   state.predictions.forEach(p=>{ const f=state.fixtures.find(x=>x.id===p.fixtureId);
     if(!f||!f.result) return; const wk=isoWeek(fixtureDT(f)); const k=p.employeeId+"|"+wk;
-    if(p.choice===f.result){ weekly[k]=(weekly[k]||0)+SCORE[f.result]; weekTotals[wk]=(weekTotals[wk]||0)+SCORE[f.result]; }
-    else { weekly[k]=(weekly[k]||0); }
+    const pts=predPoints(p,f);
+    weekly[k]=(weekly[k]||0)+pts; weekTotals[wk]=(weekTotals[wk]||0)+pts;
   });
   let topW={pts:-Infinity,name:"—",wk:""};
   Object.entries(weekly).forEach(([k,pts])=>{ if(pts>topW.pts){ const[eid,wk]=k.split("|");
@@ -1331,11 +1376,12 @@ function renderStats(){
     ["Participants", state.employees.length, "", ""],
     ["Total predictions", totalPreds, "", ""],
     ["Prediction accuracy", acc+"%", "neon", `${correct}/${settledPreds} correct`],
+    ["Score prediction accuracy", sa.pct+"%", "gold", `${sa.exact}/${sa.given} exact`],
     ["Average points", avg, "", "per player"],
     ["Most predicted team", mostTeam, "gold", `${mostN} appearances`],
     ["Highest weekly score", (topW.pts>-Infinity?topW.pts:"—")+" pts", "neon", `${esc(topW.name)}${topW.wk?` · ${topW.wk}`:""}`],
     ["Biggest upset", upsetTxt, "danger", upsetSub],
-    ["Settled fixtures", state.fixtures.filter(f=>f.result).length, "", `of ${state.fixtures.length} total`],
+    ["Completed fixtures", state.fixtures.filter(f=>f.result).length, "", `of ${state.fixtures.length} total`],
   ].map(([l,v,c,sub])=>`<div class="card stat"><div class="s-label">${l}</div>
     <div class="s-val ${c}">${esc(String(v))}</div>${sub?`<div class="s-sub">${sub}</div>`:""}</div>`).join("");
 
@@ -1464,12 +1510,11 @@ function renderAdmin(){
    TV MODE
    ===================================================================== */
 let tvScene=0, tvCycle=null, tvRefresh=null, tvClockT=null, tvCountdownT=null, tvPaused=false;
-const TV_SCENES = ["leaderboard","fixtures","results","today","performers","movers"];
+const TV_SCENES = ["leaderboard","fixtures","results","stats","today","performers","movers"];
 const TV_INTERVAL = 12000;
 
 async function openTV(){
   $("#tv").hidden=false; document.body.style.overflow="hidden";
-  paintPitchLines(".tv-bg");       // pitch markings in TV mode too
   $("#tvBrand").innerHTML = $("#brandName").innerHTML;
   tvScene=0; renderTV(); buildTicker();
   $("#tvDots").innerHTML = TV_SCENES.map((_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
@@ -1505,6 +1550,7 @@ function renderTV(){
     leaderboard: tvLeaderboard(lb),
     fixtures: tvFixtures(),
     results: tvResults(),
+    stats: tvStats(),
     today: tvToday(),
     performers: tvPerformers(lb),
     movers: tvMovers(lb),
@@ -1520,13 +1566,21 @@ function tvHead(eyebrow,title,countdown){
   return `<div class="tv-scene-head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1></div>${cd}</div>`;
 }
 function tvLeaderboard(lb){
-  const rows=lb.slice(0,8).map((r,i)=>`<div class="tvlb-row r${i+1}" style="animation-delay:${i*0.06}s">
+  const top=lb.slice(0,24);
+  const row=(r,i)=>`<div class="tvlb-row r${i+1}" style="animation-delay:${i*0.04}s">
     <div class="tvlb-rank">${i+1}</div>
     <div class="tvlb-name"><div class="avatar" style="background:${r.av}">${esc(initials(r.name))}</div>
       <span class="nm">${esc(r.name)}</span></div>
     <div class="tvlb-form">${formChips(r.form)}</div>
-    <div class="tvlb-pts">${r.points}</div></div>`).join("");
-  return tvHead("Standings","Leaderboard",false)+`<div class="tvlb">${rows}</div>`;
+    <div class="tvlb-pts">${r.points}</div></div>`;
+  if(top.length<=10){
+    return tvHead("Standings","Leaderboard",false)+`<div class="tvlb">${top.map((r,i)=>row(r,i)).join("")}</div>`;
+  }
+  const half=Math.ceil(top.length/2);
+  const left=top.slice(0,half).map((r,i)=>row(r,i)).join("");
+  const right=top.slice(half).map((r,i)=>row(r,half+i)).join("");
+  return tvHead("Standings","Leaderboard",false)+
+    `<div class="tvlb-2col"><div class="tvlb">${left}</div><div class="tvlb">${right}</div></div>`;
 }
 function tvFixtures(){
   const up=upcomingFixtures();   // shared with the Predict page so both stay in sync
@@ -1539,7 +1593,7 @@ function tvFixtures(){
   return tvHead("Schedule","Upcoming Fixtures",true)+`<div class="tvfix-grid">${cards}</div>`;
 }
 function tvResults(){
-  const done=[...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a)).slice(0,6);
+  const done=[...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a)).slice(0,12);
   if(!done.length) return tvHead("Full-time","Recent Results",false)+`<div class="tv-empty">No results yet</div>`;
   const cards=done.map(f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId);
     const hs=f.homeScore!=null?f.homeScore:"–", as=f.awayScore!=null?f.awayScore:"–";
@@ -1548,6 +1602,30 @@ function tvResults(){
       <div class="vs" style="color:var(--gold);font-family:var(--f-display);font-size:clamp(18px,2.4vw,30px)">${hs}–${as}</div>
       <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; }).join("");
   return tvHead("Full-time","Recent Results",false)+`<div class="tvfix-grid">${cards}</div>`;
+}
+function tvStats(){
+  const lb=computeLeaderboard();
+  const totalPreds=state.predictions.length;
+  const settledPreds=lb.reduce((s,r)=>s+r.settled,0);
+  const correct=lb.reduce((s,r)=>s+r.correct,0);
+  const acc=settledPreds?Math.round(correct/settledPreds*100):0;
+  const avg=state.employees.length?(lb.reduce((s,r)=>s+r.points,0)/state.employees.length).toFixed(1):"0";
+  const teamCount={};
+  state.predictions.forEach(p=>{ const f=state.fixtures.find(x=>x.id===p.fixtureId); if(!f) return;
+    [f.teamAId,f.teamBId].forEach(t=>teamCount[t]=(teamCount[t]||0)+1); });
+  let mostTeam="—",mostN=0; Object.entries(teamCount).forEach(([t,n])=>{ if(n>mostN){mostN=n;mostTeam=teamById(t).abbr;} });
+  const settledFix=state.fixtures.filter(f=>f.result).length;
+  const sa=scoreAccuracy();
+  const tiles=[
+    ["Total predictions", totalPreds, ""],
+    ["Outcome accuracy", acc+"%", "neon"],
+    ["Score accuracy", sa.pct+"%", "gold"],
+    ["Avg points / player", avg, ""],
+    ["Most predicted", mostTeam, "gold"],
+    ["Completed fixtures", `${settledFix}/${state.fixtures.length}`, ""],
+  ];
+  const cards=tiles.map(([l,v,c])=>`<div class="tvstat"><div class="tvstat-val ${c}">${esc(String(v))}</div><div class="tvstat-label">${l}</div></div>`).join("");
+  return tvHead("Tournament","Stats",false)+`<div class="tvstat-grid">${cards}</div>`;
 }
 function tvToday(){
   const today=ymd(istNow());
@@ -1635,6 +1713,8 @@ function exportCSV(){
 function wireEvents(){
   // nav
   $("#nav").addEventListener("click",e=>{ const b=e.target.closest("button[data-view]"); if(b) setActive(b.dataset.view); });
+  // close the account dropdown on any outside click
+  document.addEventListener("click",()=>{ const m=$("#acctMenu"); if(m && !m.hidden) m.hidden=true; });
 
   // score inputs: digits only (0–99), strip anything else as it's typed/pasted
   document.addEventListener("input",e=>{
@@ -1760,9 +1840,9 @@ function tickClock(){
 
 /* ---------- boot ---------- */
 /* ---------- login / identity ---------- */
-/* ---------- pitch line markings (reused on bg, landing, TV) ---------- */
-const PITCH_SVG = `<svg class="pitch-svg" viewBox="0 0 150 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="0.4"><rect x="2" y="2" width="146" height="96"/><line x1="75" y1="2" x2="75" y2="98"/><circle cx="75" cy="50" r="12"/><rect x="2" y="32" width="18" height="36"/><rect x="130" y="32" width="18" height="36"/><rect x="2" y="42" width="6" height="16"/><rect x="142" y="42" width="6" height="16"/></g><circle cx="75" cy="50" r="0.9" fill="#ffffff" fill-opacity="0.22"/></svg>`;
-function paintPitchLines(sel){ const el=$(sel); if(el && !el.querySelector(".pitch-svg")) el.insertAdjacentHTML("afterbegin", PITCH_SVG); }
+/* ---------- pitch markings: the exact TV-mode field graphic, reused everywhere ---------- */
+const PITCH_SVG = `<svg class="tv-field" viewBox="0 0 600 380" fill="none" stroke="#00FF88" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="594" height="374" rx="6"/><line x1="300" y1="3" x2="300" y2="377"/><circle cx="300" cy="190" r="58"/><circle cx="300" cy="190" r="3" fill="#00FF88" stroke="none"/><rect x="3" y="95" width="92" height="190"/><rect x="3" y="140" width="38" height="100"/><circle cx="62" cy="190" r="2.5" fill="#00FF88" stroke="none"/><path d="M95 145 A52 52 0 0 1 95 235"/><rect x="505" y="95" width="92" height="190"/><rect x="559" y="140" width="38" height="100"/><circle cx="538" cy="190" r="2.5" fill="#00FF88" stroke="none"/><path d="M505 145 A52 52 0 0 0 505 235"/><path d="M3 17 A14 14 0 0 0 17 3"/><path d="M583 3 A14 14 0 0 0 597 17"/><path d="M3 363 A14 14 0 0 1 17 377"/><path d="M583 377 A14 14 0 0 1 597 363"/></svg>`;
+function paintPitchLines(sel){ const el=$(sel); if(el && !el.querySelector(".tv-field")) el.insertAdjacentHTML("afterbegin", PITCH_SVG); }
 
 /* ---------- landing / intro ---------- */
 function ensureLandingEl(){
@@ -1835,11 +1915,13 @@ function ensureLoginEl(){
 function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex"; }
 function hideLogin(){ const el=$("#loginOverlay"); if(el) el.style.display="none"; }
 const ADMIN_EMAIL = "admin@calfus.com";
+const ADMIN_NAME = "admin";
 async function onLoginSubmit(e){
   e.preventDefault();
   const name=$("#loginName").value.trim(), email=$("#loginEmail").value.trim();
   const btn=$("#loginBtn"), err=$("#loginErr"), pw=$("#loginPw");
-  const isAdmin = email.toLowerCase()===ADMIN_EMAIL;
+  // Admin only when BOTH the name is "admin" AND the email is the admin email.
+  const isAdmin = name.toLowerCase()===ADMIN_NAME && email.toLowerCase()===ADMIN_EMAIL;
   err.textContent="";
 
   // Admin path: reveal the password field first, then authenticate against the admin login.
@@ -1893,18 +1975,19 @@ function logout(){
   showLogin(); setIdentity();
 }
 function setIdentity(){
+  const host=$(".topbar-right"); if(!host) return;
   let box=$("#identity");
-  if(!box){
-    const clock=$(".clock"); if(!clock) return;
-    box=document.createElement("div"); box.id="identity";
-    box.style.cssText="display:flex;align-items:center;gap:8px;margin-left:14px;font-family:var(--f-sport);font-weight:700";
-    clock.parentNode.insertBefore(box, clock.nextSibling);
-  }
-  box.innerHTML = currentUser
-    ? `<span title="${esc(currentUser.email||"")}">👤 ${esc(currentUser.name)}</span>
-       <button id="logoutBtn" class="btn" style="padding:4px 10px;font-size:12px">Logout</button>`
-    : "";
-  const lb=$("#logoutBtn"); if(lb) lb.onclick=logout;
+  if(!box){ box=document.createElement("div"); box.id="identity"; host.appendChild(box); }
+  if(!currentUser){ box.innerHTML=""; return; }
+  box.innerHTML = `
+    <button id="acctBtn" class="acct-btn" title="${esc(currentUser.name)}" aria-label="Account menu">${esc(initials(currentUser.name))}</button>
+    <div id="acctMenu" class="acct-menu" hidden>
+      <div class="acct-name">${esc(currentUser.name)}</div>
+      <div class="acct-email">${esc(currentUser.email||"")}</div>
+      <button id="logoutBtn">Logout</button>
+    </div>`;
+  $("#acctBtn").onclick=e=>{ e.stopPropagation(); const m=$("#acctMenu"); m.hidden=!m.hidden; };
+  $("#logoutBtn").onclick=logout;
 }
 
 /* ---------- boot ---------- */
@@ -1912,7 +1995,7 @@ async function init(){
   $("#brandName").innerHTML = renderBrand("Calfus Football League");
   $("#footNote").innerHTML = `<b>Calfus Football League</b> · scoring: correct +3 · wrong −1 · exact score +5 / −2 · predictions open Mon &amp; Thu`;
   buildSparks();
-  paintPitchLines(".bg-pitch");    // pitch markings on the global background
+  paintPitchLines(".bg-pitch");    // landscape pitch markings on the global background
   wireEvents();
   tickClock(); setInterval(tickClock,1000);
   applyAdminVisibility();          // hidden until an admin logs in
