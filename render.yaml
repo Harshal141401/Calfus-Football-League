@@ -1,0 +1,37 @@
+# Render Blueprint — deploy via render.com -> New -> Blueprint (pick this repo).
+# Secrets (sync:false) are left blank here; set them in the Render dashboard.
+# After first deploy, seed once:  Render -> service -> Shell -> npm run seed
+services:
+  - type: web
+    name: calfus-football-league
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      # --- secrets: set these in the Render dashboard (Environment) ---
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # --- non-secret config ---
+      - key: DB_NAME
+        value: promptwars
+      - key: COLLECTION
+        value: employeeDetails
+      - key: POLL_DAYS
+        value: "1,4"
+      - key: POLL_OPEN
+        value: "12:00"
+      - key: POLL_CLOSE
+        value: "17:00"
+      - key: IST_TZ
+        value: Asia/Kolkata
+      - key: US_TZ
+        value: America/Los_Angeles
+      - key: FIXTURE_TZ
+        value: Asia/Kolkata
