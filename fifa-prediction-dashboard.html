@@ -735,9 +735,6 @@ footer b{color:var(--muted)}
   </section>
 </main>
 
-<footer>
-  <span id="footNote">Self-contained prototype · data persists on this screen.</span>
-</footer>
 
 <!-- ============ TV MODE ============ -->
 <div class="tv-overlay" id="tv" hidden>
@@ -1979,7 +1976,6 @@ function setIdentity(){
 /* ---------- boot ---------- */
 async function init(){
   $("#brandName").innerHTML = renderBrand("Calfus FIFA League");
-  $("#footNote").innerHTML = `<b>Calfus FIFA League</b> · scoring: correct +3 · wrong −1 · exact score +5 / −2 · predictions open Mon &amp; Thu`;
   buildSparks();
   paintPitchLines(".bg-pitch");    // landscape pitch markings on the global background
   wireEvents();
