@@ -1808,13 +1808,14 @@ async function saveFixture(){
 }
 
 /* ---------- atmosphere: sparks ---------- */
-function buildSparks(){
-  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const wrap=$("#sparks"); let html="";
+function sparkMarkup(){
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "";
+  let html="";
   for(let i=0;i<14;i++){ const x=Math.random()*100,dur=10+Math.random()*12,delay=-Math.random()*20,sz=2+Math.random()*2;
     html+=`<i style="left:${x}%;width:${sz}px;height:${sz}px;animation-duration:${dur}s;animation-delay:${delay}s"></i>`; }
-  wrap.innerHTML=html;
+  return html;
 }
+function buildSparks(){ const w=$("#sparks"); if(w) w.innerHTML=sparkMarkup(); }
 function istNow(){ return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"})); }
 function tickClock(){
   const d=istNow();
@@ -1834,6 +1835,7 @@ function ensureLandingEl(){
   el.id="landingOverlay"; el.className="landing"; el.hidden=true;
   el.innerHTML=`
     ${PITCH_SVG}
+    <div class="sparks" id="landingSparks" aria-hidden="true" style="z-index:0"></div>
     <div class="landing-title">Calfus <span>FIFA</span> League</div>
     <div class="landing-sub">🏆 The office World Cup 2026 prediction game</div>
     <div class="landing-body">
@@ -1867,6 +1869,7 @@ function ensureLandingEl(){
       <button class="btn btn-primary landing-go" id="landingGo">Let's go →</button>
     </div>`;
   document.body.appendChild(el);
+  $("#landingSparks").innerHTML = sparkMarkup();
   $("#landingGo").addEventListener("click", ()=>{ hideLanding(); showLogin(); });
 }
 function showLanding(){
