@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Calfus FIFA League — Splash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --pitch:#19222d;
+    --turf:#008037;
+    --gold:#FFD700;
+    --neon:#00FF88;
+    --ink:#FFFFFF;
+    --f-display:'Anton','Arial Narrow',Impact,system-ui,sans-serif;
+    --f-sport:'Rajdhani','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:2560px;height:1440px;overflow:hidden}
+  body{
+    position:relative;
+    font-family:var(--f-sport);
+    background:
+      repeating-linear-gradient(90deg,rgba(0,128,55,.08) 0 9vw,rgba(0,60,26,.08) 9vw 18vw),
+      radial-gradient(60% 60% at 50% 0%,rgba(0,255,136,.12),transparent 70%),
+      radial-gradient(70% 60% at 50% 120%,rgba(0,128,55,.22),transparent 70%),
+      var(--pitch);
+  }
+  /* pitch markings — exact PITCH_SVG from the dashboard, scaled to fill */
+  .tv-field{
+    position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.30;
+    filter:drop-shadow(0 0 22px rgba(0,255,136,.25));
+  }
+  /* stadium-light sweeps */
+  .lights{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:
+      radial-gradient(40% 35% at 12% 0%, rgba(0,255,136,.16), transparent 70%),
+      radial-gradient(40% 35% at 88% 0%, rgba(0,255,136,.13), transparent 70%),
+      radial-gradient(60% 50% at 50% 120%, rgba(0,128,55,.20), transparent 70%);}
+  .vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
+    box-shadow:inset 0 0 420px 110px rgba(0,0,0,.55)}
+
+  .center{position:fixed;inset:0;z-index:3;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:0 6vw}
+  .title{
+    font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;
+    line-height:1.02;font-size:200px;color:var(--ink);
+    text-shadow:0 8px 60px rgba(0,0,0,.5);
+  }
+  .title span{color:var(--neon);text-shadow:0 0 60px rgba(0,255,136,.65),0 0 22px rgba(0,255,136,.5)}
+  .sub{margin-top:34px;color:var(--gold);font-family:var(--f-sport);font-weight:700;
+    font-size:40px;letter-spacing:.02em;text-shadow:0 0 24px rgba(255,215,0,.35)}
+
+  /* floating sparks */
+  .sparks{position:fixed;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+  .sparks i{position:absolute;width:6px;height:6px;border-radius:50%;
+    background:var(--neon);box-shadow:0 0 14px var(--neon);opacity:.55}
+</style>
+</head>
+<body>
+  <svg class="tv-field" viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#00FF88" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="594" height="374" rx="6"/><line x1="300" y1="3" x2="300" y2="377"/><circle cx="300" cy="190" r="58"/><circle cx="300" cy="190" r="3" fill="#00FF88" stroke="none"/><rect x="3" y="95" width="92" height="190"/><rect x="3" y="140" width="38" height="100"/><circle cx="62" cy="190" r="2.5" fill="#00FF88" stroke="none"/><path d="M95 145 A52 52 0 0 1 95 235"/><rect x="505" y="95" width="92" height="190"/><rect x="559" y="140" width="38" height="100"/><circle cx="538" cy="190" r="2.5" fill="#00FF88" stroke="none"/><path d="M505 145 A52 52 0 0 0 505 235"/><path d="M3 17 A14 14 0 0 0 17 3"/><path d="M583 3 A14 14 0 0 0 597 17"/><path d="M3 363 A14 14 0 0 1 17 377"/><path d="M583 377 A14 14 0 0 1 597 363"/></svg>
+  <div class="lights"></div>
+  <div class="sparks" id="sparks"></div>
+  <div class="vignette"></div>
+  <div class="center">
+    <div class="title">Calfus <span>FIFA</span> League</div>
+  </div>
+  <script>
+    // scatter sparks deterministically (no Math.random dependence on timing)
+    const s = document.getElementById('sparks');
+    const pts = [[6,82],[14,40],[21,68],[28,22],[34,55],[41,88],[48,30],[55,72],[62,18],[68,60],[74,44],[81,80],[88,34],[93,64],[10,15],[90,90],[50,12],[58,94],[3,50],[97,48]];
+    s.innerHTML = pts.map(([l,t])=>`<i style="left:${l}%;top:${t}%"></i>`).join('');
+  </script>
+</body>
+</html>

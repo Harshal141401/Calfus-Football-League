@@ -422,6 +422,10 @@ select{appearance:none;padding-right:30px;
 .tv-bg::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
 .tv-field{position:absolute;inset:0;margin:auto;height:min(86vh,820px);width:auto;
   opacity:.11;pointer-events:none;filter:drop-shadow(0 0 18px rgba(0,255,136,.14))}
+/* glowing sparks for TV mode — scoped inside .tv-bg (the global #sparks is fixed
+   at z-index:-1 and hidden behind the TV overlay), sized a touch larger for the big screen */
+.tv-sparks{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.tv-sparks i{width:4px;height:4px;box-shadow:0 0 12px var(--neon)}
 .tv-top{position:relative;z-index:3;display:flex;align-items:center;gap:20px;padding:20px 36px;
   border-bottom:1px solid var(--line)}
 .tv-top .brand-name{font-size:30px}
@@ -757,6 +761,7 @@ footer b{color:var(--muted)}
       <path d="M3 17 A14 14 0 0 0 17 3"/><path d="M583 3 A14 14 0 0 0 597 17"/>
       <path d="M3 363 A14 14 0 0 1 17 377"/><path d="M583 377 A14 14 0 0 1 597 363"/>
     </svg>
+    <div class="sparks tv-sparks" id="tvSparks" aria-hidden="true"></div>
   </div>
   <div class="tv-top">
     <svg class="ball" style="width:38px;height:38px;animation:spin 9s linear infinite" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#00FF88" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/></svg>
@@ -1497,6 +1502,7 @@ const TV_INTERVAL = 12000;
 async function openTV(){
   $("#tv").hidden=false; document.body.style.overflow="hidden";
   $("#tvBrand").innerHTML = $("#brandName").innerHTML;
+  { const ts=$("#tvSparks"); if(ts) ts.innerHTML=sparkMarkup(); }   // glowing sparks for the big screen
   tvScene=0; renderTV(); buildTicker();
   $("#tvDots").innerHTML = TV_SCENES.map((_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
   clearInterval(tvCycle); tvCycle=setInterval(()=>{ if(!tvPaused) nextScene(1); }, TV_INTERVAL);
@@ -1626,6 +1632,10 @@ function tvToday(){
   return tvHead("Live Picks",label,false)+`<div class="tvtoday">${rows}</div>`;
 }
 function tvPerformers(lb){
+  // Don't crown anyone until real results are in — otherwise this just shows the
+  // alphabetically-first 3 employees on 0 pts (same gate as the leaderboard scene).
+  if(!lb.some(r=>r.settled>0))
+    return tvHead("Spotlight","Top Performers",false)+`<div class="tv-empty">Top performers will appear once matches are settled</div>`;
   const order=[lb[1],lb[0],lb[2]],cls=["p2","p1","p3"],rk=[2,1,3];
   const pod=order.map((p,i)=>{ if(!p) return `<div class="plinth ${cls[i]}"></div>`;
     const tag=rk[i]===1?`<div class="leader-tag">${TROPHY} Leader</div>`:"";
