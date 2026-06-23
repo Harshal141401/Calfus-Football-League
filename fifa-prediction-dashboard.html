@@ -9,29 +9,33 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
 /* =====================================================================
-   FIFA PREDICTOR CUP — design system
-   Palette (locked by brief): pitch #0B0B0B · turf #008037 · gold #FFD700
-   · neon #00FF88 · white text · dark-gray cards
+   FIFA PREDICTOR CUP — design system  (v2: amber-on-slate)
+   Refined dark theme inspired by an executive dashboard. Amber/gold is the
+   primary accent; emerald is a restrained secondary. The football pitch and
+   the game feel stay — just calmer, desaturated, less neon.
+   Accent (primary): amber  --neon #E8B84B  · secondary  --accent2 #34C77B
    ===================================================================== */
 :root{
-  --pitch:#1b2430;
-  --turf:#008037;
-  --turf-deep:#00481f;
-  --turf-dark:#012a16;
-  --gold:#FFD700;
-  --neon:#00FF88;
+  --pitch:#0B0F14;
+  --turf:#1d3b34;
+  --turf-deep:#13302a;
+  --turf-dark:#0d211c;
+  --gold:#F2C84B;           /* brighter trophy gold — #1 / winner highlights */
+  /* --neon stays the primary-accent token name (used everywhere); now amber */
+  --neon:#E0AE3E;           /* primary amber accent (buttons, links, active) */
+  --accent2:#34C77B;        /* emerald — restrained secondary accent */
   --silver:#C8D0DA;
   --bronze:#E0935A;
-  --danger:#FF5468;
-  --ink:#FFFFFF;
+  --danger:#E5544E;
+  --ink:#F4F6F8;
   --muted:#8A93A0;
   --muted-2:#5C6470;
-  --card:#232e3b;
-  --card-2:#2b3746;
-  --line:rgba(255,255,255,.10);
-  --line-2:rgba(0,255,136,.20);
-  --glass:linear-gradient(180deg,rgba(48,62,79,.78),rgba(31,42,54,.82));
-  --shadow:0 18px 50px rgba(0,0,0,.45);
+  --card:#121821;
+  --card-2:#161e29;
+  --line:rgba(255,255,255,.07);
+  --line-2:rgba(232,184,75,.22);
+  --glass:linear-gradient(180deg,rgba(19,26,36,.92),rgba(13,18,25,.94));
+  --shadow:0 18px 50px rgba(0,0,0,.55);
   --f-display:'Anton','Arial Narrow',Impact,system-ui,sans-serif;
   --f-sport:'Rajdhani','Segoe UI',system-ui,sans-serif;
   --f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -52,28 +56,64 @@ body{
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
 :focus-visible{outline:3px solid var(--neon);outline-offset:3px;border-radius:8px}
-::selection{background:rgba(0,255,136,.35)}
+::selection{background:rgba(232,184,75,.28)}
 
-/* ---------- atmosphere layers ---------- */
+/* ---------- atmosphere : NIGHT STADIUM ----------
+   A pitch seen in perspective receding to a glowing horizon, slow aurora
+   blooms, floodlight coronas in the upper corners, and a deep slate sky.
+   Pure CSS, GPU-light, theme-locked (amber / emerald / slate). */
 .bg-pitch{
-  position:fixed;inset:0;z-index:-3;
-  /* identical to TV-mode background */
+  position:fixed;inset:0;z-index:-4;overflow:hidden;
   background:
-    repeating-linear-gradient(90deg,rgba(0,128,55,.08) 0 9vw,rgba(0,60,26,.08) 9vw 18vw),
-    radial-gradient(60% 60% at 50% 0%,rgba(0,255,136,.12),transparent 70%),
-    radial-gradient(70% 60% at 50% 120%,rgba(0,128,55,.22),transparent 70%),#19222d;
+    /* night sky — cool slate, slightly warmer toward the horizon */
+    radial-gradient(120% 80% at 50% 100%, #0d1620 0%, #0b0f14 45%, #080b10 100%);
 }
-.bg-pitch::after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
-  box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
+/* drifting aurora colour-blooms high in the sky */
+.bg-pitch::before{content:"";position:absolute;inset:-20% -20% 35%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(38% 42% at 22% 28%, rgba(232,184,75,.16), transparent 70%),
+    radial-gradient(34% 40% at 80% 22%, rgba(52,199,123,.13), transparent 70%),
+    radial-gradient(50% 50% at 50% 6%,  rgba(120,150,220,.08), transparent 72%);
+  filter:blur(8px);
+  animation:aurora 26s ease-in-out infinite alternate;}
+@keyframes aurora{
+  0%  {transform:translate3d(-2%,0,0) scale(1);    opacity:.85}
+  50% {transform:translate3d(3%,-1.5%,0) scale(1.08);opacity:1}
+  100%{transform:translate3d(-1%,1%,0) scale(1.03); opacity:.9}}
+/* the pitch plane: a striped field tilted away from the viewer */
+.bg-pitch::after{content:"";position:absolute;left:-30%;right:-30%;bottom:-12%;height:78%;z-index:1;
+  pointer-events:none;transform-origin:50% 100%;transform:perspective(620px) rotateX(64deg);
+  background:
+    /* centre-circle + halfway hint glowing on the turf */
+    radial-gradient(closest-side at 50% 38%, transparent 0 17%, rgba(232,184,75,.22) 17% 18.2%, transparent 19%),
+    /* mowing stripes running into the distance */
+    repeating-linear-gradient(90deg, rgba(52,199,123,.14) 0 5%, rgba(10,20,16,.12) 5% 10%),
+    /* turf glow, brightest near the camera, fading to the horizon */
+    linear-gradient(to top, rgba(46,102,80,.7) 0%, rgba(26,58,48,.4) 42%, rgba(11,18,22,0) 82%);
+  -webkit-mask-image:linear-gradient(to top, #000 18%, rgba(0,0,0,.55) 60%, transparent 96%);
+          mask-image:linear-gradient(to top, #000 18%, rgba(0,0,0,.55) 60%, transparent 96%);
+  box-shadow:0 0 140px 40px rgba(46,102,80,.22);}
 
 /* ===================== LANDING / INTRO ===================== */
 .landing{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;
-  justify-content:flex-start;padding:0 5vw 6vh;overflow-y:auto;
+  justify-content:flex-start;padding:0 5vw 6vh;overflow-y:auto;overflow-x:hidden;
+  /* night-stadium: floodlight coronas + aurora blooms over a deep slate sky */
   background:
-    repeating-linear-gradient(90deg,rgba(0,128,55,.08) 0 9vw,rgba(0,60,26,.08) 9vw 18vw),
-    radial-gradient(60% 60% at 50% 0%,rgba(0,255,136,.12),transparent 70%),
-    radial-gradient(70% 60% at 50% 120%,rgba(0,128,55,.22),transparent 70%),#19222d}
+    radial-gradient(13% 11% at 9% 6%,  rgba(255,244,214,.5), rgba(232,184,75,.12) 45%, transparent 72%),
+    radial-gradient(13% 11% at 91% 6%, rgba(255,244,214,.5), rgba(232,184,75,.12) 45%, transparent 72%),
+    radial-gradient(38% 42% at 22% 24%, rgba(232,184,75,.14), transparent 70%),
+    radial-gradient(34% 40% at 80% 20%, rgba(52,199,123,.12), transparent 70%),
+    radial-gradient(120% 80% at 50% 100%, #0d1620 0%, #0b0f14 45%, #080b10 100%)}
 .landing[hidden]{display:none}
+/* perspective pitch plane on the landing screen */
+.landing::before{content:"";position:fixed;left:-30%;right:-30%;bottom:-12%;height:74%;z-index:0;
+  pointer-events:none;transform-origin:50% 100%;transform:perspective(700px) rotateX(64deg);
+  background:
+    radial-gradient(closest-side at 50% 36%, transparent 0 17%, rgba(232,184,75,.22) 17% 18.2%, transparent 19%),
+    repeating-linear-gradient(90deg, rgba(52,199,123,.14) 0 5%, rgba(10,20,16,.12) 5% 10%),
+    linear-gradient(to top, rgba(46,102,80,.66) 0%, rgba(26,58,48,.38) 42%, rgba(11,18,22,0) 82%);
+  -webkit-mask-image:linear-gradient(to top,#000 18%,rgba(0,0,0,.5) 60%,transparent 96%);
+          mask-image:linear-gradient(to top,#000 18%,rgba(0,0,0,.5) 60%,transparent 96%)}
 .landing::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
 .landing-title{position:relative;z-index:1;margin-top:40vh;text-align:center;font-family:var(--f-display);text-transform:uppercase;
@@ -87,7 +127,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .landing.revealed .landing-title{margin-top:5vh;font-size:clamp(26px,4.6vw,48px)}
 .landing.revealed .landing-sub,.landing.revealed .landing-body{opacity:1;transform:none}
 .lnd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:22px}
-.lnd-card{background:linear-gradient(180deg,rgba(34,45,58,.92),rgba(27,36,48,.72));
+.lnd-card{background:linear-gradient(180deg,rgba(19,26,36,.92),rgba(13,18,25,.72));
   border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px}
 .lnd-card h3{margin:0 0 10px;font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;
   font-size:15px;color:var(--neon)}
@@ -96,40 +136,41 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .lnd-card b{color:var(--ink)}
 .lnd-score{display:flex;gap:10px;flex-wrap:wrap}
 .lnd-pill{font-family:var(--f-sport);font-weight:700;font-size:13px;padding:5px 11px;border-radius:999px}
-.lnd-pos{background:rgba(0,255,136,.16);color:var(--neon)}
+.lnd-pos{background:rgba(232,184,75,.16);color:var(--neon)}
 .lnd-neg{background:rgba(239,68,68,.16);color:#ff7676}
 .landing-go{align-self:center;margin:4px auto 0;display:block}
+/* floodlight coronas in the upper corners + a faint horizon glow band */
 .bg-lights{
   position:fixed;inset:0;z-index:-2;pointer-events:none;
   background:
-    radial-gradient(40% 35% at 12% 0%, rgba(0,255,136,.16), transparent 70%),
-    radial-gradient(40% 35% at 88% 0%, rgba(0,255,136,.13), transparent 70%),
-    radial-gradient(60% 50% at 50% 120%, rgba(0,128,55,.20), transparent 70%);
+    radial-gradient(13% 10% at 9% 7%,  rgba(255,244,214,.5), rgba(232,184,75,.12) 45%, transparent 72%),
+    radial-gradient(13% 10% at 91% 7%, rgba(255,244,214,.5), rgba(232,184,75,.12) 45%, transparent 72%),
+    radial-gradient(70% 16% at 50% 40%, rgba(232,184,75,.08), transparent 75%);
 }
+/* soft light beams raking down from each floodlight */
 .bg-lights::before,.bg-lights::after{
-  content:"";position:absolute;top:-30%;width:42%;height:160%;
-  background:linear-gradient(180deg,rgba(255,255,255,.10),transparent 60%);
-  filter:blur(22px);transform:skewX(-12deg);opacity:.5;
-  animation:sweep 14s ease-in-out infinite;
+  content:"";position:absolute;top:-6%;width:34%;height:150%;
+  background:linear-gradient(180deg,rgba(255,244,214,.10),rgba(232,184,75,.04) 38%,transparent 66%);
+  filter:blur(24px);opacity:.5;animation:beam 16s ease-in-out infinite;
 }
-.bg-lights::before{left:6%}
-.bg-lights::after{right:6%;animation-delay:-7s}
-@keyframes sweep{0%,100%{opacity:.25;transform:skewX(-12deg) translateX(-12px)}50%{opacity:.6;transform:skewX(-12deg) translateX(14px)}}
+.bg-lights::before{left:-2%;transform-origin:top left;transform:rotate(13deg)}
+.bg-lights::after{right:-2%;transform-origin:top right;transform:rotate(-13deg);animation-delay:-8s}
+@keyframes beam{0%,100%{opacity:.32}50%{opacity:.6}}
 .bg-circle{position:fixed;inset:0;margin:auto;width:min(82vw,780px);z-index:-2;opacity:.12;pointer-events:none;
-  filter:drop-shadow(0 0 16px rgba(0,255,136,.14))}
+  filter:drop-shadow(0 0 16px rgba(232,184,75,.14))}
 .bg-vignette{position:fixed;inset:0;z-index:-1;pointer-events:none;
   box-shadow:inset 0 0 200px 50px rgba(0,0,0,.42)}
 
 /* floating sparks (atmosphere, restrained) */
 .sparks{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
-.sparks i{position:absolute;bottom:-10px;width:3px;height:3px;border-radius:50%;
-  background:var(--neon);box-shadow:0 0 8px var(--neon);opacity:.0;
+.sparks i{position:absolute;bottom:-10px;width:2.5px;height:2.5px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 7px rgba(232,184,75,.7);opacity:.0;
   animation:rise linear infinite}
-@keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:.7}90%{opacity:.5}100%{transform:translateY(-105vh);opacity:0}}
+@keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:.45}90%{opacity:.3}100%{transform:translateY(-105vh);opacity:0}}
 
 /* ---------- top bar / scoreboard header ---------- */
 .topbar{position:sticky;top:0;z-index:40;
-  background:linear-gradient(180deg,rgba(34,45,58,.92),rgba(27,36,48,.72));
+  background:linear-gradient(180deg,rgba(19,26,36,.92),rgba(13,18,25,.72));
   border-bottom:1px solid var(--line);
   backdrop-filter:blur(12px);}
 .topbar-inner{width:100%;display:flex;align-items:center;
@@ -139,7 +180,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 @keyframes spin{to{transform:rotate(360deg)}}
 .brand-name{font-family:var(--f-display);font-size:22px;letter-spacing:.06em;line-height:.9;
   text-transform:uppercase}
-.brand-name span{color:var(--neon);text-shadow:0 0 18px rgba(0,255,136,.55)}
+.brand-name span{color:var(--neon);text-shadow:0 0 14px rgba(232,184,75,.28)}
 .brand-sub{font-family:var(--f-sport);font-weight:600;font-size:11px;letter-spacing:.32em;
   color:var(--muted);text-transform:uppercase;margin-top:2px}
 .nav{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
@@ -147,10 +188,10 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
   text-transform:uppercase;padding:9px 14px;border-radius:10px;color:var(--muted);
   border:1px solid transparent;transition:.18s}
 .nav button:hover{color:var(--ink);background:rgba(255,255,255,.05)}
-.nav button.active{color:var(--pitch);background:var(--neon);
-  box-shadow:0 0 22px rgba(0,255,136,.5)}
-.nav .tv-btn{color:var(--gold);border:1px solid rgba(255,215,0,.4)}
-.nav .tv-btn:hover{background:rgba(255,215,0,.12);color:var(--gold)}
+.nav button.active{color:#1a1402;background:var(--neon);
+  box-shadow:0 4px 16px rgba(232,184,75,.22)}
+.nav .tv-btn{color:var(--gold);border:1px solid rgba(232,184,75,.4)}
+.nav .tv-btn:hover{background:rgba(232,184,75,.12);color:var(--gold)}
 .topbar-right{display:flex;align-items:center;gap:16px;flex:1 1 0;justify-content:flex-end}
 .clock{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-weight:700;font-size:13px;letter-spacing:.01em;
   color:var(--neon);display:flex;align-items:center;gap:8px;white-space:nowrap;
@@ -158,10 +199,10 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 #identity{position:relative}
 .acct-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
   font-family:var(--f-sport);font-weight:800;font-size:13px;letter-spacing:.02em;
-  color:var(--pitch);background:var(--neon);border:0;box-shadow:0 0 16px rgba(0,255,136,.4)}
+  color:var(--pitch);background:var(--neon);border:0;box-shadow:0 0 16px rgba(232,184,75,.32)}
 .acct-btn:hover{filter:brightness(1.08)}
 .acct-menu{position:absolute;right:0;top:48px;min-width:200px;z-index:60;padding:14px;border-radius:12px;
-  background:linear-gradient(180deg,#222d3a,#1a232f);border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.5)}
+  background:linear-gradient(180deg,#161e29,#0F141C);border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.5)}
 .acct-menu[hidden]{display:none}
 .acct-name{font-family:var(--f-sport);font-weight:700;color:var(--ink);font-size:15px}
 .acct-email{font-size:12px;color:var(--muted);margin:3px 0 12px;word-break:break-all}
@@ -189,8 +230,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
   font-size:14px;padding:11px 18px;border-radius:11px;display:inline-flex;align-items:center;
   gap:8px;transition:.16s;border:1px solid var(--line)}
 .btn:hover{transform:translateY(-1px)}
-.btn-primary{background:var(--neon);color:#062313;border-color:transparent;
-  box-shadow:0 6px 22px rgba(0,255,136,.32)}
+.btn-primary{background:var(--neon);color:#1a1402;border-color:transparent;
+  box-shadow:0 6px 22px rgba(232,184,75,.32)}
 .btn-gold{background:linear-gradient(180deg,#ffe674,#e6b800);color:#2a2000;border-color:transparent}
 .btn-ghost{background:rgba(255,255,255,.04)}
 .btn-danger{background:rgba(255,84,104,.14);color:#ff9aa6;border-color:rgba(255,84,104,.35)}
@@ -222,7 +263,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
   border:2px solid rgba(255,255,255,.6);text-shadow:none}
 .p1 .pavatar{width:96px;height:96px;border-radius:28px;font-size:35px}
 .p1 .prank{width:36px;height:36px;font-size:18px;right:-10px;top:-10px;
-  background:radial-gradient(circle at 35% 30%,#fff6c6,#FFD700 58%,#b8920a);box-shadow:0 0 18px rgba(255,215,0,.7)}
+  background:radial-gradient(circle at 35% 30%,#fff6c6,#FFD700 58%,#b8920a);box-shadow:0 0 18px rgba(232,184,75,.7)}
 .p2 .prank{background:radial-gradient(circle at 35% 30%,#fff,#C8D0DA 58%,#7e8794);box-shadow:0 0 12px rgba(200,208,218,.5)}
 .p3 .prank{background:radial-gradient(circle at 35% 30%,#ffd9b8,#E0935A 58%,#9c5a2c);box-shadow:0 0 12px rgba(224,147,90,.5)}
 .plinth .pname{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.02em;
@@ -230,26 +271,26 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
 .plinth .ppts{font-family:var(--f-sport);font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--muted)}
 .plinth .ppts b{color:var(--neon);font-size:17px}
 .bar{margin-top:14px;border-radius:12px 12px 0 0;border:1px solid var(--line);border-bottom:0;
-  background:linear-gradient(180deg,var(--card-2),#1a232f);position:relative;overflow:hidden;
+  background:linear-gradient(180deg,var(--card-2),#0F141C);position:relative;overflow:hidden;
   display:grid;place-items:end center;padding-bottom:10px;transform-origin:bottom;
   animation:rise-bar .8s cubic-bezier(.2,.9,.25,1) both}
 .bar::before{content:"";position:absolute;inset:0;
   background:repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 14px,transparent 14px 28px)}
 .bar .rk{font-family:var(--f-display);font-size:clamp(40px,8vw,72px);line-height:1;
   color:rgba(255,255,255,.10)}
-.p1 .bar{height:170px;border-color:rgba(255,215,0,.4);
-  box-shadow:0 0 50px rgba(255,215,0,.18) inset}
-.p1 .bar .rk{color:rgba(255,215,0,.28)}
+.p1 .bar{height:170px;border-color:rgba(232,184,75,.4);
+  box-shadow:0 0 50px rgba(232,184,75,.18) inset}
+.p1 .bar .rk{color:rgba(232,184,75,.28)}
 .p2 .bar{height:126px;animation-delay:.08s}
 .p3 .bar{height:104px;animation-delay:.16s}
 @keyframes rise-bar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 .p1 .crowd{animation:leaderglow 2.6s ease-in-out infinite}
-@keyframes leaderglow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,215,0,0))}50%{filter:drop-shadow(0 0 22px rgba(255,215,0,.55))}}
+@keyframes leaderglow{0%,100%{filter:drop-shadow(0 0 0 rgba(232,184,75,0))}50%{filter:drop-shadow(0 0 22px rgba(232,184,75,.55))}}
 .leader-tag{display:inline-flex;align-items:center;gap:6px;margin:0 auto 4px;
   font-family:var(--f-sport);font-weight:700;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--gold);background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.35);
+  color:var(--gold);background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.35);
   padding:3px 9px;border-radius:99px}
-.leader-tag .trophy{filter:drop-shadow(0 0 4px rgba(255,215,0,.55));transform:translateY(-.5px)}
+.leader-tag .trophy{filter:drop-shadow(0 0 4px rgba(232,184,75,.55));transform:translateY(-.5px)}
 
 /* ===================== LEADERBOARD TABLE ===================== */
 .lb-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
@@ -268,13 +309,13 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
   text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
 .lb-row{border-bottom:1px solid var(--line);transition:.16s;border-radius:10px}
 .lb-row:last-child{border-bottom:0}
-.lb-row:hover{background:rgba(0,255,136,.05)}
-.lb-row.top1{background:linear-gradient(90deg,rgba(255,215,0,.12),transparent 60%)}
+.lb-row:hover{background:rgba(232,184,75,.05)}
+.lb-row.top1{background:linear-gradient(90deg,rgba(232,184,75,.12),transparent 60%)}
 .lb-row.top2{background:linear-gradient(90deg,rgba(200,208,218,.09),transparent 60%)}
 .lb-row.top3{background:linear-gradient(90deg,rgba(224,147,90,.09),transparent 60%)}
 .lb-rank{font-family:var(--f-display);font-size:24px;display:flex;align-items:center;gap:6px}
 .lb-rank .mv{font-family:var(--f-sport);font-size:12px;font-weight:700}
-.mv.up{color:var(--neon)} .mv.down{color:var(--danger)} .mv.same{color:var(--muted-2)}
+.mv.up{color:var(--accent2)} .mv.down{color:var(--danger)} .mv.same{color:var(--muted-2)}
 .lb-player{display:flex;align-items:center;gap:11px;min-width:0}
 .avatar{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;
   font-family:var(--f-display);font-size:15px;color:#0b0d0a;border:2px solid rgba(255,255,255,.15)}
@@ -282,24 +323,25 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lb-pts{font-family:var(--f-display);font-size:26px;color:var(--neon)}
 .lb-num{font-family:var(--f-sport);font-weight:700;font-size:18px;text-align:center}
-.lb-num.good{color:var(--neon)} .lb-num.bad{color:var(--danger)} .lb-num.draw{color:var(--gold)}
+.lb-num.good{color:var(--accent2)} .lb-num.bad{color:var(--danger)} .lb-num.draw{color:var(--gold)}
 .form{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
 .chip{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;
   font-family:var(--f-sport);font-weight:700;font-size:12px;border:1px solid var(--line)}
-.chip.c-w{background:rgba(0,255,136,.16);color:var(--neon);border-color:var(--line-2)}
+.chip.c-w{background:rgba(52,199,123,.16);color:var(--accent2);border-color:rgba(52,199,123,.3)}
 .chip.c-l{background:rgba(255,84,104,.16);color:#ff96a2;border-color:rgba(255,84,104,.3)}
-.chip.c-d{background:rgba(255,215,0,.14);color:var(--gold);border-color:rgba(255,215,0,.3)}
+.chip.c-d{background:rgba(232,184,75,.14);color:var(--gold);border-color:rgba(232,184,75,.3)}
 .chip.miss{opacity:.45}
 .chip.empty{background:rgba(255,255,255,.03);color:var(--muted-2)}
 
 /* ===================== TEAM BADGE ===================== */
 .badge{width:var(--bsz,46px);height:var(--bsz,46px);border-radius:50%;flex:none;position:relative;
-  display:grid;place-items:center;padding:3px}
+  display:grid;place-items:center;padding:0px}
 .badge .ring{position:absolute;inset:0;border-radius:50%}
 .badge .core{position:relative;width:78%;height:78%;border-radius:50%;background:#0c0f12;
-  display:grid;place-items:center;border:1px solid rgba(255,255,255,.14);z-index:1}
+  display:grid;place-items:center;border:0.5px solid rgba(255,255,255,.14);z-index:1}
 .badge .abbr{font-family:var(--f-display);font-size:calc(var(--bsz,46px)*.3);color:#fff;letter-spacing:.02em}
-.badge .flag{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;z-index:2}
+/* flag overflows its core to cover most of the ring, leaving only a thin gold rim */
+.badge .flag{position:absolute;inset:-13%;width:126%;height:126%;border-radius:50%;object-fit:cover;z-index:2}
 
 /* ===================== PREDICTIONS ===================== */
 .userbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
@@ -312,8 +354,34 @@ select{appearance:none;padding-right:30px;
   background-image:linear-gradient(45deg,transparent 50%,var(--neon) 50%),linear-gradient(135deg,var(--neon) 50%,transparent 50%);
   background-position:calc(100% - 16px) 18px,calc(100% - 11px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
 
-.fix-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
-.fix-card{padding:18px 18px 16px}
+/* Predict, Leaderboard & Stats views break out of the 1200px cap to use almost
+   the full screen, with a comfortable responsive gutter left and right. */
+#view-predict.is-active,#view-home.is-active,#view-stats.is-active{width:100vw;max-width:100vw;
+  margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding:0 clamp(32px,9vw,160px)}
+@media(max-width:680px){#view-home.is-active,#view-stats.is-active{padding:0 16px}}
+.fix-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:80px}
+.fix-card{padding:24px 24px 20px}
+/* live match: highlighted card + pulsing LIVE badge */
+.fix-card.is-live{border-color:rgba(229,84,78,.6);
+  box-shadow:0 0 0 1px rgba(229,84,78,.35),0 0 34px rgba(229,84,78,.28);
+  animation:livecard 2.4s ease-in-out infinite}
+@keyframes livecard{0%,100%{box-shadow:0 0 0 1px rgba(229,84,78,.3),0 0 24px rgba(229,84,78,.2)}
+  50%{box-shadow:0 0 0 1px rgba(229,84,78,.5),0 0 40px rgba(229,84,78,.36)}}
+.live-badge{display:inline-flex;align-items:center;gap:6px;color:#ff8a86;
+  font-family:var(--f-sport);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.live-pulse{width:8px;height:8px;border-radius:50%;background:var(--danger);
+  box-shadow:0 0 0 0 rgba(229,84,78,.7);animation:livepulse 1.5s infinite}
+@keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(229,84,78,.6)}70%{box-shadow:0 0 0 8px rgba(229,84,78,0)}100%{box-shadow:0 0 0 0 rgba(229,84,78,0)}}
+@media(max-width:1000px){.fix-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.fix-grid{grid-template-columns:1fr}
+  #view-predict.is-active{padding:0 16px}}
+/* FIFA World Cup trophy in the Predict header */
+.predict-head{position:relative}
+.predict-trophy{height:clamp(96px,12vw,150px);width:auto;align-self:center;
+  filter:drop-shadow(0 10px 26px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(232,184,75,.35));
+  animation:trophy-float 5.5s ease-in-out infinite}
+@keyframes trophy-float{0%,100%{transform:translateY(0) rotate(-.5deg)}50%{transform:translateY(-8px) rotate(.5deg)}}
+@media(max-width:560px){.predict-trophy{display:none}}
 .fix-meta{display:flex;justify-content:space-between;align-items:center;
   font-family:var(--f-sport);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);margin-bottom:14px}
@@ -322,26 +390,27 @@ select{appearance:none;padding-right:30px;
 .team{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
 .team .tname{font-family:var(--f-display);font-size:16px;text-transform:uppercase;letter-spacing:.02em}
 .vs{font-family:var(--f-display);font-size:22px;color:var(--gold);
-  text-shadow:0 0 16px rgba(255,215,0,.4)}
+  text-shadow:0 0 16px rgba(232,184,75,.4)}
 .pick-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .pick{font-family:var(--f-sport);font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-  font-size:13px;padding:11px 6px;border-radius:11px;border:1px solid var(--line);
-  background:rgba(255,255,255,.03);transition:.15s;text-align:center}
+  font-size:13px;padding:11px 6px;border-radius:11px;border:1px solid rgba(232,184,75,.55);
+  background:transparent;color:var(--gold);transition:.15s;text-align:center}
 .pick small{display:block;font-size:10px;opacity:.7;margin-top:2px;letter-spacing:.04em}
-.pick:hover:not(:disabled){border-color:var(--line-2);background:rgba(0,255,136,.06)}
-.pick.win.sel{background:rgba(0,255,136,.18);color:var(--neon);border-color:var(--neon);box-shadow:0 0 18px rgba(0,255,136,.3)}
-.pick.draw.sel{background:rgba(255,215,0,.16);color:var(--gold);border-color:var(--gold)}
+.pick:hover:not(:disabled){border-color:var(--gold);background:rgba(232,184,75,.14);
+  color:var(--gold);box-shadow:0 0 14px rgba(232,184,75,.2)}
+.pick.win.sel{background:rgba(52,199,123,.16);color:var(--accent2);border-color:var(--accent2);box-shadow:0 0 16px rgba(52,199,123,.25)}
+.pick.draw.sel{background:rgba(232,184,75,.16);color:var(--gold);border-color:var(--gold)}
 .pick.lose.sel{background:rgba(255,84,104,.16);color:#ff97a3;border-color:var(--danger)}
 .pick:disabled{cursor:default}
 .locked{margin-top:13px;display:flex;align-items:center;gap:8px;font-family:var(--f-sport);
   font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--neon)}
 .settled-pill{font-family:var(--f-sport);font-weight:700;font-size:11px;letter-spacing:.1em;
   text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line)}
-.settled-pill.correct{color:var(--neon);background:rgba(0,255,136,.12);border-color:var(--line-2)}
+.settled-pill.correct{color:var(--accent2);background:rgba(52,199,123,.12);border-color:rgba(52,199,123,.3)}
 .settled-pill.wrong{color:#ff97a3;background:rgba(255,84,104,.12);border-color:rgba(255,84,104,.3)}
 .votes{display:flex;gap:4px;height:6px;margin-top:12px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.06)}
 .votes i{display:block;height:100%}
-.votes .v-w{background:var(--neon)} .votes .v-d{background:var(--gold)} .votes .v-l{background:var(--danger)}
+.votes .v-w{background:var(--accent2)} .votes .v-d{background:var(--gold)} .votes .v-l{background:var(--danger)}
 .vote-legend{display:flex;justify-content:space-between;font-family:var(--f-sport);font-weight:600;
   font-size:11px;letter-spacing:.04em;color:var(--muted);margin-top:5px}
 
@@ -355,12 +424,12 @@ select{appearance:none;padding-right:30px;
 .sp-board .sp-team{font-family:var(--f-display);font-size:14px;letter-spacing:.04em;color:var(--muted);min-width:34px;text-align:center}
 .sp-board input{width:48px;height:48px;text-align:center;border-radius:10px;
   font-family:var(--f-display);font-size:24px;line-height:1;color:var(--neon);
-  background:radial-gradient(120% 120% at 50% 0%,rgba(0,255,136,.10),rgba(255,255,255,.03));
+  background:radial-gradient(120% 120% at 50% 0%,rgba(232,184,75,.10),rgba(255,255,255,.03));
   border:1px solid var(--line-2);transition:.15s;-moz-appearance:textfield;appearance:textfield}
 .sp-board input::-webkit-outer-spin-button,.sp-board input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .sp-board input::placeholder{color:var(--muted-2);font-size:22px}
-.sp-board input:focus{outline:none;border-color:var(--neon);box-shadow:0 0 16px rgba(0,255,136,.35);background:rgba(0,255,136,.12)}
-.sp-board .sp-colon{font-family:var(--f-display);font-size:24px;color:var(--gold);text-shadow:0 0 12px rgba(255,215,0,.4)}
+.sp-board input:focus{outline:none;border-color:var(--neon);box-shadow:0 0 16px rgba(232,184,75,.35);background:rgba(232,184,75,.12)}
+.sp-board .sp-colon{font-family:var(--f-display);font-size:24px;color:var(--gold);text-shadow:0 0 12px rgba(232,184,75,.4)}
 .score-pred.is-locked{opacity:.55}
 .score-pred.is-locked .sp-board input{color:var(--muted);border-color:var(--line)}
 
@@ -383,7 +452,7 @@ select{appearance:none;padding-right:30px;
 .adm-actions{display:flex;gap:6px;align-items:center}
 .icon-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;
   background:rgba(255,255,255,.03);transition:.15s}
-.icon-btn:hover{border-color:var(--line-2);background:rgba(0,255,136,.08)}
+.icon-btn:hover{border-color:var(--line-2);background:rgba(232,184,75,.08)}
 .icon-btn.del:hover{border-color:rgba(255,84,104,.4);background:rgba(255,84,104,.1)}
 .res-select{padding:6px 8px;font-size:12px}
 .gate{max-width:380px;margin:40px auto;padding:26px;text-align:center}
@@ -396,7 +465,10 @@ select{appearance:none;padding-right:30px;
 .pchip .x:hover{color:#ff97a3;background:rgba(255,84,104,.15)}
 
 /* ===================== STATS ===================== */
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+/* 9 stat tiles laid out in two rows (5 + 4) on wide screens */
+.stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:1100px){.stat-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:680px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
 .stat{padding:16px}
 .stat .s-label{font-family:var(--f-sport);font-weight:600;font-size:11px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--muted)}
@@ -411,17 +483,27 @@ select{appearance:none;padding-right:30px;
 .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
 
 /* ===================== TV MODE ===================== */
-.tv-overlay{position:fixed;inset:0;z-index:200;background:#19222d;display:flex;flex-direction:column;
+.tv-overlay{position:fixed;inset:0;z-index:200;background:#0B0F14;display:flex;flex-direction:column;
   overflow:hidden}
 .tv-overlay[hidden]{display:none}
-.tv-bg{position:absolute;inset:0;z-index:0;
+.tv-bg{position:absolute;inset:0;z-index:0;overflow:hidden;
   background:
-    repeating-linear-gradient(90deg,rgba(0,128,55,.08) 0 9vw,rgba(0,60,26,.08) 9vw 18vw),
-    radial-gradient(60% 60% at 50% 0%,rgba(0,255,136,.12),transparent 70%),
-    radial-gradient(70% 60% at 50% 120%,rgba(0,128,55,.22),transparent 70%),#19222d}
-.tv-bg::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
-.tv-field{position:absolute;inset:0;margin:auto;height:min(86vh,820px);width:auto;
-  opacity:.11;pointer-events:none;filter:drop-shadow(0 0 18px rgba(0,255,136,.14))}
+    radial-gradient(13% 11% at 9% 6%,  rgba(255,244,214,.5), rgba(232,184,75,.12) 45%, transparent 72%),
+    radial-gradient(13% 11% at 91% 6%, rgba(255,244,214,.5), rgba(232,184,75,.12) 45%, transparent 72%),
+    radial-gradient(38% 42% at 22% 26%, rgba(232,184,75,.14), transparent 70%),
+    radial-gradient(34% 40% at 80% 22%, rgba(52,199,123,.12), transparent 70%),
+    radial-gradient(120% 80% at 50% 100%, #0d1620 0%, #0b0f14 45%, #080b10 100%)}
+/* perspective pitch plane for TV mode */
+.tv-bg::before{content:"";position:absolute;left:-25%;right:-25%;bottom:-10%;height:74%;z-index:0;
+  pointer-events:none;transform-origin:50% 100%;transform:perspective(800px) rotateX(63deg);
+  background:
+    repeating-linear-gradient(90deg, rgba(52,199,123,.14) 0 5%, rgba(10,20,16,.12) 5% 10%),
+    linear-gradient(to top, rgba(46,102,80,.66) 0%, rgba(26,58,48,.38) 42%, rgba(11,18,22,0) 82%);
+  -webkit-mask-image:linear-gradient(to top,#000 18%,rgba(0,0,0,.5) 60%,transparent 96%);
+          mask-image:linear-gradient(to top,#000 18%,rgba(0,0,0,.5) 60%,transparent 96%)}
+.tv-bg::after{content:"";position:absolute;inset:0;z-index:2;box-shadow:inset 0 0 240px 60px rgba(0,0,0,.45)}
+.tv-field{position:absolute;inset:0;margin:auto;height:min(86vh,820px);width:auto;z-index:1;
+  opacity:.13;pointer-events:none;filter:drop-shadow(0 0 18px rgba(232,184,75,.16))}
 /* glowing sparks for TV mode — scoped inside .tv-bg (the global #sparks is fixed
    at z-index:-1 and hidden behind the TV overlay), sized a touch larger for the big screen */
 .tv-sparks{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
@@ -432,7 +514,7 @@ select{appearance:none;padding-right:30px;
 .tv-top .tv-clock{margin-left:auto;font-family:var(--f-sport);font-weight:700;font-size:24px;color:var(--neon);
   display:flex;align-items:center;gap:10px}
 .tv-exit{font-family:var(--f-sport);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:14px;
-  color:var(--gold);border:1px solid rgba(255,215,0,.4);padding:8px 14px;border-radius:10px}
+  color:var(--gold);border:1px solid rgba(232,184,75,.4);padding:8px 14px;border-radius:10px}
 .tv-stage{position:relative;z-index:2;flex:1;padding:clamp(20px,3vw,42px) clamp(24px,5vw,72px);overflow:hidden}
 .tv-scene{position:absolute;inset:0;padding:inherit;display:flex;flex-direction:column;
   opacity:0;transform:scale(.985);transition:opacity .7s ease,transform .7s ease;pointer-events:none}
@@ -445,12 +527,12 @@ select{appearance:none;padding-right:30px;
 .tv-countdown .cd-label{font-family:var(--f-sport);font-weight:700;font-size:clamp(11px,1.1vw,15px);
   letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
 .tv-countdown .cd-time{font-family:var(--f-display);font-size:clamp(30px,4.4vw,64px);color:var(--gold);
-  line-height:.9;text-shadow:0 0 30px rgba(255,215,0,.4)}
+  line-height:.9;text-shadow:0 0 30px rgba(232,184,75,.4)}
 
 /* TV leaderboard */
 .tvlb{display:flex;flex-direction:column;gap:clamp(5px,.8vh,10px);flex:1;overflow-y:auto;min-height:0;padding-right:6px}
 .tvlb::-webkit-scrollbar{width:8px}
-.tvlb::-webkit-scrollbar-thumb{background:rgba(0,255,136,.4);border-radius:99px}
+.tvlb::-webkit-scrollbar-thumb{background:rgba(232,184,75,.4);border-radius:99px}
 .tvlb::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:99px}
 /* two-column leaderboard for TV — fits ~20 names on one screen */
 .tvlb-2col{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.1vw,18px);flex:1;min-height:0}
@@ -467,8 +549,8 @@ select{appearance:none;padding-right:30px;
   gap:clamp(12px,2vw,28px);padding:clamp(8px,1.4vh,18px) clamp(16px,2vw,30px);border-radius:14px;
   background:var(--glass);border:1px solid var(--line);animation:tvrow .6s both}
 @keyframes tvrow{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
-.tvlb-row.r1{border-color:rgba(255,215,0,.5);background:linear-gradient(90deg,rgba(255,215,0,.16),rgba(43,55,70,.72));
-  box-shadow:0 0 50px rgba(255,215,0,.18)}
+.tvlb-row.r1{border-color:rgba(232,184,75,.5);background:linear-gradient(90deg,rgba(232,184,75,.16),rgba(22,30,41,.72));
+  box-shadow:0 0 50px rgba(232,184,75,.18)}
 .tvlb-row.r2{border-color:rgba(200,208,218,.35)}
 .tvlb-row.r3{border-color:rgba(224,147,90,.35)}
 .tvlb-rank{font-family:var(--f-display);font-size:clamp(24px,3.1vw,46px);line-height:1;color:rgba(255,255,255,.2)}
@@ -480,13 +562,13 @@ select{appearance:none;padding-right:30px;
 .tvlb-form{display:flex;gap:6px}
 .tvlb-form .chip{width:clamp(24px,2.2vw,36px);height:clamp(24px,2.2vw,36px);font-size:clamp(11px,1.3vw,18px)}
 .tvlb-pts{font-family:var(--f-display);font-size:clamp(26px,3.6vw,54px);color:var(--neon);
-  text-shadow:0 0 24px rgba(0,255,136,.4);min-width:clamp(64px,7vw,130px);text-align:right}
+  text-shadow:0 0 24px rgba(232,184,75,.4);min-width:clamp(64px,7vw,130px);text-align:right}
 
 /* TV fixtures */
 .tvfix-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.4vw,20px);flex:1;
   align-content:start;overflow-y:auto;padding:2px 10px 2px 2px;min-height:0}
 .tvfix-grid::-webkit-scrollbar{width:8px}
-.tvfix-grid::-webkit-scrollbar-thumb{background:rgba(0,255,136,.4);border-radius:99px}
+.tvfix-grid::-webkit-scrollbar-thumb{background:rgba(232,184,75,.4);border-radius:99px}
 .tvfix-grid::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:99px}
 .tvstat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,28px);flex:1;
   align-content:center;min-height:0}
@@ -525,7 +607,7 @@ select{appearance:none;padding-right:30px;
 .tvmov-row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:clamp(14px,2vw,28px);
   padding:clamp(10px,1.6vh,20px) clamp(18px,2.4vw,34px);border-radius:14px;background:var(--glass);border:1px solid var(--line)}
 .tvmov-arrow{font-family:var(--f-display);font-size:clamp(28px,3.6vw,56px)}
-.tvmov-arrow.up{color:var(--neon)} .tvmov-arrow.down{color:var(--danger)}
+.tvmov-arrow.up{color:var(--accent2)} .tvmov-arrow.down{color:var(--danger)}
 .tvmov-name{font-family:var(--f-display);font-size:clamp(22px,3vw,46px);text-transform:uppercase}
 .tvmov-delta{font-family:var(--f-sport);font-weight:700;font-size:clamp(16px,2vw,30px);color:var(--muted)}
 .tvmov-rank{font-family:var(--f-display);font-size:clamp(20px,2.4vw,40px);color:var(--gold)}
@@ -543,9 +625,9 @@ select{appearance:none;padding-right:30px;
 
 /* TV ticker */
 .tv-ticker{position:relative;z-index:3;border-top:1px solid var(--line);
-  background:linear-gradient(180deg,rgba(0,128,55,.18),rgba(27,36,48,.9));overflow:hidden;
+  background:linear-gradient(180deg,rgba(29,59,52,.18),rgba(13,18,25,.9));overflow:hidden;
   display:flex;align-items:center;height:clamp(46px,6vh,68px)}
-.tv-ticker .tag{flex:none;background:var(--neon);color:#062313;font-family:var(--f-display);
+.tv-ticker .tag{flex:none;background:var(--neon);color:#1a1402;font-family:var(--f-display);
   text-transform:uppercase;letter-spacing:.05em;font-size:clamp(15px,1.6vw,22px);
   padding:0 clamp(16px,2vw,26px);height:100%;display:flex;align-items:center;z-index:2}
 .tv-ticker .track{display:flex;white-space:nowrap;animation:ticker 38s linear infinite;will-change:transform}
@@ -615,7 +697,7 @@ footer b{color:var(--muted)}
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <svg class="ball" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#00FF88" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/><path d="M31 14l8 2 .8 8-7 3-4.5-6.2zM17 14l-8 2-.8 8 7 3 4.5-6.2zM19.7 30.3h8.6l2.7 8-7 4.2-7-4.2z" fill="#0c0f12" stroke="#fff" stroke-width="1.2"/></svg>
+      <svg class="ball" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#E8B84B" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/><path d="M31 14l8 2 .8 8-7 3-4.5-6.2zM17 14l-8 2-.8 8 7 3 4.5-6.2zM19.7 30.3h8.6l2.7 8-7 4.2-7-4.2z" fill="#0c0f12" stroke="#fff" stroke-width="1.2"/></svg>
       <div>
         <div class="brand-name" id="brandName">Calfus <span>FIFA</span> League</div>
       </div>
@@ -628,7 +710,7 @@ footer b{color:var(--muted)}
       <button data-view="tv" class="tv-btn">▶ TV Mode</button>
     </nav>
     <div class="topbar-right">
-      <div class="clock"><span class="live-dot"></span><span id="clock">--:--</span></div>
+      <div class="clock"><span id="clock">--:--</span></div>
     </div>
   </div>
 </header>
@@ -638,7 +720,7 @@ footer b{color:var(--muted)}
   <section id="view-home" class="view is-active">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Standings · Matchday Live</div>
+        <div class="eyebrow">Standings</div>
         <h2>🏆 Tournament Leaderboard</h2>
       </div>
       <div class="spacer"></div>
@@ -650,12 +732,13 @@ footer b{color:var(--muted)}
 
   <!-- ============ PREDICT ============ -->
   <section id="view-predict" class="view">
-    <div class="section-head">
+    <div class="section-head predict-head">
       <div>
-        <div class="eyebrow">Mondays &amp; Thursdays</div>
+        <!-- <div class="eyebrow">Mondays &amp; Thursdays</div> -->
         <h2>Make Your Picks</h2>
       </div>
       <div class="spacer"></div>
+      <!-- <img class="predict-trophy" src="./assets/hd-world-cup-fifa-trophy-transparent-png-704081694879203dnnohbitx0-removebg-preview.png" alt="FIFA World Cup trophy"/> -->
     </div>
     <h3 style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;font-size:18px;margin:18px 0 12px;color:var(--neon)">Open Fixtures</h3>
     <div class="fix-grid" id="openFixtures"></div>
@@ -681,7 +764,7 @@ footer b{color:var(--muted)}
         <h3>Prediction Distribution</h3>
         <div id="distChart"></div>
         <div class="legend">
-          <span><i style="background:var(--neon)"></i>Win</span>
+          <span><i style="background:var(--accent2)"></i>Win</span>
           <span><i style="background:var(--gold)"></i>Draw</span>
           <span><i style="background:var(--danger)"></i>Lose</span>
         </div>
@@ -743,19 +826,19 @@ footer b{color:var(--muted)}
 <!-- ============ TV MODE ============ -->
 <div class="tv-overlay" id="tv" hidden>
   <div class="tv-bg">
-    <svg class="tv-field" viewBox="0 0 600 380" fill="none" stroke="#00FF88" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <svg class="tv-field" viewBox="0 0 600 380" fill="none" stroke="#E8B84B" stroke-width="2" stroke-linecap="round" aria-hidden="true">
       <rect x="3" y="3" width="594" height="374" rx="6"/>
       <line x1="300" y1="3" x2="300" y2="377"/>
-      <circle cx="300" cy="190" r="58"/><circle cx="300" cy="190" r="3" fill="#00FF88" stroke="none"/>
+      <circle cx="300" cy="190" r="58"/><circle cx="300" cy="190" r="3" fill="#E8B84B" stroke="none"/>
       <!-- left half -->
       <rect x="3" y="95" width="92" height="190"/>
       <rect x="3" y="140" width="38" height="100"/>
-      <circle cx="62" cy="190" r="2.5" fill="#00FF88" stroke="none"/>
+      <circle cx="62" cy="190" r="2.5" fill="#E8B84B" stroke="none"/>
       <path d="M95 145 A52 52 0 0 1 95 235"/>
       <!-- right half -->
       <rect x="505" y="95" width="92" height="190"/>
       <rect x="559" y="140" width="38" height="100"/>
-      <circle cx="538" cy="190" r="2.5" fill="#00FF88" stroke="none"/>
+      <circle cx="538" cy="190" r="2.5" fill="#E8B84B" stroke="none"/>
       <path d="M505 145 A52 52 0 0 0 505 235"/>
       <!-- corner arcs -->
       <path d="M3 17 A14 14 0 0 0 17 3"/><path d="M583 3 A14 14 0 0 0 597 17"/>
@@ -764,7 +847,7 @@ footer b{color:var(--muted)}
     <div class="sparks tv-sparks" id="tvSparks" aria-hidden="true"></div>
   </div>
   <div class="tv-top">
-    <svg class="ball" style="width:38px;height:38px;animation:spin 9s linear infinite" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#00FF88" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/></svg>
+    <svg class="ball" style="width:38px;height:38px;animation:spin 9s linear infinite" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#E8B84B" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/></svg>
     <div class="brand-name" id="tvBrand">Calfus <span>FIFA</span> League</div>
     <div class="tv-clock"><span class="live-dot"></span><span id="tvClock">--:--:--</span></div>
     <button class="tv-exit" id="tvExit">✕ Exit (Esc)</button>
@@ -864,7 +947,7 @@ function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.get
 
 /* ---------- WORLD CUP 2026 official teams + fixtures (loaded from uploaded data) ---------- */
 /* ---- WORLD CUP 2026 real teams (from uploaded data) ---- */
-const TEAMS = [{"id":"1","name":"Mexico","abbr":"MEX","group":"A","flag":"https://flagcdn.com/w80/mx.png","c1":"#00FF88","c2":"#FFD700"},{"id":"2","name":"South Africa","abbr":"RSA","group":"A","flag":"https://flagcdn.com/w80/za.png","c1":"#00FF88","c2":"#FFD700"},{"id":"3","name":"South Korea","abbr":"KOR","group":"A","flag":"https://flagcdn.com/w80/kr.png","c1":"#00FF88","c2":"#FFD700"},{"id":"4","name":"Czech Republic","abbr":"CZE","group":"A","flag":"https://flagcdn.com/w80/cz.png","c1":"#00FF88","c2":"#FFD700"},{"id":"5","name":"Canada","abbr":"CAN","group":"B","flag":"https://flagcdn.com/w80/ca.png","c1":"#00FF88","c2":"#FFD700"},{"id":"6","name":"Bosnia and Herzegovina","abbr":"BIH","group":"B","flag":"https://flagcdn.com/w80/ba.png","c1":"#00FF88","c2":"#FFD700"},{"id":"7","name":"Qatar","abbr":"QAT","group":"B","flag":"https://flagcdn.com/w80/qa.png","c1":"#00FF88","c2":"#FFD700"},{"id":"8","name":"Switzerland","abbr":"SUI","group":"B","flag":"https://flagcdn.com/w80/ch.png","c1":"#00FF88","c2":"#FFD700"},{"id":"9","name":"Brazil","abbr":"BRA","group":"C","flag":"https://flagcdn.com/w80/br.png","c1":"#00FF88","c2":"#FFD700"},{"id":"10","name":"Morocco","abbr":"MAR","group":"C","flag":"https://flagcdn.com/w80/ma.png","c1":"#00FF88","c2":"#FFD700"},{"id":"11","name":"Haiti","abbr":"HAI","group":"C","flag":"https://flagcdn.com/w80/ht.png","c1":"#00FF88","c2":"#FFD700"},{"id":"12","name":"Scotland","abbr":"SCO","group":"C","flag":"https://flagcdn.com/w80/gb-sct.png","c1":"#00FF88","c2":"#FFD700"},{"id":"13","name":"United States","abbr":"USA","group":"D","flag":"https://flagcdn.com/w80/us.png","c1":"#00FF88","c2":"#FFD700"},{"id":"14","name":"Paraguay","abbr":"PAR","group":"D","flag":"https://flagcdn.com/w80/py.png","c1":"#00FF88","c2":"#FFD700"},{"id":"15","name":"Australia","abbr":"AUS","group":"D","flag":"https://flagcdn.com/w80/au.png","c1":"#00FF88","c2":"#FFD700"},{"id":"16","name":"Turkey","abbr":"TUR","group":"D","flag":"https://flagcdn.com/w80/tr.png","c1":"#00FF88","c2":"#FFD700"},{"id":"17","name":"Germany","abbr":"GER","group":"E","flag":"https://flagcdn.com/w80/de.png","c1":"#00FF88","c2":"#FFD700"},{"id":"18","name":"Curaçao","abbr":"CUW","group":"E","flag":"https://flagcdn.com/w80/cw.png","c1":"#00FF88","c2":"#FFD700"},{"id":"19","name":"Ivory Coast","abbr":"CIV","group":"E","flag":"https://flagcdn.com/w80/ci.png","c1":"#00FF88","c2":"#FFD700"},{"id":"20","name":"Ecuador","abbr":"ECU","group":"E","flag":"https://flagcdn.com/w80/ec.png","c1":"#00FF88","c2":"#FFD700"},{"id":"21","name":"Netherlands","abbr":"NED","group":"F","flag":"https://flagcdn.com/w80/nl.png","c1":"#00FF88","c2":"#FFD700"},{"id":"22","name":"Japan","abbr":"JPN","group":"F","flag":"https://flagcdn.com/w80/jp.png","c1":"#00FF88","c2":"#FFD700"},{"id":"23","name":"Sweden","abbr":"SWE","group":"F","flag":"https://flagcdn.com/w80/se.png","c1":"#00FF88","c2":"#FFD700"},{"id":"24","name":"Tunisia","abbr":"TUN","group":"F","flag":"https://flagcdn.com/w80/tn.png","c1":"#00FF88","c2":"#FFD700"},{"id":"25","name":"Belgium","abbr":"BEL","group":"G","flag":"https://flagcdn.com/w80/be.png","c1":"#00FF88","c2":"#FFD700"},{"id":"26","name":"Egypt","abbr":"EGY","group":"G","flag":"https://flagcdn.com/w80/eg.png","c1":"#00FF88","c2":"#FFD700"},{"id":"27","name":"Iran","abbr":"IRN","group":"G","flag":"https://flagcdn.com/w80/ir.png","c1":"#00FF88","c2":"#FFD700"},{"id":"28","name":"New Zealand","abbr":"NZL","group":"G","flag":"https://flagcdn.com/w80/nz.png","c1":"#00FF88","c2":"#FFD700"},{"id":"29","name":"Spain","abbr":"ESP","group":"H","flag":"https://flagcdn.com/w80/es.png","c1":"#00FF88","c2":"#FFD700"},{"id":"30","name":"Cape Verde","abbr":"CPV","group":"H","flag":"https://flagcdn.com/w80/cv.png","c1":"#00FF88","c2":"#FFD700"},{"id":"31","name":"Saudi Arabia","abbr":"KSA","group":"H","flag":"https://flagcdn.com/w80/sa.png","c1":"#00FF88","c2":"#FFD700"},{"id":"32","name":"Uruguay","abbr":"URU","group":"H","flag":"https://flagcdn.com/w80/uy.png","c1":"#00FF88","c2":"#FFD700"},{"id":"33","name":"France","abbr":"FRA","group":"I","flag":"https://flagcdn.com/w80/fr.png","c1":"#00FF88","c2":"#FFD700"},{"id":"34","name":"Senegal","abbr":"SEN","group":"I","flag":"https://flagcdn.com/w80/sn.png","c1":"#00FF88","c2":"#FFD700"},{"id":"35","name":"Iraq","abbr":"IRQ","group":"I","flag":"https://flagcdn.com/w80/iq.png","c1":"#00FF88","c2":"#FFD700"},{"id":"36","name":"Norway","abbr":"NOR","group":"I","flag":"https://flagcdn.com/w80/no.png","c1":"#00FF88","c2":"#FFD700"},{"id":"37","name":"Argentina","abbr":"ARG","group":"J","flag":"https://flagcdn.com/w80/ar.png","c1":"#00FF88","c2":"#FFD700"},{"id":"38","name":"Algeria","abbr":"ALG","group":"J","flag":"https://flagcdn.com/w80/dz.png","c1":"#00FF88","c2":"#FFD700"},{"id":"39","name":"Austria","abbr":"AUT","group":"J","flag":"https://flagcdn.com/w80/at.png","c1":"#00FF88","c2":"#FFD700"},{"id":"40","name":"Jordan","abbr":"JOR","group":"J","flag":"https://flagcdn.com/w80/jo.png","c1":"#00FF88","c2":"#FFD700"},{"id":"41","name":"Portugal","abbr":"POR","group":"K","flag":"https://flagcdn.com/w80/pt.png","c1":"#00FF88","c2":"#FFD700"},{"id":"42","name":"Democratic Republic of the Congo","abbr":"COD","group":"K","flag":"https://flagcdn.com/w80/cd.png","c1":"#00FF88","c2":"#FFD700"},{"id":"43","name":"Uzbekistan","abbr":"UZB","group":"K","flag":"https://flagcdn.com/w80/uz.png","c1":"#00FF88","c2":"#FFD700"},{"id":"44","name":"Colombia","abbr":"COL","group":"K","flag":"https://flagcdn.com/w80/co.png","c1":"#00FF88","c2":"#FFD700"},{"id":"45","name":"England","abbr":"ENG","group":"L","flag":"https://flagcdn.com/w80/gb-eng.png","c1":"#00FF88","c2":"#FFD700"},{"id":"46","name":"Croatia","abbr":"CRO","group":"L","flag":"https://flagcdn.com/w80/hr.png","c1":"#00FF88","c2":"#FFD700"},{"id":"47","name":"Ghana","abbr":"GHA","group":"L","flag":"https://flagcdn.com/w80/gh.png","c1":"#00FF88","c2":"#FFD700"},{"id":"48","name":"Panama","abbr":"PAN","group":"L","flag":"https://flagcdn.com/w80/pa.png","c1":"#00FF88","c2":"#FFD700"}];
+const TEAMS = [{"id":"1","name":"Mexico","abbr":"MEX","group":"A","flag":"https://flagcdn.com/w80/mx.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"2","name":"South Africa","abbr":"RSA","group":"A","flag":"https://flagcdn.com/w80/za.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"3","name":"South Korea","abbr":"KOR","group":"A","flag":"https://flagcdn.com/w80/kr.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"4","name":"Czech Republic","abbr":"CZE","group":"A","flag":"https://flagcdn.com/w80/cz.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"5","name":"Canada","abbr":"CAN","group":"B","flag":"https://flagcdn.com/w80/ca.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"6","name":"Bosnia and Herzegovina","abbr":"BIH","group":"B","flag":"https://flagcdn.com/w80/ba.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"7","name":"Qatar","abbr":"QAT","group":"B","flag":"https://flagcdn.com/w80/qa.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"8","name":"Switzerland","abbr":"SUI","group":"B","flag":"https://flagcdn.com/w80/ch.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"9","name":"Brazil","abbr":"BRA","group":"C","flag":"https://flagcdn.com/w80/br.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"10","name":"Morocco","abbr":"MAR","group":"C","flag":"https://flagcdn.com/w80/ma.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"11","name":"Haiti","abbr":"HAI","group":"C","flag":"https://flagcdn.com/w80/ht.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"12","name":"Scotland","abbr":"SCO","group":"C","flag":"https://flagcdn.com/w80/gb-sct.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"13","name":"United States","abbr":"USA","group":"D","flag":"https://flagcdn.com/w80/us.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"14","name":"Paraguay","abbr":"PAR","group":"D","flag":"https://flagcdn.com/w80/py.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"15","name":"Australia","abbr":"AUS","group":"D","flag":"https://flagcdn.com/w80/au.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"16","name":"Turkey","abbr":"TUR","group":"D","flag":"https://flagcdn.com/w80/tr.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"17","name":"Germany","abbr":"GER","group":"E","flag":"https://flagcdn.com/w80/de.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"18","name":"Curaçao","abbr":"CUW","group":"E","flag":"https://flagcdn.com/w80/cw.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"19","name":"Ivory Coast","abbr":"CIV","group":"E","flag":"https://flagcdn.com/w80/ci.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"20","name":"Ecuador","abbr":"ECU","group":"E","flag":"https://flagcdn.com/w80/ec.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"21","name":"Netherlands","abbr":"NED","group":"F","flag":"https://flagcdn.com/w80/nl.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"22","name":"Japan","abbr":"JPN","group":"F","flag":"https://flagcdn.com/w80/jp.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"23","name":"Sweden","abbr":"SWE","group":"F","flag":"https://flagcdn.com/w80/se.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"24","name":"Tunisia","abbr":"TUN","group":"F","flag":"https://flagcdn.com/w80/tn.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"25","name":"Belgium","abbr":"BEL","group":"G","flag":"https://flagcdn.com/w80/be.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"26","name":"Egypt","abbr":"EGY","group":"G","flag":"https://flagcdn.com/w80/eg.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"27","name":"Iran","abbr":"IRN","group":"G","flag":"https://flagcdn.com/w80/ir.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"28","name":"New Zealand","abbr":"NZL","group":"G","flag":"https://flagcdn.com/w80/nz.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"29","name":"Spain","abbr":"ESP","group":"H","flag":"https://flagcdn.com/w80/es.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"30","name":"Cape Verde","abbr":"CPV","group":"H","flag":"https://flagcdn.com/w80/cv.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"31","name":"Saudi Arabia","abbr":"KSA","group":"H","flag":"https://flagcdn.com/w80/sa.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"32","name":"Uruguay","abbr":"URU","group":"H","flag":"https://flagcdn.com/w80/uy.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"33","name":"France","abbr":"FRA","group":"I","flag":"https://flagcdn.com/w80/fr.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"34","name":"Senegal","abbr":"SEN","group":"I","flag":"https://flagcdn.com/w80/sn.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"35","name":"Iraq","abbr":"IRQ","group":"I","flag":"https://flagcdn.com/w80/iq.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"36","name":"Norway","abbr":"NOR","group":"I","flag":"https://flagcdn.com/w80/no.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"37","name":"Argentina","abbr":"ARG","group":"J","flag":"https://flagcdn.com/w80/ar.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"38","name":"Algeria","abbr":"ALG","group":"J","flag":"https://flagcdn.com/w80/dz.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"39","name":"Austria","abbr":"AUT","group":"J","flag":"https://flagcdn.com/w80/at.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"40","name":"Jordan","abbr":"JOR","group":"J","flag":"https://flagcdn.com/w80/jo.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"41","name":"Portugal","abbr":"POR","group":"K","flag":"https://flagcdn.com/w80/pt.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"42","name":"Democratic Republic of the Congo","abbr":"COD","group":"K","flag":"https://flagcdn.com/w80/cd.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"43","name":"Uzbekistan","abbr":"UZB","group":"K","flag":"https://flagcdn.com/w80/uz.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"44","name":"Colombia","abbr":"COL","group":"K","flag":"https://flagcdn.com/w80/co.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"45","name":"England","abbr":"ENG","group":"L","flag":"https://flagcdn.com/w80/gb-eng.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"46","name":"Croatia","abbr":"CRO","group":"L","flag":"https://flagcdn.com/w80/hr.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"47","name":"Ghana","abbr":"GHA","group":"L","flag":"https://flagcdn.com/w80/gh.png","c1":"#E8B84B","c2":"#FFD700"},{"id":"48","name":"Panama","abbr":"PAN","group":"L","flag":"https://flagcdn.com/w80/pa.png","c1":"#E8B84B","c2":"#FFD700"}];
 
 /* ---- WORLD CUP 2026 group-stage fixtures (kickoff in IST) ---- */
 const WC_FIXTURES = [
@@ -948,7 +1031,7 @@ const teamById = id => state.teams.find(t=>t.id===id) || {name:"?",abbr:"?",c1:"
 function badge(team,size){
   const s = size? `--bsz:${size}px;` : "";
   const ring = team.flag
-    ? `background:conic-gradient(var(--gold) 0 50%, var(--neon) 50% 100%)`
+    ? `background:conic-gradient(var(--gold) 0 50%, var(--neon) 70% 100%)`
     : `background:conic-gradient(${team.c1} 0 50%, ${team.c2} 50% 100%)`;
   const flag = team.flag
     ? `<img class="flag" src="${esc(team.flag)}" alt="${esc(team.name)}" loading="lazy" onerror="this.remove()"/>`
@@ -960,7 +1043,7 @@ function badge(team,size){
 
 const PLAYER_NAMES = ["Harshal Pawar","Aisha Khan","Diego Mendes","Priya Nair","Liam O'Brien",
   "Sofia Rossi","Kenji Tanaka","Zara Ahmed","Marcus Bauer","Nina Petrov","Omar Hassan","Lucia Gomez"];
-const AVCOL = ["#00FF88","#FFD700","#75AADB","#EF4444","#A78BFA","#F472B6","#34D399","#FB923C","#60A5FA","#FBBF24","#F87171","#2DD4BF"];
+const AVCOL = ["#E8B84B","#FFD700","#75AADB","#EF4444","#A78BFA","#F472B6","#34D399","#FB923C","#60A5FA","#FBBF24","#F87171","#2DD4BF"];
 
 /* ---------- seed demo data ---------- */
 function seed(){
@@ -1017,7 +1100,7 @@ async function saveState(){ /* no-op: persistence now lives in MongoDB via the A
 
 /* ---------- map backend payloads to the shapes the renderers expect ---------- */
 function mapTeam(t){ return { id:String(t.id), name:t.name, abbr:t.abbr||"?", flag:t.flag||"",
-  c1:t.c1||"#00FF88", c2:t.c2||"#FFD700", group:t.group||"" }; }
+  c1:t.c1||"#E8B84B", c2:t.c2||"#FFD700", group:t.group||"" }; }
 function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
   teamAId:String(f.teamA.id), teamBId:String(f.teamB.id),
   date:f.date, time:f.time, kickoff:f.kickoff, round:f.round, group:f.group, md:f.md,
@@ -1226,15 +1309,20 @@ function renderPredict(){
   // Predictions are open all the time; show every upcoming unsettled match. Each
   // fixture locks 30 min before its own kickoff (the card reflects that per-fixture).
   const now = windowState ? new Date(windowState.serverTime) : new Date();
+  // Show every unsettled match. A match whose kickoff has already passed but
+  // has no result yet is treated as LIVE and highlighted in its card.
+  const isLive = f => !f.result && new Date(f.kickoff).getTime() <= now.getTime();
   const open = sorted.filter(f=> !f.result && new Date(f.kickoff).getTime() > now.getTime());
+  const live = sorted.filter(isLive);
+  const openAndLive = [...live, ...open];   // live matches first
   const settled = sorted.filter(f=>f.result).reverse().slice(0,6);
 
-  $("#openFixtures").innerHTML = open.length ? open.map(f=>fixtureCard(f,uidc,false)).join("")
+  $("#openFixtures").innerHTML = openAndLive.length ? openAndLive.map(f=>fixtureCard(f,uidc,false,isLive(f))).join("")
     : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No upcoming matches right now.</div>`;
   $("#settledFixtures").innerHTML = settled.length ? settled.map(f=>fixtureCard(f,uidc,true)).join("")
     : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No results yet.</div>`;
 }
-function fixtureCard(f,empId,isSettled){
+function fixtureCard(f,empId,isSettled,live){
   const A=teamById(f.teamAId), B=teamById(f.teamBId);
   const d=fixtureDT(f);
   const pred=userPrediction(empId,f.id);
@@ -1284,8 +1372,9 @@ function fixtureCard(f,empId,isSettled){
       <div class="vote-legend"><span>W ${pct("win")}%</span><span>D ${pct("draw")}%</span><span>L ${pct("lose")}%</span></div>` : "";
     bottom=`<div class="pick-row">${picks}</div>${scoreRow}${action}${votes}`;
   }
-  return `<div class="card fix-card">
-    <div class="fix-meta"><span class="round">${esc(f.round||"Fixture")}</span><span>${fmtDayStr(f.date)} · ${fmtTime12(f.time)} IST</span></div>
+  const liveBadge = live ? `<span class="live-badge"><span class="live-pulse"></span>Live</span>` : "";
+  return `<div class="card fix-card${live?" is-live":""}">
+    <div class="fix-meta"><span class="round">${liveBadge||esc(f.round||"Fixture")}</span><span>${fmtDayStr(f.date)} · ${fmtTime12(f.time)} IST</span></div>
     <div class="matchup">
       <div class="team">${badge(A)}<span class="tname">${esc(A.name)}</span></div>
       <div class="vs">VS</div>
@@ -1381,9 +1470,9 @@ function renderStats(){
   const dist={win:0,draw:0,lose:0};
   state.predictions.forEach(p=>dist[p.choice]++);
   $("#distChart").innerHTML = svgDonut([
-    {label:"Win",value:dist.win,color:"#00FF88"},
-    {label:"Draw",value:dist.draw,color:"#FFD700"},
-    {label:"Lose",value:dist.lose,color:"#FF5468"},
+    {label:"Win",value:dist.win,color:"#34C77B"},
+    {label:"Draw",value:dist.draw,color:"#F2C84B"},
+    {label:"Lose",value:dist.lose,color:"#E5544E"},
   ]);
 }
 function svgBars(data){
@@ -1396,11 +1485,11 @@ function svgBars(data){
       <text x="${pad-8}" y="${y+4}" text-anchor="end" fill="#5C6470" font-family="Rajdhani" font-size="12" font-weight="600">${val}</text>`; }
   data.forEach((d,i)=>{ const h=(H-pad*2)*(d.value/max); const x=pad+i*(bw+gap); const y=H-pad-h;
     bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="5" fill="url(#barg)"/>
-      <text x="${x+bw/2}" y="${y-7}" text-anchor="middle" fill="#00FF88" font-family="Anton" font-size="15">${d.value}</text>
+      <text x="${x+bw/2}" y="${y-7}" text-anchor="middle" fill="#E8B84B" font-family="Anton" font-size="15">${d.value}</text>
       <text x="${x+bw/2}" y="${H-pad+18}" text-anchor="middle" fill="#8A93A0" font-family="Rajdhani" font-size="12" font-weight="700">${esc(d.label)}</text>`; });
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Weekly points chart">
     <defs><linearGradient id="barg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#00FF88"/><stop offset="1" stop-color="#008037"/></linearGradient></defs>
+      <stop offset="0" stop-color="#F2C84B"/><stop offset="1" stop-color="#9c7d1f"/></linearGradient></defs>
     ${grid}${bars}</svg>`;
 }
 function svgDonut(segs){
@@ -1467,7 +1556,7 @@ function renderAdmin(){
   if(!adminToken){
     panel.hidden=true; gate.hidden=false;
     gate.innerHTML = `<div class="card gate">
-      <svg class="ball" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#00FF88" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/></svg>
+      <svg class="ball" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#E8B84B" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/></svg>
       <h3 style="font-family:var(--f-display);text-transform:uppercase;font-size:20px;margin:0 0 6px">Control Room</h3>
       <p style="color:var(--muted);font-size:14px;margin:0 0 16px">Enter the admin password to record match results.</p>
       <input type="password" id="admPass" placeholder="Admin password" style="width:100%;text-align:center;margin-bottom:8px" />
@@ -1835,7 +1924,7 @@ function tickClock(){
 /* ---------- boot ---------- */
 /* ---------- login / identity ---------- */
 /* ---------- pitch markings: the exact TV-mode field graphic, reused everywhere ---------- */
-const PITCH_SVG = `<svg class="tv-field" viewBox="0 0 600 380" fill="none" stroke="#00FF88" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="594" height="374" rx="6"/><line x1="300" y1="3" x2="300" y2="377"/><circle cx="300" cy="190" r="58"/><circle cx="300" cy="190" r="3" fill="#00FF88" stroke="none"/><rect x="3" y="95" width="92" height="190"/><rect x="3" y="140" width="38" height="100"/><circle cx="62" cy="190" r="2.5" fill="#00FF88" stroke="none"/><path d="M95 145 A52 52 0 0 1 95 235"/><rect x="505" y="95" width="92" height="190"/><rect x="559" y="140" width="38" height="100"/><circle cx="538" cy="190" r="2.5" fill="#00FF88" stroke="none"/><path d="M505 145 A52 52 0 0 0 505 235"/><path d="M3 17 A14 14 0 0 0 17 3"/><path d="M583 3 A14 14 0 0 0 597 17"/><path d="M3 363 A14 14 0 0 1 17 377"/><path d="M583 377 A14 14 0 0 1 597 363"/></svg>`;
+const PITCH_SVG = `<svg class="tv-field" viewBox="0 0 600 380" fill="none" stroke="#E8B84B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="594" height="374" rx="6"/><line x1="300" y1="3" x2="300" y2="377"/><circle cx="300" cy="190" r="58"/><circle cx="300" cy="190" r="3" fill="#E8B84B" stroke="none"/><rect x="3" y="95" width="92" height="190"/><rect x="3" y="140" width="38" height="100"/><circle cx="62" cy="190" r="2.5" fill="#E8B84B" stroke="none"/><path d="M95 145 A52 52 0 0 1 95 235"/><rect x="505" y="95" width="92" height="190"/><rect x="559" y="140" width="38" height="100"/><circle cx="538" cy="190" r="2.5" fill="#E8B84B" stroke="none"/><path d="M505 145 A52 52 0 0 0 505 235"/><path d="M3 17 A14 14 0 0 0 17 3"/><path d="M583 3 A14 14 0 0 0 597 17"/><path d="M3 363 A14 14 0 0 1 17 377"/><path d="M583 377 A14 14 0 0 1 597 363"/></svg>`;
 function paintPitchLines(sel){ const el=$(sel); if(el && !el.querySelector(".tv-field")) el.insertAdjacentHTML("afterbegin", PITCH_SVG); }
 
 /* ---------- landing / intro ---------- */
@@ -1844,7 +1933,6 @@ function ensureLandingEl(){
   const el=document.createElement("div");
   el.id="landingOverlay"; el.className="landing"; el.hidden=true;
   el.innerHTML=`
-    ${PITCH_SVG}
     <div class="sparks" id="landingSparks" aria-hidden="true" style="z-index:0"></div>
     <div class="landing-title">Calfus <span>FIFA</span> League</div>
     <div class="landing-sub">🏆 The office World Cup 2026 prediction game</div>
