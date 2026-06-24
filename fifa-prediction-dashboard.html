@@ -209,9 +209,23 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .acct-menu[hidden]{display:none}
 .acct-name{font-family:var(--f-sport);font-weight:700;color:var(--ink);font-size:15px}
 .acct-email{font-size:12px;color:var(--muted);margin:3px 0 12px;word-break:break-all}
-.acct-menu #logoutBtn{width:100%;padding:9px;font-size:13px;border-radius:9px;color:var(--ink);
-  border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.acct-menu #rulesBtn,.acct-menu #logoutBtn{width:100%;padding:9px;font-size:13px;border-radius:9px;color:var(--ink);
+  border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;font-family:var(--f-sport);font-weight:700}
+.acct-menu #rulesBtn{margin-bottom:8px}
+.acct-menu #rulesBtn:hover{background:rgba(232,184,75,.16);border-color:rgba(232,184,75,.4);color:var(--neon)}
 .acct-menu #logoutBtn:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);color:#ff8a8a}
+
+/* rules / instructions modal (account menu) */
+.rules-modal{position:fixed;inset:0;z-index:340;display:grid;place-items:center;padding:20px;
+  background:rgba(6,9,14,.72);backdrop-filter:blur(6px)}
+.rules-modal[hidden]{display:none}
+.rules-box{position:relative;width:min(960px,100%);max-height:88vh;overflow:auto;padding:28px clamp(20px,3vw,40px);
+  border-radius:16px;background:linear-gradient(180deg,#161e29,#0F141C);border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.rules-title{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;
+  font-size:clamp(22px,3vw,32px);color:var(--neon);margin:0 0 18px}
+.rules-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);font-size:15px;line-height:1}
+.rules-close:hover{background:rgba(255,255,255,.14)}
 
 /* ---------- layout ---------- */
 main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
@@ -2405,6 +2419,56 @@ function tickClock(){
 const PITCH_SVG = `<svg class="tv-field" viewBox="0 0 600 380" fill="none" stroke="#E8B84B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="594" height="374" rx="6"/><line x1="300" y1="3" x2="300" y2="377"/><circle cx="300" cy="190" r="58"/><circle cx="300" cy="190" r="3" fill="#E8B84B" stroke="none"/><rect x="3" y="95" width="92" height="190"/><rect x="3" y="140" width="38" height="100"/><circle cx="62" cy="190" r="2.5" fill="#E8B84B" stroke="none"/><path d="M95 145 A52 52 0 0 1 95 235"/><rect x="505" y="95" width="92" height="190"/><rect x="559" y="140" width="38" height="100"/><circle cx="538" cy="190" r="2.5" fill="#E8B84B" stroke="none"/><path d="M505 145 A52 52 0 0 0 505 235"/><path d="M3 17 A14 14 0 0 0 17 3"/><path d="M583 3 A14 14 0 0 0 597 17"/><path d="M3 363 A14 14 0 0 1 17 377"/><path d="M583 377 A14 14 0 0 1 597 363"/></svg>`;
 function paintPitchLines(sel){ const el=$(sel); if(el && !el.querySelector(".tv-field")) el.insertAdjacentHTML("afterbegin", PITCH_SVG); }
 
+/* ---------- rules / instructions (shared by the landing page and the account menu) ---------- */
+function rulesHTML(){
+  return `
+    <div class="lnd-grid">
+      <div class="lnd-card">
+        <h3>How to play</h3>
+        <ul>
+          <li>Sign in with your <b>name</b> and <b>Calfus email</b>.</li>
+          <li>For each fixture, pick the result: <b>Team A wins</b>, <b>Draw</b>, or <b>Team B wins</b>.</li>
+          <li>Optionally predict the <b>exact score</b> for bonus points.</li>
+          <li>Climb the <b>leaderboard</b> as results come in!</li>
+        </ul>
+      </div>
+      <div class="lnd-card">
+        <h3>Scoring</h3>
+        <p>Match outcome (required):</p>
+        <div class="lnd-score"><span class="lnd-pill lnd-pos">Correct +3</span><span class="lnd-pill lnd-neg">Wrong −1</span></div>
+        <p style="margin-top:12px">Exact score (optional):</p>
+        <div class="lnd-score"><span class="lnd-pill lnd-pos">Exact +5</span><span class="lnd-pill lnd-neg">Given &amp; wrong −2</span><span class="lnd-pill" style="background:rgba(255,255,255,.08);color:var(--muted)">Skipped 0</span></div>
+        <p style="margin-top:10px">A spot-on win nets you <b>+8</b>!</p>
+      </div>
+      <div class="lnd-card">
+        <h3>When to predict</h3>
+        <ul>
+          <li>Predictions are <b>open all the time</b> — pick whenever you like.</li>
+          <li>Each match <b>locks 30 minutes before its kickoff</b>.</li>
+          <li>Other matches stay open, so <b>predict early</b> and come back for the rest!</li>
+        </ul>
+      </div>
+    </div>`;
+}
+function showRules(){
+  let el=$("#rulesModal");
+  if(!el){
+    el=document.createElement("div");
+    el.id="rulesModal"; el.className="rules-modal"; el.hidden=true;
+    el.innerHTML=`
+      <div class="rules-box">
+        <button class="rules-close" id="rulesClose" aria-label="Close">✕</button>
+        <h2 class="rules-title">Rules &amp; Instructions</h2>
+        ${rulesHTML()}
+      </div>`;
+    document.body.appendChild(el);
+    $("#rulesClose").addEventListener("click", hideRules);
+    el.addEventListener("click", e=>{ if(e.target.id==="rulesModal") hideRules(); });
+  }
+  el.hidden=false; document.body.style.overflow="hidden";
+}
+function hideRules(){ const el=$("#rulesModal"); if(el) el.hidden=true; document.body.style.overflow=""; }
+
 /* ---------- landing / intro ---------- */
 function ensureLandingEl(){
   if($("#landingOverlay")) return;
@@ -2415,33 +2479,7 @@ function ensureLandingEl(){
     <div class="landing-title"><img class="calfus-wm" src="/assets/calfus-logo-white.png" alt="Calfus"> <span>FIFA</span> League</div>
     <div class="landing-sub">🏆 The office World Cup 2026 prediction game</div>
     <div class="landing-body">
-      <div class="lnd-grid">
-        <div class="lnd-card">
-          <h3>How to play</h3>
-          <ul>
-            <li>Sign in with your <b>name</b> and <b>Calfus email</b>.</li>
-            <li>For each fixture, pick the result: <b>Team A wins</b>, <b>Draw</b>, or <b>Team B wins</b>.</li>
-            <li>Optionally predict the <b>exact score</b> for bonus points.</li>
-            <li>Climb the <b>leaderboard</b> as results come in!</li>
-          </ul>
-        </div>
-        <div class="lnd-card">
-          <h3>Scoring</h3>
-          <p>Match outcome (required):</p>
-          <div class="lnd-score"><span class="lnd-pill lnd-pos">Correct +3</span><span class="lnd-pill lnd-neg">Wrong −1</span></div>
-          <p style="margin-top:12px">Exact score (optional):</p>
-          <div class="lnd-score"><span class="lnd-pill lnd-pos">Exact +5</span><span class="lnd-pill lnd-neg">Given &amp; wrong −2</span><span class="lnd-pill" style="background:rgba(255,255,255,.08);color:var(--muted)">Skipped 0</span></div>
-          <p style="margin-top:10px">A spot-on win nets you <b>+8</b>!</p>
-        </div>
-        <div class="lnd-card">
-          <h3>When to predict</h3>
-          <ul>
-            <li>Predictions are <b>open all the time</b> — pick whenever you like.</li>
-            <li>Each match <b>locks 30 minutes before its kickoff</b>.</li>
-            <li>Other matches stay open, so <b>predict early</b> and come back for the rest!</li>
-          </ul>
-        </div>
-      </div>
+      ${rulesHTML()}
       <button class="btn btn-primary landing-go" id="landingGo">Let's go →</button>
     </div>`;
   document.body.appendChild(el);
@@ -2593,9 +2631,11 @@ function setIdentity(){
     <div id="acctMenu" class="acct-menu" hidden>
       <div class="acct-name">${esc(currentUser.name)}</div>
       <div class="acct-email">${esc(currentUser.email||"")}</div>
+      <button id="rulesBtn">Rules &amp; Instructions</button>
       <button id="logoutBtn">Logout</button>
     </div>`;
   $("#acctBtn").onclick=e=>{ e.stopPropagation(); const m=$("#acctMenu"); m.hidden=!m.hidden; };
+  $("#rulesBtn").onclick=()=>{ $("#acctMenu").hidden=true; showRules(); };
   $("#logoutBtn").onclick=logout;
 }
 
