@@ -13,6 +13,7 @@ const express = require("express");
 const cors = require("cors");
 const config = require("./src/config");
 const { connect, collections } = require("./src/db");
+const { startPoller } = require("./src/espnSync");
 
 const authRoutes = require("./src/routes/auth");
 const { router: fixturesRoutes } = require("./src/routes/fixtures");
@@ -71,6 +72,8 @@ app.get("/api/wc/*", async (req, res) => {
 
 // ---- boot --------------------------------------------------------------------
 connect()
-  .then(() => app.listen(config.PORT, () =>
-    console.log(`API on http://localhost:${config.PORT}`)))
+  .then(() => {
+    app.listen(config.PORT, () => console.log(`API on http://localhost:${config.PORT}`));
+    startPoller();
+  })
   .catch(err => { console.error("Startup failed:", err); process.exit(1); });

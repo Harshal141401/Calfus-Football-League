@@ -73,6 +73,19 @@ const config = {
   // --- Football API proxy (optional, kept from original server) ---
   WC_BASE: env.WC_BASE || "https://worldcup26.ir",
   WC_TOKEN: env.WC_TOKEN || "",
+
+  // --- ESPN live scoreboard poller (auto live-scores + auto-settle) ---
+  ESPN_POLL_ENABLED: env.ESPN_POLL_ENABLED === "true",
+  ESPN_POLL_SEC: parseInt(env.ESPN_POLL_SEC || "60", 10),
+  ESPN_BASE: env.ESPN_BASE ||
+    "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard",
+
+  // --- Email via Microsoft Graph (client-credentials). Emails no-op unless all set. ---
+  EMAIL_ENABLED: env.EMAIL_ENABLED === "true",
+  GRAPH_TENANT_ID: env.GRAPH_TENANT_ID || "",
+  GRAPH_CLIENT_ID: env.GRAPH_CLIENT_ID || "",
+  GRAPH_CLIENT_SECRET: env.GRAPH_CLIENT_SECRET || "",
+  GRAPH_SENDER: env.GRAPH_SENDER || "",  // from-mailbox UPN, needs Mail.Send app consent
 };
 
 if (!config.MONGODB_URI) {

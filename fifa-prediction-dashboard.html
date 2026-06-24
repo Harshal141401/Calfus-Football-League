@@ -1105,6 +1105,7 @@ function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
   teamAId:String(f.teamA.id), teamBId:String(f.teamB.id),
   date:f.date, time:f.time, kickoff:f.kickoff, round:f.round, group:f.group, md:f.md,
   result:f.result||null, homeScore:f.homeScore, awayScore:f.awayScore,
+  liveStatus:f.liveStatus||null, liveHomeScore:f.liveHomeScore, liveAwayScore:f.liveAwayScore, liveClock:f.liveClock||null,
   predictable:!!f.predictable, locked:!!f.locked }; }
 function mapEmployee(e,i){ return { id:String(e.id), name:e.name, av:AVCOL[i%AVCOL.length] }; }
 
@@ -1370,7 +1371,12 @@ function fixtureCard(f,empId,isSettled,live){
     else { action = `<button class="btn btn-primary lockin" data-fix="${f.id}">${pred?"Update pick":"Lock in pick"}</button>`; }
     const votes = v.total? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-d" style="width:${pct("draw")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>
       <div class="vote-legend"><span>W ${pct("win")}%</span><span>D ${pct("draw")}%</span><span>L ${pct("lose")}%</span></div>` : "";
-    bottom=`<div class="pick-row">${picks}</div>${scoreRow}${action}${votes}`;
+    let liveScore="";
+    if(f.liveStatus==="in" && f.liveHomeScore!=null && f.liveAwayScore!=null){
+      const clk = f.liveClock ? esc(f.liveClock) : "LIVE";
+      liveScore=`<div class="fix-meta" style="margin:0 0 10px"><span>${esc(A.abbr)} <b style="color:var(--gold)">${f.liveHomeScore}–${f.liveAwayScore}</b> ${esc(B.abbr)}</span><span class="round" style="color:var(--accent2)">⚽ ${clk}</span></div>`;
+    }
+    bottom=`${liveScore}<div class="pick-row">${picks}</div>${scoreRow}${action}${votes}`;
   }
   const liveBadge = live ? `<span class="live-badge"><span class="live-pulse"></span>Live</span>` : "";
   return `<div class="card fix-card${live?" is-live":""}">
