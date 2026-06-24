@@ -63,7 +63,7 @@ function buildEmail(p, fixture, nameA, nameB) {
       <tr><td style="padding:10px 0;font-weight:bold;border-top:1px solid #eee">Points</td>
           <td style="padding:10px 0;text-align:right;font-weight:bold;border-top:1px solid #eee">${sign}${points}</td></tr>
     </table>
-    <p style="color:#888;font-size:13px;margin-top:20px">Calfus Football League — check the leaderboard for your standing.</p>
+    <p style="color:#888;font-size:13px;margin-top:20px">Calfus FIFA League — check the leaderboard for your standing.</p>
   </div>`;
 }
 
