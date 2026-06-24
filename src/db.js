@@ -22,6 +22,8 @@ async function connect() {
   await database.collection("settledScores").createIndex({ fixtureId: 1 }, { unique: true });
   // One password credential per email (login).
   await database.collection("credentials").createIndex({ email: 1 }, { unique: true });
+  // Cache of ESPN athlete -> club name (keyed by athlete id; clubs are stable for the tournament).
+  await database.collection("athleteClubs").createIndex({ at: 1 });
 
   console.log(`Connected to ${config.DB_NAME}`);
   return database;
@@ -34,6 +36,7 @@ const collections = {
   predictions: () => database.collection("predictions"),
   settledScores: () => database.collection("settledScores"),
   credentials: () => database.collection("credentials"),
+  athleteClubs: () => database.collection("athleteClubs"),
 };
 
 module.exports = { connect, collections, client };

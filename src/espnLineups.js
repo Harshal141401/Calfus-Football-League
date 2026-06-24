@@ -1,6 +1,12 @@
-/* Fetch + parse starting XI from ESPN's match summary endpoint.
-   parseLineup is a pure transform (unit-tested offline); fetchLineup does I/O.
-   ESPN publishes lineups only ~1h before kickoff, so callers retry until present. */
+/* Fetch + parse starting XI from ESPN's match summary endpoint, enriched with each
+   player's club. parseLineup is a pure transform (unit-tested offline); fetchLineup
+   does I/O. ESPN publishes lineups only ~1h before kickoff, so callers retry until present.
+
+   Club isn't in the summary roster — it lives on the per-athlete endpoint as `defaultTeam`
+   (the player's club, isNational=false). We resolve it once per athlete and cache the
+   result in Mongo (athleteClubs), since clubs don't change over the tournament. */
+const ATHLETE_BASE = "https://sports.core.api.espn.com/v2/sports/soccer/athletes";
+
 function parseLineup(json) {
   const out = { home: [], away: [] };
   for (const r of json?.rosters || []) {
@@ -9,6 +15,7 @@ function parseLineup(json) {
     out[side] = (r.roster || [])
       .filter(p => p.starter)
       .map(p => ({
+        id: String(p.athlete?.id || ""),
         num: String(p.jersey || ""),
         name: p.athlete?.displayName || p.athlete?.shortName || "",
         pos: p.position?.abbreviation || "",
@@ -18,12 +25,64 @@ function parseLineup(json) {
   return out;
 }
 
+async function getJson(url) {
+  const r = await fetch(String(url).replace(/^http:/, "https:"), { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`ESPN ${r.status}`);
+  return r.json();
+}
+
+/* Live resolve of an athlete's club via ESPN core API. Returns "" if none / national team
+   / any failure — club is purely cosmetic, so it must never break a lineup fetch. */
+async function resolveClub(athleteId) {
+  try {
+    const a = await getJson(`${ATHLETE_BASE}/${encodeURIComponent(athleteId)}`);
+    if (!a.defaultTeam?.$ref) return "";
+    const t = await getJson(a.defaultTeam.$ref);
+    if (t.isNational) return "";                 // their World Cup side, not a club
+    return t.shortDisplayName || t.name || t.displayName || "";
+  } catch (e) { return ""; }
+}
+
+/* Club for an athlete, memoised in Mongo (presence of a doc = resolved, even if ""). */
+async function clubFor(athleteId) {
+  if (!athleteId) return "";
+  let cache = null;
+  try { cache = require("./db").collections.athleteClubs(); } catch (e) { /* db not ready */ }
+  if (cache) {
+    const hit = await cache.findOne({ _id: athleteId });
+    if (hit) return hit.club || "";
+  }
+  const club = await resolveClub(athleteId);
+  if (cache) {
+    try { await cache.updateOne({ _id: athleteId }, { $set: { club, at: new Date() } }, { upsert: true }); }
+    catch (e) { /* cache write is best-effort */ }
+  }
+  return club;
+}
+
+/* Fill `club` on each player, a few at a time so one fixture's XI resolves in a couple
+   of rounds rather than 11 sequential round-trips. Mutates the array in place. */
+async function enrichClubs(players) {
+  const LIMIT = 5;
+  let next = 0;
+  async function worker() {
+    while (next < players.length) {
+      const p = players[next++];
+      p.club = await clubFor(p.id);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(LIMIT, players.length) }, worker));
+  return players;
+}
+
 async function fetchLineup(espnId) {
   const config = require("./config");
   const base = config.ESPN_SUMMARY_BASE || config.ESPN_BASE.replace("scoreboard", "summary");
   const r = await fetch(`${base}?event=${encodeURIComponent(espnId)}`, { signal: AbortSignal.timeout(10000) });
   if (!r.ok) throw new Error(`ESPN summary ${r.status}`);
-  return parseLineup(await r.json());
+  const lineup = parseLineup(await r.json());
+  await Promise.all([enrichClubs(lineup.home), enrichClubs(lineup.away)]);
+  return lineup;
 }
 
-module.exports = { fetchLineup, parseLineup };
+module.exports = { fetchLineup, parseLineup, enrichClubs, resolveClub };
