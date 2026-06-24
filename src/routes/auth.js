@@ -38,16 +38,28 @@ router.post("/login", async (req, res) => {
 // Name + Email pair matching an employee; then the password is (re)set and they're logged in.
 router.post("/set-password", async (req, res) => {
   try {
-    const { name, email, password } = req.body || {};
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "Name, email and password are required." });
+    const { name, email, password, intent } = req.body || {};
+    const isReset = intent === "reset";
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required." });
     }
     if (String(password).length < MIN_PW) {
       return res.status(400).json({ error: `Password must be at least ${MIN_PW} characters.` });
     }
-    const emp = await findEmployee(name, email);   // name + email must match an employee
-    if (!emp) {
-      return res.status(401).json({ error: "Name and work email don't match an employee." });
+    // Register: verified by email only. Reset: also requires the matching full name.
+    let emp;
+    if (isReset) {
+      if (!name) return res.status(400).json({ error: "Full name is required to reset your password." });
+      emp = await findEmployee(name, email);
+      if (!emp) return res.status(401).json({ error: "Full name and work email don't match an employee." });
+    } else {
+      emp = await findEmployeeByEmail(email);
+      if (!emp) return res.status(401).json({ error: "No employee found for that work email." });
+    }
+    // Register is one-time: refuse if a password already exists (use Forgot password to change).
+    const existing = await collections.credentials().findOne({ email: norm(email) });
+    if (!isReset && existing) {
+      return res.status(409).json({ error: "This email is already registered. Please log in, or use “Forgot password” to reset." });
     }
     const passwordHash = await hashPassword(password);
     const now = new Date();

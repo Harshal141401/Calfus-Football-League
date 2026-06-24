@@ -177,15 +177,18 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
   gap:18px;padding:12px 28px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 0}
 .brand .ball{width:34px;height:34px;flex:none;animation:spin 9s linear infinite}
+.brand-logo{height:54px;width:auto;flex:none;object-fit:contain}
+.calfus-wm{height:1.15em;width:auto;vertical-align:0.0em;display:inline-block}
+.tv-logo{height:clamp(56px,8vh,96px)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .brand-name{font-family:var(--f-display);font-size:22px;letter-spacing:.06em;line-height:.9;
   text-transform:uppercase}
 .brand-name span{color:var(--neon);text-shadow:0 0 14px rgba(232,184,75,.28)}
 .brand-sub{font-family:var(--f-sport);font-weight:600;font-size:11px;letter-spacing:.32em;
   color:var(--muted);text-transform:uppercase;margin-top:2px}
-.nav{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.nav{display:flex;gap:clamp(8px,1.6vw,26px);flex-wrap:wrap;justify-content:center}
 .nav button{font-family:var(--f-sport);font-weight:600;font-size:14px;letter-spacing:.08em;
-  text-transform:uppercase;padding:9px 14px;border-radius:10px;color:var(--muted);
+  text-transform:uppercase;padding:9px 18px;border-radius:10px;color:var(--muted);
   border:1px solid transparent;transition:.18s}
 .nav button:hover{color:var(--ink);background:rgba(255,255,255,.05)}
 .nav button.active{color:#1a1402;background:var(--neon);
@@ -372,6 +375,21 @@ select{appearance:none;padding-right:30px;
 .live-pulse{width:8px;height:8px;border-radius:50%;background:var(--danger);
   box-shadow:0 0 0 0 rgba(229,84,78,.7);animation:livepulse 1.5s infinite}
 @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(229,84,78,.6)}70%{box-shadow:0 0 0 8px rgba(229,84,78,0)}100%{box-shadow:0 0 0 0 rgba(229,84,78,0)}}
+/* flip card — front = match, back = starting XIs (hover or ⟳ to flip) */
+.fix-card.flip{position:relative;overflow:hidden;perspective:1200px}
+.fix-card.flip .flip-inner{position:relative;transition:transform .6s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
+.fix-card.flip:hover .flip-inner,.fix-card.flip.flipped .flip-inner{transform:rotateY(180deg)}
+.flip-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip-back{position:absolute;inset:0;transform:rotateY(180deg);overflow:auto;display:flex;flex-direction:column;gap:8px}
+.flip-btn{position:absolute;top:10px;right:10px;z-index:4;width:30px;height:30px;border-radius:50%;
+  border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);cursor:pointer;font-size:15px;line-height:1}
+.flip-btn:hover{background:rgba(255,255,255,.16)}
+.xi-head{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;font-size:13px;color:var(--neon);text-align:center}
+.xi-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px}
+.xi-team{font-family:var(--f-sport);font-weight:700;color:var(--gold);text-align:center;margin-bottom:4px}
+.xi-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.xi-list li{display:flex;gap:6px;align-items:baseline;color:var(--ink);line-height:1.25}
+.xi-num{color:var(--muted);min-width:18px;text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:1000px){.fix-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.fix-grid{grid-template-columns:1fr}
   #view-predict.is-active{padding:0 16px}}
@@ -581,6 +599,7 @@ select{appearance:none;padding-right:30px;
   text-transform:uppercase;color:var(--muted);font-size:clamp(11px,1.3vw,17px)}
 .tvfix{padding:clamp(16px,2.4vh,30px);border-radius:18px;background:var(--glass);border:1px solid var(--line);
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(10px,2vw,24px)}
+.tvfix.is-live{border-color:rgba(255,84,104,.5);box-shadow:0 0 30px rgba(255,84,104,.16)}
 .tvfix .when{grid-column:1/-1;text-align:center;font-family:var(--f-sport);font-weight:700;
   letter-spacing:.18em;text-transform:uppercase;color:var(--neon);font-size:clamp(13px,1.4vw,20px);margin-bottom:6px}
 .tvfix .team{gap:clamp(8px,1.4vh,16px)}
@@ -697,7 +716,7 @@ footer b{color:var(--muted)}
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <svg class="ball" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#E8B84B" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/><path d="M31 14l8 2 .8 8-7 3-4.5-6.2zM17 14l-8 2-.8 8 7 3 4.5-6.2zM19.7 30.3h8.6l2.7 8-7 4.2-7-4.2z" fill="#0c0f12" stroke="#fff" stroke-width="1.2"/></svg>
+      <img class="brand-logo" src="/assets/Picture1.png" alt="FIFA World Cup">
       <div>
         <div class="brand-name" id="brandName">Calfus <span>FIFA</span> League</div>
       </div>
@@ -847,7 +866,7 @@ footer b{color:var(--muted)}
     <div class="sparks tv-sparks" id="tvSparks" aria-hidden="true"></div>
   </div>
   <div class="tv-top">
-    <svg class="ball" style="width:38px;height:38px;animation:spin 9s linear infinite" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#0c0f12" stroke="#E8B84B" stroke-width="1.5"/><path d="M24 9l7 5-2.7 8.3h-8.6L17 14z" fill="#fff"/></svg>
+    <img class="brand-logo tv-logo" src="/assets/Picture1.png" alt="FIFA World Cup">
     <div class="brand-name" id="tvBrand">Calfus <span>FIFA</span> League</div>
     <div class="tv-clock"><span class="live-dot"></span><span id="tvClock">--:--:--</span></div>
     <button class="tv-exit" id="tvExit">✕ Exit (Esc)</button>
@@ -1106,6 +1125,7 @@ function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
   date:f.date, time:f.time, kickoff:f.kickoff, round:f.round, group:f.group, md:f.md,
   result:f.result||null, homeScore:f.homeScore, awayScore:f.awayScore,
   liveStatus:f.liveStatus||null, liveHomeScore:f.liveHomeScore, liveAwayScore:f.liveAwayScore, liveClock:f.liveClock||null,
+  lineups:f.lineups||null,
   predictable:!!f.predictable, locked:!!f.locked }; }
 function mapEmployee(e,i){ return { id:String(e.id), name:e.name, av:AVCOL[i%AVCOL.length] }; }
 
@@ -1349,44 +1369,68 @@ function fixtureCard(f,empId,isSettled,live){
     } else pill=`<span class="settled-pill">No pick</span>`;
     bottom=`<div class="fix-meta" style="margin:0 0 10px"><span>${scoreTxt?`Final · <b style="color:var(--gold)">${scoreTxt}</b>`:"Final result"}</span><span class="round">${resTxt}</span></div>${pill}`;
   } else {
-    const dis = f.predictable ? "" : "disabled";
-    const picks=["win","draw","lose"].map(c=>{
-      const seld=pred&&pred.choice===c?"sel":"";
-      return `<button class="pick ${c} ${seld}" ${dis} data-pick="${c}" data-fix="${f.id}">${labels[c]}</button>`;
-    }).join("");
-    const sh = (pred&&pred.scoreHome!=null)?pred.scoreHome:"", sa=(pred&&pred.scoreAway!=null)?pred.scoreAway:"";
-    const scoreRow = `<div class="score-pred ${dis?'is-locked':''}">
-        <span class="sp-cap">Predict the score</span>
-        <div class="sp-board">
-          <span class="sp-team">${esc(A.abbr)}</span>
-          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" class="sc-h" data-fix="${f.id}" value="${sh}" placeholder="–" ${dis} aria-label="${esc(A.abbr)} goals">
-          <span class="sp-colon">:</span>
-          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" class="sc-a" data-fix="${f.id}" value="${sa}" placeholder="–" ${dis} aria-label="${esc(B.abbr)} goals">
-          <span class="sp-team">${esc(B.abbr)}</span>
-        </div>
-      </div>`;
-    let action;
-    const yourPick = pred?` · your pick: ${labels[pred.choice]}`:"";
-    if(!f.predictable){ action = `<div class="locked">🔒 Predictions closed (locked 30 min before kickoff)${yourPick}</div>`; }
-    else { action = `<button class="btn btn-primary lockin" data-fix="${f.id}">${pred?"Update pick":"Lock in pick"}</button>`; }
     const votes = v.total? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-d" style="width:${pct("draw")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>
       <div class="vote-legend"><span>W ${pct("win")}%</span><span>D ${pct("draw")}%</span><span>L ${pct("lose")}%</span></div>` : "";
-    let liveScore="";
-    if(f.liveStatus==="in" && f.liveHomeScore!=null && f.liveAwayScore!=null){
-      const clk = f.liveClock ? esc(f.liveClock) : "LIVE";
-      liveScore=`<div class="fix-meta" style="margin:0 0 10px"><span>${esc(A.abbr)} <b style="color:var(--gold)">${f.liveHomeScore}–${f.liveAwayScore}</b> ${esc(B.abbr)}</span><span class="round" style="color:var(--accent2)">⚽ ${clk}</span></div>`;
+    if(live){
+      // Match underway — show the live score in place of prediction controls.
+      let head;
+      if(f.liveStatus==="in" && f.liveHomeScore!=null && f.liveAwayScore!=null){
+        const clk = f.liveClock ? esc(f.liveClock) : "LIVE";
+        head = `<div class="fix-meta" style="margin:0 0 8px"><span class="round" style="color:#ff5468">⚽ ${clk}</span><span class="round">In&nbsp;play</span></div>
+          <div style="text-align:center;font-family:var(--f-display);font-size:clamp(28px,4vw,40px);color:var(--ink)">${esc(A.abbr)} <span style="color:var(--gold)">${f.liveHomeScore}–${f.liveAwayScore}</span> ${esc(B.abbr)}</div>`;
+      } else {
+        head = `<div class="locked">🔴 Match underway — predictions closed</div>`;
+      }
+      const yourPick = pred? `<div class="fix-meta" style="margin:8px 0 0"><span class="round">Your pick · ${labels[pred.choice]}</span></div>` : "";
+      bottom = `${head}${yourPick}${votes}`;
+    } else {
+      const dis = f.predictable ? "" : "disabled";
+      const picks=["win","draw","lose"].map(c=>{
+        const seld=pred&&pred.choice===c?"sel":"";
+        return `<button class="pick ${c} ${seld}" ${dis} data-pick="${c}" data-fix="${f.id}">${labels[c]}</button>`;
+      }).join("");
+      const sh = (pred&&pred.scoreHome!=null)?pred.scoreHome:"", sa=(pred&&pred.scoreAway!=null)?pred.scoreAway:"";
+      const scoreRow = `<div class="score-pred ${dis?'is-locked':''}">
+          <span class="sp-cap">Predict the score</span>
+          <div class="sp-board">
+            <span class="sp-team">${esc(A.abbr)}</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" class="sc-h" data-fix="${f.id}" value="${sh}" placeholder="–" ${dis} aria-label="${esc(A.abbr)} goals">
+            <span class="sp-colon">:</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" class="sc-a" data-fix="${f.id}" value="${sa}" placeholder="–" ${dis} aria-label="${esc(B.abbr)} goals">
+            <span class="sp-team">${esc(B.abbr)}</span>
+          </div>
+        </div>`;
+      const yourPick = pred?` · your pick: ${labels[pred.choice]}`:"";
+      const action = f.predictable
+        ? `<button class="btn btn-primary lockin" data-fix="${f.id}">${pred?"Update pick":"Lock in pick"}</button>`
+        : `<div class="locked">🔒 Predictions closed (locked 30 min before kickoff)${yourPick}</div>`;
+      bottom=`<div class="pick-row">${picks}</div>${scoreRow}${action}${votes}`;
     }
-    bottom=`${liveScore}<div class="pick-row">${picks}</div>${scoreRow}${action}${votes}`;
   }
   const liveBadge = live ? `<span class="live-badge"><span class="live-pulse"></span>Live</span>` : "";
-  return `<div class="card fix-card${live?" is-live":""}">
+  const frontInner = `
     <div class="fix-meta"><span class="round">${liveBadge||esc(f.round||"Fixture")}</span><span>${fmtDayStr(f.date)} · ${fmtTime12(f.time)} IST</span></div>
     <div class="matchup">
       <div class="team">${badge(A)}<span class="tname">${esc(A.name)}</span></div>
       <div class="vs">VS</div>
       <div class="team">${badge(B)}<span class="tname">${esc(B.name)}</span></div>
     </div>
-    ${bottom}
+    ${bottom}`;
+  const lu = f.lineups;
+  const hasXI = lu && ((lu.teamA && lu.teamA.length) || (lu.teamB && lu.teamB.length));
+  if(!hasXI){
+    return `<div class="card fix-card${live?" is-live":""}">${frontInner}</div>`;
+  }
+  // Flip card — back shows both teams' starting XI (hover to flip, or the ⟳ button).
+  const xiCol = (arr, abbr) => `<div class="xi-col"><div class="xi-team">${esc(abbr)}</div>
+    <ol class="xi-list">${(arr||[]).map(p=>`<li><span class="xi-num">${esc(String(p.num||"·"))}</span><span class="xi-name">${esc(p.name)}</span></li>`).join("")}</ol></div>`;
+  const back = `<div class="xi-head">Starting XI</div><div class="xi-wrap">${xiCol(lu.teamA,A.abbr)}${xiCol(lu.teamB,B.abbr)}</div>`;
+  return `<div class="card fix-card flip${live?" is-live":""}">
+    <button class="flip-btn" type="button" title="Show line-ups" aria-label="Show line-ups">⟳</button>
+    <div class="flip-inner">
+      <div class="flip-face flip-front">${frontInner}</div>
+      <div class="flip-face flip-back">${back}</div>
+    </div>
   </div>`;
 }
 
@@ -1667,14 +1711,25 @@ function tvLeaderboard(lb){
     `<div class="tvlb-2col"><div class="tvlb">${left}</div><div class="tvlb">${right}</div></div>`;
 }
 function tvFixtures(){
+  const now=Date.now();
+  const live=[...state.fixtures].filter(f=>!f.result && fixtureDT(f).getTime()<=now).sort((a,b)=>fixtureDT(a)-fixtureDT(b));
   const up=upcomingFixtures();   // shared with the Predict page so both stay in sync
-  if(!up.length) return tvHead("Schedule","Upcoming Fixtures",true)+`<div class="tv-empty">No upcoming fixtures</div>`;
-  const cards=up.map(f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId),d=fixtureDT(f);
+  if(!live.length && !up.length) return tvHead("Schedule","Upcoming Fixtures",true)+`<div class="tv-empty">No upcoming fixtures</div>`;
+  const liveCard=f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId);
+    const has=f.liveStatus==="in" && f.liveHomeScore!=null && f.liveAwayScore!=null;
+    const clk=has && f.liveClock?esc(f.liveClock):"LIVE";
+    const mid=has?`<div class="vs" style="color:var(--gold);font-family:var(--f-display);font-size:clamp(20px,2.6vw,34px)">${f.liveHomeScore}–${f.liveAwayScore}</div>`:`<div class="vs">VS</div>`;
+    return `<div class="tvfix is-live"><div class="when" style="color:#ff5468">🔴 ${clk}</div>
+      <div class="team">${badge(A)}<span class="tname">${esc(A.abbr)}</span></div>
+      ${mid}
+      <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; };
+  const upCard=f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId);
     return `<div class="tvfix"><div class="when">${fmtDayStr(f.date)} · ${fmtTime12(f.time)} IST · ${esc(f.round||"")}</div>
       <div class="team">${badge(A)}<span class="tname">${esc(A.abbr)}</span></div>
       <div class="vs">VS</div>
-      <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; }).join("");
-  return tvHead("Schedule","Upcoming Fixtures",true)+`<div class="tvfix-grid">${cards}</div>`;
+      <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; };
+  const cards=live.map(liveCard).join("")+up.map(upCard).join("");
+  return tvHead("Schedule", live.length?"Live &amp; Upcoming":"Upcoming Fixtures", true)+`<div class="tvfix-grid">${cards}</div>`;
 }
 function tvResults(){
   const done=[...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a)).slice(0,12);
@@ -1803,6 +1858,9 @@ function wireEvents(){
   $("#nav").addEventListener("click",e=>{ const b=e.target.closest("button[data-view]"); if(b) setActive(b.dataset.view); });
   // close the account dropdown on any outside click
   document.addEventListener("click",()=>{ const m=$("#acctMenu"); if(m && !m.hidden) m.hidden=true; });
+  // ⟳ flip button on fixture cards — toggle the lineup back (hover also flips)
+  document.addEventListener("click",e=>{ const b=e.target.closest(".flip-btn"); if(!b) return;
+    e.stopPropagation(); b.closest(".fix-card")?.classList.toggle("flipped"); });
 
   // score inputs: digits only (0–99), strip anything else as it's typed/pasted
   document.addEventListener("input",e=>{
@@ -1940,7 +1998,7 @@ function ensureLandingEl(){
   el.id="landingOverlay"; el.className="landing"; el.hidden=true;
   el.innerHTML=`
     <div class="sparks" id="landingSparks" aria-hidden="true" style="z-index:0"></div>
-    <div class="landing-title">Calfus <span>FIFA</span> League</div>
+    <div class="landing-title"><img class="calfus-wm" src="/assets/calfus-logo-white.png" alt="Calfus"> <span>FIFA</span> League</div>
     <div class="landing-sub">🏆 The office World Cup 2026 prediction game</div>
     <div class="landing-body">
       <div class="lnd-grid">
@@ -1986,7 +2044,18 @@ function showLanding(){
 function hideLanding(){ const el=$("#landingOverlay"); if(el) el.hidden=true; }
 
 const ADMIN_EMAIL = "admin@calfus.com";
-let loginMode = "login";   // "login" | "setup"
+let loginMode = "login";   // "login" | "register" | "reset"
+const LOGIN_MODES = {
+  login:    { title:"Sign in to play", hint:"Enter your work email and password.",
+              pw:"Password", btn:"Sign in",
+              left:{t:"Register", m:"register"}, right:{t:"Forgot password", m:"reset"} },
+  register: { title:"Register", hint:"New here? Use your work email and choose a password.",
+              pw:"New password (min 6 chars)", btn:"Register & sign in",
+              left:{t:"Login", m:"login"}, right:{t:"Forgot password", m:"reset"} },
+  reset:    { title:"Reset your password", hint:"Forgot it? Confirm your full name + work email, then set a new password.",
+              pw:"New password (min 6 chars)", btn:"Reset & sign in",
+              left:{t:"Login", m:"login"}, right:{t:"Register", m:"register"} },
+};
 function ensureLoginEl(){
   if($("#loginOverlay")) return;
   const el=document.createElement("div");
@@ -1994,34 +2063,39 @@ function ensureLoginEl(){
   el.style.cssText="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(8,10,14,.92);backdrop-filter:blur(4px)";
   el.innerHTML=`<form id="loginForm" class="card panel" style="width:min(92vw,400px);padding:26px;display:flex;flex-direction:column;gap:12px">
       <div id="loginTitle" style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;font-size:20px;color:var(--neon)">Sign in to play</div>
-      <div id="loginHint" style="color:var(--muted);font-size:13px">Enter your work email and password.</div>
+      <div id="loginHint" style="color:var(--muted);font-size:13px"></div>
       <input id="loginName" type="text" placeholder="Full name (as in records)" autocomplete="name" style="display:none;padding:11px;border-radius:9px">
       <input id="loginEmail" type="email" placeholder="Work email" autocomplete="email" required style="padding:11px;border-radius:9px">
       <input id="loginPw" type="password" placeholder="Password" autocomplete="current-password" required style="padding:11px;border-radius:9px">
       <input id="loginPw2" type="password" placeholder="Confirm password" autocomplete="new-password" style="display:none;padding:11px;border-radius:9px">
       <div id="loginErr" style="color:#EF4444;font-size:13px;min-height:1em"></div>
       <button type="submit" class="btn btn-primary" id="loginBtn">Sign in</button>
-      <button type="button" id="loginToggle" style="background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;padding:2px">First time or forgot password?</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+        <button type="button" id="lnkLeft" style="background:none;border:0;color:var(--neon);font-size:13px;cursor:pointer;padding:2px;font-weight:600">Register</button>
+        <button type="button" id="lnkRight" style="background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;padding:2px">Forgot password</button>
+      </div>
     </form>`;
   document.body.appendChild(el);
   $("#loginForm").addEventListener("submit", onLoginSubmit);
-  $("#loginToggle").addEventListener("click", ()=> setLoginMode(loginMode==="login"?"setup":"login"));
   setLoginMode("login");
 }
 function setLoginMode(m){
   loginMode = m;
-  const setup = m==="setup";
-  $("#loginName").style.display = setup ? "block" : "none";
-  $("#loginPw2").style.display = setup ? "block" : "none";
-  $("#loginName").required = setup; $("#loginPw2").required = setup;
-  $("#loginTitle").textContent = setup ? "Set your password" : "Sign in to play";
-  $("#loginHint").textContent = setup
-    ? "First time or forgot it? Confirm your name + work email, then choose a password."
-    : "Enter your work email and password.";
-  $("#loginPw").placeholder = setup ? "New password (min 6 chars)" : "Password";
-  $("#loginPw").autocomplete = setup ? "new-password" : "current-password";
-  $("#loginBtn").textContent = setup ? "Set password & sign in" : "Sign in";
-  $("#loginToggle").textContent = setup ? "← Back to sign in" : "First time or forgot password?";
+  const c = LOGIN_MODES[m] || LOGIN_MODES.login;
+  const showName = (m === "reset");        // full name only needed to reset
+  const showConfirm = (m !== "login");     // register & reset set a new password
+  $("#loginName").style.display = showName ? "block" : "none";
+  $("#loginName").required = showName;
+  $("#loginPw2").style.display = showConfirm ? "block" : "none";
+  $("#loginPw2").required = showConfirm;
+  $("#loginTitle").textContent = c.title;
+  $("#loginHint").textContent = c.hint;
+  $("#loginPw").placeholder = c.pw;
+  $("#loginPw").autocomplete = (m === "login") ? "current-password" : "new-password";
+  $("#loginBtn").textContent = c.btn;
+  const L=$("#lnkLeft"), R=$("#lnkRight");
+  L.textContent=c.left.t;  L.onclick=()=>setLoginMode(c.left.m);
+  R.textContent=c.right.t; R.onclick=()=>setLoginMode(c.right.m);
   $("#loginErr").textContent="";
 }
 function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex"; }
@@ -2035,11 +2109,11 @@ async function onLoginSubmit(e){
   const post=(path,body)=>fetch(base+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   err.textContent=""; btn.disabled=true;
   try{
-    if(loginMode==="setup"){
+    if(loginMode!=="login"){   // register or reset → set a password (Name + Email gated)
       if(pw.length<6){ err.textContent="Password must be at least 6 characters."; return; }
       if(pw!==pw2){ err.textContent="Passwords don't match."; return; }
-      btn.textContent="Setting…";
-      const r=await post("/api/auth/set-password",{name,email,password:pw});
+      btn.textContent="Saving…";
+      const r=await post("/api/auth/set-password",{name,email,password:pw,intent:loginMode});
       const data=await r.json().catch(()=>({}));
       if(!r.ok) throw new Error(data.error||"Could not set password");
       authToken=data.token; currentUser=data.user; localStorage.setItem(TOKEN_KEY,authToken);
@@ -2059,9 +2133,9 @@ async function onLoginSubmit(e){
     const r=await post("/api/auth/login",{email,password:pw});
     const data=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(data.error||"Login failed");
-    if(data.needsSetup){                          // first time — switch to set-password
-      setLoginMode("setup");
-      $("#loginHint").textContent="Looks like your first time — set a password to continue.";
+    if(data.needsSetup){                          // first time — switch to register
+      setLoginMode("register");
+      $("#loginHint").textContent="Looks like your first time — register a password to continue.";
       return;
     }
     authToken=data.token; currentUser=data.user; localStorage.setItem(TOKEN_KEY,authToken);
@@ -2071,7 +2145,7 @@ async function onLoginSubmit(e){
     err.textContent = net ? "Cannot reach the server. Open the app at its URL and try again." : ex.message;
   }finally{
     btn.disabled=false;
-    btn.textContent = loginMode==="setup" ? "Set password & sign in" : "Sign in";
+    btn.textContent = (LOGIN_MODES[loginMode] || LOGIN_MODES.register).btn;
   }
 }
 const isCurrentUserAdmin = () => !!currentUser && String(currentUser.email||"").toLowerCase()===ADMIN_EMAIL;
@@ -2088,7 +2162,7 @@ function logout(){
   localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(ADMIN_TOKEN_KEY);
   applyAdminVisibility();
   showLogin(); setIdentity();
-  // clear fields and return to the sign-in mode
+  // clear fields and return to the default (login) mode
   ["#loginPw","#loginPw2","#loginName"].forEach(s=>{ const i=$(s); if(i) i.value=""; });
   setLoginMode("login");
 }
@@ -2146,12 +2220,9 @@ async function startSession(){
   clearInterval(window._winTimer); window._winTimer=setInterval(refreshWindow, 60000);
   startBoardPolling();
 }
-function renderBrand(name){
-  // neon-highlight the middle word if there are 3, else highlight "Predictor"-ish
-  const parts=name.split(" ");
-  if(parts.length>=2){ const mid=Math.floor(parts.length/2);
-    return parts.map((w,i)=> i===mid?`<span>${esc(w)}</span>`:esc(w)).join(" "); }
-  return esc(name);
+function renderBrand(_name){
+  // "Calfus" rendered as the white logo wordmark; "FIFA" highlighted; + "League".
+  return `<img class="calfus-wm" src="/assets/calfus-logo-white.png" alt="Calfus"> <span>FIFA</span> League`;
 }
 init();
 </script>

@@ -79,6 +79,8 @@ const config = {
   ESPN_POLL_SEC: parseInt(env.ESPN_POLL_SEC || "60", 10),
   ESPN_BASE: env.ESPN_BASE ||
     "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard",
+  ESPN_SUMMARY_BASE: env.ESPN_SUMMARY_BASE ||
+    "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary",
 
   // --- Email via Microsoft Graph (client-credentials). Emails no-op unless all set. ---
   EMAIL_ENABLED: env.EMAIL_ENABLED === "true",

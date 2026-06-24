@@ -29,6 +29,7 @@ app.use(express.json());
 // index:false so the "/" route below always serves the canonical source file
 // (not a possibly-stale public/index.html copy).
 app.use(express.static("public", { index: false }));
+app.use("/assets", express.static(path.join(__dirname, "assets")));
 // Serve the dashboard at the root so it's same-origin with the API.
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "fifa-prediction-dashboard.html")));
 

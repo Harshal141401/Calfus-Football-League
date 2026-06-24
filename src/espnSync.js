@@ -6,6 +6,24 @@ const { fetchScoreboard, parseEvents } = require("./espn");
 const { matchFixture, dayUtc } = require("./matchFixture");
 const { settleFixture } = require("./settle");
 const { notifyPredictors } = require("./notify");
+const { fetchLineup } = require("./espnLineups");
+
+/* Fetch the starting XI for a matched event (once it's available) and store it on
+   the fixture, mapped to Team A / Team B. Retries each tick until ESPN publishes it. */
+async function syncLineup(ev, f, teamsById) {
+  if (f.lineups || !(ev.state === "in" || ev.completed)) return;
+  try {
+    const lu = await fetchLineup(ev.espnId);
+    if (!lu.home.length && !lu.away.length) return;   // not published yet — retry later
+    const A = teamsById[String(f.teamAId)] || {};
+    const aIsHome = String(A.abbr || "").toUpperCase() === String(ev.home.abbr || "").toUpperCase()
+      || String(A.name || "").toLowerCase() === String(ev.home.name || "").toLowerCase();
+    const lineups = aIsHome ? { teamA: lu.home, teamB: lu.away } : { teamA: lu.away, teamB: lu.home };
+    await collections.fixtures().updateOne({ _id: f._id }, { $set: { lineups, lineupsAt: new Date() } });
+    f.lineups = lineups;
+    console.log(`[espn] lineups stored for ${f.apiId}`);
+  } catch (e) { console.warn("[espn] lineup fetch failed:", e.message); }
+}
 
 async function runSync() {
   const json = await fetchScoreboard();
@@ -40,6 +58,7 @@ async function runSync() {
         liveClock: ev.clock, liveUpdatedAt: new Date(),
       } });
     }
+    await syncLineup(ev, f, teamsById);   // store starting XI when available
   }
 }
 
