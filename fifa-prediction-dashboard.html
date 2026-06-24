@@ -375,11 +375,24 @@ select{appearance:none;padding-right:30px;
 .live-pulse{width:8px;height:8px;border-radius:50%;background:var(--danger);
   box-shadow:0 0 0 0 rgba(229,84,78,.7);animation:livepulse 1.5s infinite}
 @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(229,84,78,.6)}70%{box-shadow:0 0 0 8px rgba(229,84,78,0)}100%{box-shadow:0 0 0 0 rgba(229,84,78,0)}}
-/* flip card — front = match, back = starting XIs (hover or ⟳ to flip) */
-.fix-card.flip{position:relative;overflow:hidden;perspective:1200px}
-.fix-card.flip .flip-inner{position:relative;transition:transform .6s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
+/* flip card — front = match, back = starting XIs (hover or ⟳ to flip).
+   The whole card flips: the outer .fix-card.flip is a transparent 3D stage
+   (no surface of its own) and each face carries the full card surface, so the
+   panel itself turns over rather than just its contents. Look is unchanged —
+   the face replicates .card + .fix-card padding exactly. */
+.fix-card.flip{overflow:visible;perspective:1200px;
+  background:none;border:0;box-shadow:none;backdrop-filter:none;padding:0}
+.fix-card.flip::after{display:none}
+.fix-card.flip .flip-inner{position:relative;width:100%;height:100%;min-height:inherit;
+  transition:transform .6s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
 .fix-card.flip:hover .flip-inner,.fix-card.flip.flipped .flip-inner{transform:rotateY(180deg)}
-.flip-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fix-card.flip .flip-face{backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:var(--glass);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);backdrop-filter:blur(10px);padding:24px 24px 20px;overflow:hidden}
+.fix-card.flip.is-live .flip-front{border-color:rgba(229,84,78,.6);
+  box-shadow:0 0 0 1px rgba(229,84,78,.35),0 0 34px rgba(229,84,78,.28);
+  animation:livecard 2.4s ease-in-out infinite}
+.fix-card.flip .flip-front{position:relative}
 .flip-back{position:absolute;inset:0;transform:rotateY(180deg);overflow:auto;display:flex;flex-direction:column;gap:8px}
 .flip-btn{position:absolute;top:10px;right:10px;z-index:4;width:30px;height:30px;border-radius:50%;
   border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);cursor:pointer;font-size:15px;line-height:1}
@@ -722,13 +735,7 @@ footer b{color:var(--muted)}
 
 /* ===================== TEAMS & SQUADS ===================== */
 .teams-toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:8px 0 22px}
-.grp-chips{display:flex;flex-wrap:wrap;gap:8px;flex:1;min-width:0}
-.grp-chip{font-family:var(--f-sport);font-weight:700;font-size:13px;letter-spacing:.04em;color:var(--muted);
-  background:var(--card-2);border:1px solid var(--line);border-radius:99px;padding:8px 15px;cursor:pointer;
-  transition:color .15s,border-color .15s,background .15s;white-space:nowrap}
-.grp-chip:hover{color:var(--ink);border-color:var(--line-2)}
-.grp-chip.on{color:#1a1402;background:var(--neon);border-color:var(--neon);box-shadow:0 4px 16px rgba(224,174,62,.3)}
-.team-search{position:relative;display:flex;align-items:center;min-width:220px}
+.team-search{position:relative;display:flex;align-items:center;min-width:220px;flex:1}
 .team-search .ts-ic{position:absolute;left:12px;font-size:13px;opacity:.6;pointer-events:none}
 .team-search input{width:100%;font-family:var(--f-sport);font-weight:600;font-size:14px;color:var(--ink);
   background:var(--card-2);border:1px solid var(--line);border-radius:11px;padding:10px 14px 10px 34px;outline:none;
@@ -736,6 +743,11 @@ footer b{color:var(--muted)}
 .team-search input:focus{border-color:var(--neon)}
 .team-search input::placeholder{color:var(--muted-2)}
 
+.teams-group{margin-bottom:30px}
+.teams-group-head{margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.teams-group-head h3{margin:0;font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;
+  font-size:22px;color:var(--neon)}
+.teams-group-note{margin:6px 0 0;font-family:var(--f-sport);font-weight:600;font-size:12px;color:var(--muted);line-height:1.4}
 .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 .team-card{display:flex;align-items:center;gap:14px;text-align:left;width:100%;cursor:pointer;
   background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:14px 16px;
@@ -815,13 +827,6 @@ footer b{color:var(--muted)}
 .fh-list .hi-text{color:var(--ink);opacity:.92}
 
 .facts-toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:6px 0 20px}
-.dec-chips{display:flex;flex-wrap:wrap;gap:8px;flex:1;min-width:0}
-.dec-chip{font-family:var(--f-sport);font-weight:700;font-size:13px;letter-spacing:.04em;color:var(--muted);
-  background:var(--card-2);border:1px solid var(--line);border-radius:99px;padding:8px 15px;cursor:pointer;
-  transition:color .15s,border-color .15s,background .15s;white-space:nowrap}
-.dec-chip:hover{color:var(--ink);border-color:var(--line-2)}
-.dec-chip.on{color:#1a1402;background:var(--neon);border-color:var(--neon);box-shadow:0 4px 16px rgba(224,174,62,.3)}
-
 .facts-timeline{position:relative;display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
 .ed-card{background:var(--glass);border:1px solid var(--line);border-radius:14px;overflow:hidden;
   transition:border-color .16s ease}
@@ -869,9 +874,9 @@ footer b{color:var(--muted)}
       </div>
     </div>
     <nav class="nav" id="nav">
-      <button data-view="home" class="active">Leaderboard</button>
-      <button data-view="predict">Predict</button>
       <button data-view="teams">Teams</button>
+      <button data-view="predict">Predict</button>
+      <button data-view="home" class="active">Leaderboard</button>
       <button data-view="stats">Stats</button>
       <button data-view="facts">Facts</button>
       <button data-view="admin">Admin</button>
@@ -924,12 +929,11 @@ footer b{color:var(--muted)}
       <div class="spacer"></div>
     </div>
     <div class="teams-toolbar">
-      <div class="grp-chips" id="grpChips"></div>
       <div class="team-search"><span class="ts-ic">🔎</span>
         <input type="text" id="teamSearch" placeholder="Search team or player…" autocomplete="off" />
       </div>
     </div>
-    <div class="teams-grid" id="teamsGrid"></div>
+    <div id="teamsGroups"></div>
   </section>
 
   <!-- team squad detail modal -->
@@ -977,7 +981,6 @@ footer b{color:var(--muted)}
     </div>
     <div id="factsHighlights"></div>
     <div class="facts-toolbar">
-      <div class="dec-chips" id="decChips"></div>
       <div class="team-search"><span class="ts-ic">🔎</span>
         <input type="text" id="factsSearch" placeholder="Search players, teams, moments…" autocomplete="off" />
       </div>
@@ -2066,7 +2069,7 @@ function buildTicker(){
 /* =====================================================================
    RENDER — TEAMS & SQUADS  (display-only info tab; data = SQUADS const)
    ===================================================================== */
-let teamsState = { group:"all", q:"" };
+let teamsState = { q:"" };
 const POS_LABELS = { gk:"Goalkeepers", df:"Defenders", mf:"Midfielders", fw:"Forwards" };
 
 /* Match a squad's team name to live team meta (flag/colors/abbr) from state.teams. */
@@ -2085,47 +2088,47 @@ const capName = t => (t.captain||"").replace(/\s*\([^)]*\)/g,"").trim();
 
 function renderTeams(){
   if(!state) return;
-  // group chips
-  const chips = [["all","All"]].concat(SQUADS.order.map(g=>[g,"Group "+g]));
-  $("#grpChips").innerHTML = chips.map(([g,label])=>
-    `<button class="grp-chip${teamsState.group===g?" on":""}" data-grp="${g}">${esc(label)}</button>`).join("");
   renderTeamsGrid();
+}
+
+function teamCardHTML(t){
+  const m = squadTeamMeta(t.name);
+  const flag = m.flag ? `<img class="tc-flag" src="${esc(m.flag)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`
+                      : `<div class="tc-flag tc-flag-fb" style="background:linear-gradient(135deg,${m.c1},${m.c2})"></div>`;
+  return `<button class="team-card" data-team="${esc(t.name)}">
+    ${flag}
+    <div class="tc-info">
+      <div class="tc-name">${esc(t.name)}</div>
+      <div class="tc-sub">${squadSize(t)} players</div>
+      ${capName(t)?`<div class="tc-cap"><span class="cap-c">C</span>${esc(capName(t))}</div>`:""}
+    </div>
+    <span class="tc-go">›</span>
+  </button>`;
 }
 
 function renderTeamsGrid(){
   const q = teamsState.q.trim().toLowerCase();
-  let list = SQUADS.teams.slice();
-  if(teamsState.group!=="all") list = list.filter(t=>t.group===teamsState.group);
-  if(q){
-    list = list.filter(t=>{
-      if(t.name.toLowerCase().includes(q)) return true;
-      return ["gk","df","mf","fw"].some(k=>t[k].some(p=>p.name.toLowerCase().includes(q)));
-    });
-  }
-  if(!list.length){
-    $("#teamsGrid").innerHTML = `<div class="teams-empty">No teams or players match “${esc(teamsState.q)}”.</div>`;
-    return;
-  }
-  $("#teamsGrid").innerHTML = list.map(t=>{
-    const m = squadTeamMeta(t.name);
-    const flag = m.flag ? `<img class="tc-flag" src="${esc(m.flag)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`
-                        : `<div class="tc-flag tc-flag-fb" style="background:linear-gradient(135deg,${m.c1},${m.c2})"></div>`;
-    return `<button class="team-card" data-team="${esc(t.name)}">
-      ${flag}
-      <div class="tc-info">
-        <div class="tc-name">${esc(t.name)}</div>
-        <div class="tc-sub"><span class="tc-grp">Group ${esc(t.group)}</span><span class="tc-dot">·</span>${squadSize(t)} players</div>
-        ${capName(t)?`<div class="tc-cap"><span class="cap-c">C</span>${esc(capName(t))}</div>`:""}
-      </div>
-      <span class="tc-go">›</span>
-    </button>`;
-  }).join("");
+  const match = t => {
+    if(!q) return true;
+    if(t.name.toLowerCase().includes(q)) return true;
+    return ["gk","df","mf","fw"].some(k=>t[k].some(p=>p.name.toLowerCase().includes(q)));
+  };
+  const sections = SQUADS.order.map(g=>{
+    const note = (SQUADS.groups[g]&&SQUADS.groups[g].note)||"";
+    const teams = SQUADS.teams.filter(t=>t.group===g && match(t));
+    if(!teams.length) return "";
+    return `<section class="teams-group">
+      <div class="teams-group-head"><h3>Group ${esc(g)}</h3>${note?`<p class="teams-group-note">${esc(note)}</p>`:""}</div>
+      <div class="teams-grid">${teams.map(teamCardHTML).join("")}</div>
+    </section>`;
+  }).filter(Boolean).join("");
+  $("#teamsGroups").innerHTML = sections ||
+    `<div class="teams-empty">No teams or players match “${esc(teamsState.q)}”.</div>`;
 }
 
 function openTeamModal(name){
   const t = SQUADS.teams.find(x=>x.name===name); if(!t) return;
   const m = squadTeamMeta(t.name);
-  const cap = capName(t);
   const flag = m.flag ? `<img class="sq-flag" src="${esc(m.flag)}" alt="" onerror="this.style.visibility='hidden'"/>`
                       : `<div class="sq-flag sq-flag-fb" style="background:linear-gradient(135deg,${m.c1},${m.c2})"></div>`;
   const col = (key) => {
@@ -2143,7 +2146,6 @@ function openTeamModal(name){
         <div class="sq-grp">Group ${esc(t.group)} · ${squadSize(t)} players</div>
         <h3 class="sq-title">${esc(t.name)}</h3>
         <div class="sq-meta">
-          ${cap?`<span><i>Captain</i>${esc(cap)}</span>`:""}
           ${t.coach?`<span><i>Coach</i>${esc(t.coach)}</span>`:""}
         </div>
       </div>
@@ -2158,14 +2160,13 @@ function closeTeamModal(){ $("#teamModal").hidden = true; document.body.style.ov
 /* =====================================================================
    RENDER — FACTS & HISTORY  (display-only info tab; data = FACTS const)
    ===================================================================== */
-let factsState = { decade:"all", q:"", open:{} };
+let factsState = { q:"", open:{} };
 const WC_CHAMPIONS = {1930:"Uruguay",1934:"Italy",1938:"Italy",1950:"Uruguay",1954:"West Germany",
   1958:"Brazil",1962:"Brazil",1966:"England",1970:"Brazil",1974:"West Germany",1978:"Argentina",
   1982:"Italy",1986:"Argentina",1990:"West Germany",1994:"Brazil",1998:"France",2002:"Brazil",
   2006:"Italy",2010:"Spain",2014:"Germany",2018:"France",2022:"Argentina"};
 const FACT_MONTHS = /^(January|February|March|April|May|June|July|August|September|October|November|December)\b/;
 
-function decadeOf(year){ const y=parseInt(String(year).slice(0,4),10); return isNaN(y)?"":(Math.floor(y/10)*10)+"s"; }
 function splitDated(s){
   const m = s.match(/^([^:]{1,30}):\s+([\s\S]+)$/);
   if(m && (FACT_MONTHS.test(m[1]) || /\d{4}/.test(m[1]) || /^\d{4}$/.test(m[1]))) return { date:m[1].trim(), text:m[2].trim() };
@@ -2191,11 +2192,6 @@ function renderFacts(){
       <div class="fh-stats">${stats.map(([n,l])=>`<div class="fh-stat"><b>${n}</b><span>${l}</span></div>`).join("")}</div>
       <ul class="fh-list">${hi}</ul>
     </div>`;
-  // ---- decade chips ----
-  const decades = []; FACTS.editions.forEach(e=>{ const d=decadeOf(e.year); if(d && !decades.includes(d)) decades.push(d); });
-  const chips = [["all","All"]].concat(decades.map(d=>[d,d]));
-  $("#decChips").innerHTML = chips.map(([v,l])=>
-    `<button class="dec-chip${factsState.decade===v?" on":""}" data-dec="${v}">${esc(l)}</button>`).join("");
   // ---- honours ----
   $("#factsHonours").innerHTML = FACTS.winners
     ? `<div class="honours"><div class="hon-h">🏆 Roll of Honour</div><p>${esc(FACTS.winners)}</p></div>` : "";
@@ -2205,7 +2201,6 @@ function renderFacts(){
 function renderFactsTimeline(){
   const q = factsState.q.trim().toLowerCase();
   let eds = FACTS.editions.slice();
-  if(factsState.decade!=="all") eds = eds.filter(e=>decadeOf(e.year)===factsState.decade);
   if(q) eds = eds.filter(e=>edMatches(e,q));
   if(!eds.length){
     $("#factsTimeline").innerHTML = `<div class="teams-empty">No moments match “${esc(factsState.q)}”.</div>`;
@@ -2272,18 +2267,14 @@ function wireEvents(){
   document.addEventListener("click",e=>{ const b=e.target.closest(".flip-btn"); if(!b) return;
     e.stopPropagation(); b.closest(".fix-card")?.classList.toggle("flipped"); });
 
-  // Teams tab: group chips, search, team-card → squad modal, modal close
-  $("#grpChips").addEventListener("click",e=>{ const b=e.target.closest(".grp-chip"); if(!b) return;
-    teamsState.group=b.dataset.grp; renderTeams(); });
+  // Teams tab: search, team-card → squad modal, modal close
   $("#teamSearch").addEventListener("input",e=>{ teamsState.q=e.target.value; renderTeamsGrid(); });
-  $("#teamsGrid").addEventListener("click",e=>{ const c=e.target.closest(".team-card"); if(c) openTeamModal(c.dataset.team); });
+  $("#teamsGroups").addEventListener("click",e=>{ const c=e.target.closest(".team-card"); if(c) openTeamModal(c.dataset.team); });
   $("#teamModalClose").addEventListener("click",closeTeamModal);
   $("#teamModal").addEventListener("click",e=>{ if(e.target.id==="teamModal") closeTeamModal(); });
   document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#teamModal").hidden) closeTeamModal(); });
 
-  // Facts tab: decade chips, search, expand/collapse an edition
-  $("#decChips").addEventListener("click",e=>{ const b=e.target.closest(".dec-chip"); if(!b) return;
-    factsState.decade=b.dataset.dec; renderFacts(); });
+  // Facts tab: search, expand/collapse an edition
   $("#factsSearch").addEventListener("input",e=>{ factsState.q=e.target.value; renderFactsTimeline(); });
   $("#factsTimeline").addEventListener("click",e=>{ const h=e.target.closest(".ed-head"); if(!h) return;
     const card=h.closest(".ed-card"); const key=card.dataset.ed;
