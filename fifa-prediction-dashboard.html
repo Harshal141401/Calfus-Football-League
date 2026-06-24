@@ -212,9 +212,6 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .acct-menu #logoutBtn{width:100%;padding:9px;font-size:13px;border-radius:9px;color:var(--ink);
   border:1px solid var(--line);background:rgba(255,255,255,.04)}
 .acct-menu #logoutBtn:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);color:#ff8a8a}
-.live-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);
-  box-shadow:0 0 0 0 rgba(255,84,104,.7);animation:pulse 1.6s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,84,104,.6)}70%{box-shadow:0 0 0 10px rgba(255,84,104,0)}100%{box-shadow:0 0 0 0 rgba(255,84,104,0)}}
 
 /* ---------- layout ---------- */
 main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
@@ -411,6 +408,8 @@ select{appearance:none;padding-right:30px;
   #view-predict.is-active{padding:0 16px}}
 /* FIFA World Cup trophy in the Predict header */
 .predict-head{position:relative}
+.predict-note{margin:8px 0 0;font-family:var(--f-sport);font-weight:600;font-size:13px;color:var(--muted)}
+.predict-note b{color:var(--neon);font-weight:700}
 .predict-trophy{height:clamp(96px,12vw,150px);width:auto;align-self:center;
   filter:drop-shadow(0 10px 26px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(232,184,75,.35));
   animation:trophy-float 5.5s ease-in-out infinite}
@@ -910,6 +909,7 @@ footer b{color:var(--muted)}
       <div>
         <!-- <div class="eyebrow">Mondays &amp; Thursdays</div> -->
         <h2>Make Your Picks</h2>
+        <p class="predict-note">⏱ Each match's prediction locks <b>30 minutes before kickoff</b>.</p>
       </div>
       <div class="spacer"></div>
       <!-- <img class="predict-trophy" src="./assets/hd-world-cup-fifa-trophy-transparent-png-704081694879203dnnohbitx0-removebg-preview.png" alt="FIFA World Cup trophy"/> -->
@@ -1067,7 +1067,7 @@ footer b{color:var(--muted)}
   <div class="tv-top">
     <img class="brand-logo tv-logo" src="/assets/Picture1.png" alt="FIFA World Cup">
     <div class="brand-name" id="tvBrand">Calfus <span>FIFA</span> League</div>
-    <div class="tv-clock"><span class="live-dot"></span><span id="tvClock">--:--:--</span></div>
+    <div class="tv-clock"><span id="tvClock">--:--:--</span></div>
     <button class="tv-exit" id="tvExit">✕ Exit (Esc)</button>
   </div>
   <div class="tv-stage" id="tvStage"></div>
@@ -1508,16 +1508,6 @@ function countUpAll(root){
 /* =====================================================================
    RENDER — PREDICT
    ===================================================================== */
-function renderWindowBanner(){
-  const host = $("#openFixtures"); if(!host) return;
-  let el = $("#windowBanner");
-  if(!el){ el=document.createElement("div"); el.id="windowBanner";
-    el.style.cssText="text-align:center;font-family:var(--f-sport);font-weight:700;margin:0 0 12px;padding:10px;border-radius:10px;background:rgba(255,255,255,.04)";
-    host.parentNode.insertBefore(el, host); }
-  const mins = (windowState && windowState.lockBeforeMin) || 30;
-  el.innerHTML = `🟢 Predictions are OPEN — each match locks <b>${mins} minutes before kickoff</b>.`;
-  el.style.color="var(--neon)";
-}
 // Fixtures still to be played (future kickoffs, no result), sorted — SHARED by the Predict page,
 // TV "Upcoming Fixtures" and the ticker, so all three always agree. Change the rule here only.
 function upcomingFixtures(){
@@ -1527,7 +1517,6 @@ function upcomingFixtures(){
 function renderPredict(){
   const sel = $("#userSel");
   if(sel){ sel.innerHTML = `<option>${esc(currentUser ? currentUser.name : "")}</option>`; sel.disabled = true; }
-  renderWindowBanner();
   const uidc = state.currentUserId;
   const sorted = [...state.fixtures].sort((a,b)=>fixtureDT(a)-fixtureDT(b));
   // Predictions are open all the time; show every upcoming unsettled match. Each
