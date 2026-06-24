@@ -20,6 +20,8 @@ async function connect() {
   await database.collection("fixtures").createIndex({ kickoff: 1 });
   // One settled-score record per fixture (the results ledger).
   await database.collection("settledScores").createIndex({ fixtureId: 1 }, { unique: true });
+  // One password credential per email (login).
+  await database.collection("credentials").createIndex({ email: 1 }, { unique: true });
 
   console.log(`Connected to ${config.DB_NAME}`);
   return database;
@@ -31,6 +33,7 @@ const collections = {
   fixtures: () => database.collection("fixtures"),
   predictions: () => database.collection("predictions"),
   settledScores: () => database.collection("settledScores"),
+  credentials: () => database.collection("credentials"),
 };
 
 module.exports = { connect, collections, client };

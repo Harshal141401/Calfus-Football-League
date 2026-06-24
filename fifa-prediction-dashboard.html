@@ -1979,66 +1979,94 @@ function showLanding(){
 }
 function hideLanding(){ const el=$("#landingOverlay"); if(el) el.hidden=true; }
 
+const ADMIN_EMAIL = "admin@calfus.com";
+let loginMode = "login";   // "login" | "setup"
 function ensureLoginEl(){
   if($("#loginOverlay")) return;
   const el=document.createElement("div");
   el.id="loginOverlay";
   el.style.cssText="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(8,10,14,.92);backdrop-filter:blur(4px)";
-  el.innerHTML=`<form id="loginForm" class="card panel" style="width:min(92vw,380px);padding:26px;display:flex;flex-direction:column;gap:14px">
-      <div style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;font-size:20px;color:var(--neon)">Sign in to play</div>
-      <div style="color:var(--muted);font-size:13px">Use your Calfus name and work email.</div>
-      <input id="loginName" type="text" placeholder="Full name" autocomplete="name" required style="padding:11px;border-radius:9px">
+  el.innerHTML=`<form id="loginForm" class="card panel" style="width:min(92vw,400px);padding:26px;display:flex;flex-direction:column;gap:12px">
+      <div id="loginTitle" style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;font-size:20px;color:var(--neon)">Sign in to play</div>
+      <div id="loginHint" style="color:var(--muted);font-size:13px">Enter your work email and password.</div>
+      <input id="loginName" type="text" placeholder="Full name (as in records)" autocomplete="name" style="display:none;padding:11px;border-radius:9px">
       <input id="loginEmail" type="email" placeholder="Work email" autocomplete="email" required style="padding:11px;border-radius:9px">
-      <input id="loginPw" type="password" placeholder="Admin password" autocomplete="current-password" style="display:none;padding:11px;border-radius:9px">
+      <input id="loginPw" type="password" placeholder="Password" autocomplete="current-password" required style="padding:11px;border-radius:9px">
+      <input id="loginPw2" type="password" placeholder="Confirm password" autocomplete="new-password" style="display:none;padding:11px;border-radius:9px">
       <div id="loginErr" style="color:#EF4444;font-size:13px;min-height:1em"></div>
-      <button type="submit" class="btn btn-primary" id="loginBtn">Enter</button>
+      <button type="submit" class="btn btn-primary" id="loginBtn">Sign in</button>
+      <button type="button" id="loginToggle" style="background:none;border:0;color:var(--muted);font-size:13px;cursor:pointer;padding:2px">First time or forgot password?</button>
     </form>`;
   document.body.appendChild(el);
   $("#loginForm").addEventListener("submit", onLoginSubmit);
+  $("#loginToggle").addEventListener("click", ()=> setLoginMode(loginMode==="login"?"setup":"login"));
+  setLoginMode("login");
+}
+function setLoginMode(m){
+  loginMode = m;
+  const setup = m==="setup";
+  $("#loginName").style.display = setup ? "block" : "none";
+  $("#loginPw2").style.display = setup ? "block" : "none";
+  $("#loginName").required = setup; $("#loginPw2").required = setup;
+  $("#loginTitle").textContent = setup ? "Set your password" : "Sign in to play";
+  $("#loginHint").textContent = setup
+    ? "First time or forgot it? Confirm your name + work email, then choose a password."
+    : "Enter your work email and password.";
+  $("#loginPw").placeholder = setup ? "New password (min 6 chars)" : "Password";
+  $("#loginPw").autocomplete = setup ? "new-password" : "current-password";
+  $("#loginBtn").textContent = setup ? "Set password & sign in" : "Sign in";
+  $("#loginToggle").textContent = setup ? "← Back to sign in" : "First time or forgot password?";
+  $("#loginErr").textContent="";
 }
 function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex"; }
 function hideLogin(){ const el=$("#loginOverlay"); if(el) el.style.display="none"; }
-const ADMIN_EMAIL = "admin@calfus.com";
-const ADMIN_NAME = "admin";
 async function onLoginSubmit(e){
   e.preventDefault();
   const name=$("#loginName").value.trim(), email=$("#loginEmail").value.trim();
-  const btn=$("#loginBtn"), err=$("#loginErr"), pw=$("#loginPw");
-  // Admin only when BOTH the name is "admin" AND the email is the admin email.
-  const isAdmin = name.toLowerCase()===ADMIN_NAME && email.toLowerCase()===ADMIN_EMAIL;
-  err.textContent="";
-
-  // Admin path: reveal the password field first, then authenticate against the admin login.
-  if(isAdmin && pw.style.display==="none"){
-    pw.style.display="block"; pw.focus(); btn.textContent="Enter as admin"; return;
-  }
-
-  btn.disabled=true; const label=isAdmin?"Enter as admin":"Enter"; btn.textContent="Checking…";
+  const pw=$("#loginPw").value, pw2=$("#loginPw2").value;
+  const btn=$("#loginBtn"), err=$("#loginErr");
+  const base=API.base.replace(/\/$/,"");
+  const post=(path,body)=>fetch(base+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  err.textContent=""; btn.disabled=true;
   try{
-    if(isAdmin){
-      const r=await fetch(API.base.replace(/\/$/,"")+"/api/admin/login",
-        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw.value})});
+    if(loginMode==="setup"){
+      if(pw.length<6){ err.textContent="Password must be at least 6 characters."; return; }
+      if(pw!==pw2){ err.textContent="Passwords don't match."; return; }
+      btn.textContent="Setting…";
+      const r=await post("/api/auth/set-password",{name,email,password:pw});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(data.error||"Could not set password");
+      authToken=data.token; currentUser=data.user; localStorage.setItem(TOKEN_KEY,authToken);
+      await startSession(); return;
+    }
+    // --- login mode ---
+    if(email.toLowerCase()===ADMIN_EMAIL){       // admin uses its own password
+      btn.textContent="Checking…";
+      const r=await post("/api/admin/login",{password:pw});
       const data=await r.json().catch(()=>({}));
       if(!r.ok) throw new Error(data.error||"Admin login failed");
-      // Admin token doubles as the session — use it for both reads and admin actions.
       authToken=data.token; adminToken=data.token;
       localStorage.setItem(TOKEN_KEY,authToken); localStorage.setItem(ADMIN_TOKEN_KEY,adminToken);
-      await startSession();
-    } else {
-      const r=await fetch(API.base.replace(/\/$/,"")+"/api/auth/login",
-        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email})});
-      const data=await r.json().catch(()=>({}));
-      if(!r.ok) throw new Error(data.error||"Login failed");
-      authToken=data.token; currentUser=data.user; localStorage.setItem(TOKEN_KEY,authToken);
-      await startSession();
+      await startSession(); return;
     }
+    btn.textContent="Signing in…";
+    const r=await post("/api/auth/login",{email,password:pw});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(data.error||"Login failed");
+    if(data.needsSetup){                          // first time — switch to set-password
+      setLoginMode("setup");
+      $("#loginHint").textContent="Looks like your first time — set a password to continue.";
+      return;
+    }
+    authToken=data.token; currentUser=data.user; localStorage.setItem(TOKEN_KEY,authToken);
+    await startSession();
   }catch(ex){
-    const net = ex instanceof TypeError;   // fetch network failure
-    err.textContent = net
-      ? `Cannot reach the server (${API.base||location.origin}). Make sure it's running and open the app at http://localhost:4000.`
-      : ex.message;
+    const net = ex instanceof TypeError;
+    err.textContent = net ? "Cannot reach the server. Open the app at its URL and try again." : ex.message;
+  }finally{
+    btn.disabled=false;
+    btn.textContent = loginMode==="setup" ? "Set password & sign in" : "Sign in";
   }
-  finally{ btn.disabled=false; btn.textContent=label; }
 }
 const isCurrentUserAdmin = () => !!currentUser && String(currentUser.email||"").toLowerCase()===ADMIN_EMAIL;
 function applyAdminVisibility(){
@@ -2053,10 +2081,10 @@ function logout(){
   authToken=null; adminToken=null; currentUser=null;
   localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(ADMIN_TOKEN_KEY);
   applyAdminVisibility();
-  // reset the login form back to player mode
-  const pw=$("#loginPw"); if(pw){ pw.style.display="none"; pw.value=""; }
-  const lb=$("#loginBtn"); if(lb) lb.textContent="Enter";
   showLogin(); setIdentity();
+  // clear fields and return to the sign-in mode
+  ["#loginPw","#loginPw2","#loginName"].forEach(s=>{ const i=$(s); if(i) i.value=""; });
+  setLoginMode("login");
 }
 function setIdentity(){
   const host=$(".topbar-right"); if(!host) return;

@@ -1,10 +1,38 @@
-/* Trust-based auth: match Name + Email against the employees collection,
-   then issue a signed JWT session. Admin actions use a separate header key. */
+/* Password auth: first login (or reset) is gated by Name + Email matching an
+   employee; the password is hashed (bcrypt) into the `credentials` collection.
+   Subsequent logins use email + password. Admin uses a separate key/password. */
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const config = require("./config");
 const { collections } = require("./db");
 
 const norm = s => String(s || "").trim().toLowerCase();
+
+/** Find an employee by email alone (case-insensitive) — used for email+password login. */
+async function findEmployeeByEmail(email) {
+  const e = norm(email);
+  if (!e) return null;
+  const doc = await collections.employees().findOne({
+    $or: [
+      { Email: { $regex: `^${escapeRegex(e)}$`, $options: "i" } },
+      { email: { $regex: `^${escapeRegex(e)}$`, $options: "i" } },
+    ],
+  });
+  if (!doc) return null;
+  const docName = doc.Name || doc.name || doc.fullName || doc.employeeName ||
+    [doc.firstName, doc.lastName].filter(Boolean).join(" ");
+  const location = doc.Location || doc.location || doc.office || "";
+  return {
+    id: String(doc._id),
+    name: docName || "",
+    email: doc.Email || doc.email,
+    location,
+    tz: config.officeTzFor(location),
+  };
+}
+
+const hashPassword = pw => bcrypt.hash(String(pw), 10);
+const verifyPassword = (pw, hash) => bcrypt.compare(String(pw), String(hash || ""));
 
 /** Find an employee by email (case-insensitive) and verify the name matches. */
 async function findEmployee(name, email) {
@@ -100,4 +128,7 @@ function requireAdmin(req, res, next) {
   return res.status(403).json({ error: "Admin authentication required" });
 }
 
-module.exports = { findEmployee, issueToken, requireAuth, requireAdmin, issueAdminToken, checkAdminPassword };
+module.exports = {
+  findEmployee, findEmployeeByEmail, hashPassword, verifyPassword,
+  issueToken, requireAuth, requireAdmin, issueAdminToken, checkAdminPassword,
+};
