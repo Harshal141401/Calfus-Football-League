@@ -375,17 +375,20 @@ select{appearance:none;padding-right:30px;
 .live-pulse{width:8px;height:8px;border-radius:50%;background:var(--danger);
   box-shadow:0 0 0 0 rgba(229,84,78,.7);animation:livepulse 1.5s infinite}
 @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(229,84,78,.6)}70%{box-shadow:0 0 0 8px rgba(229,84,78,0)}100%{box-shadow:0 0 0 0 rgba(229,84,78,0)}}
-/* flip card — front = match, back = starting XIs (hover or ⟳ to flip).
+/* flip card — front = match, back = starting XIs (hover to flip).
    The whole card flips: the outer .fix-card.flip is a transparent 3D stage
    (no surface of its own) and each face carries the full card surface, so the
    panel itself turns over rather than just its contents. Look is unchanged —
    the face replicates .card + .fix-card padding exactly. */
-.fix-card.flip{overflow:visible;perspective:1200px;
+.fix-card.flip{position:relative;overflow:visible;perspective:1200px;
   background:none;border:0;box-shadow:none;backdrop-filter:none;padding:0}
 .fix-card.flip::after{display:none}
 .fix-card.flip .flip-inner{position:relative;width:100%;height:100%;min-height:inherit;
   transition:transform .6s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
-.fix-card.flip:hover .flip-inner,.fix-card.flip.flipped .flip-inner{transform:rotateY(180deg)}
+.fix-card.flip.flipped .flip-inner{transform:rotateY(180deg)}
+@media (hover:hover){
+  .fix-card.flip:hover .flip-inner{transform:rotateY(180deg)}
+}
 .fix-card.flip .flip-face{backface-visibility:hidden;-webkit-backface-visibility:hidden;
   background:var(--glass);border:1px solid var(--line);border-radius:var(--r);
   box-shadow:var(--shadow);backdrop-filter:blur(10px);padding:24px 24px 20px;overflow:hidden}
@@ -393,10 +396,8 @@ select{appearance:none;padding-right:30px;
   box-shadow:0 0 0 1px rgba(229,84,78,.35),0 0 34px rgba(229,84,78,.28);
   animation:livecard 2.4s ease-in-out infinite}
 .fix-card.flip .flip-front{position:relative}
-.flip-back{position:absolute;inset:0;transform:rotateY(180deg);overflow:auto;display:flex;flex-direction:column;gap:8px}
-.flip-btn{position:absolute;top:10px;right:10px;z-index:4;width:30px;height:30px;border-radius:50%;
-  border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--ink);cursor:pointer;font-size:15px;line-height:1}
-.flip-btn:hover{background:rgba(255,255,255,.16)}
+.fix-card.flip .flip-back{position:absolute;inset:0;transform:rotateY(180deg);
+  overflow:auto;display:flex;flex-direction:column;gap:8px}
 .xi-head{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;font-size:13px;color:var(--neon);text-align:center}
 .xi-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px}
 .xi-team{font-family:var(--f-sport);font-weight:700;color:var(--gold);text-align:center;margin-bottom:4px}
@@ -1625,10 +1626,9 @@ function fixtureCard(f,empId,isSettled,live){
   }
   // Flip card — back shows both teams' starting XI (hover to flip, or the ⟳ button).
   const xiCol = (arr, abbr) => `<div class="xi-col"><div class="xi-team">${esc(abbr)}</div>
-    <ol class="xi-list">${(arr||[]).map(p=>`<li><span class="xi-num">${esc(String(p.num||"·"))}</span><span class="xi-player"><span class="xi-name">${esc(p.name)}</span>${p.club?`<span class="xi-club">${esc(p.club)}</span>`:""}</span></li>`).join("")}</ol></div>`;
+    <ol class="xi-list">${(arr||[]).map(p=>`<li><span class="xi-num">${esc(String(p.num||"·"))}</span><span class="xi-player"><span class="xi-name">${esc(p.name)}</span></span></li>`).join("")}</ol></div>`;
   const back = `<div class="xi-head">Starting XI</div><div class="xi-wrap">${xiCol(lu.teamA,A.abbr)}${xiCol(lu.teamB,B.abbr)}</div>`;
   return `<div class="card fix-card flip${live?" is-live":""}">
-    <button class="flip-btn" type="button" title="Show line-ups" aria-label="Show line-ups">⟳</button>
     <div class="flip-inner">
       <div class="flip-face flip-front">${frontInner}</div>
       <div class="flip-face flip-back">${back}</div>
@@ -2263,9 +2263,14 @@ function wireEvents(){
   $("#nav").addEventListener("click",e=>{ const b=e.target.closest("button[data-view]"); if(b) setActive(b.dataset.view); });
   // close the account dropdown on any outside click
   document.addEventListener("click",()=>{ const m=$("#acctMenu"); if(m && !m.hidden) m.hidden=true; });
-  // ⟳ flip button on fixture cards — toggle the lineup back (hover also flips)
-  document.addEventListener("click",e=>{ const b=e.target.closest(".flip-btn"); if(!b) return;
-    e.stopPropagation(); b.closest(".fix-card")?.classList.toggle("flipped"); });
+
+  // Tap to flip a fixture card — touch devices have no hover, so a tap toggles
+  // the lineup back (ignored when the tap lands on a button/link/input on the front).
+  document.addEventListener("click",e=>{
+    const card=e.target.closest(".fix-card.flip"); if(!card) return;
+    if(e.target.closest("button,a,input,select,label")) return;
+    card.classList.toggle("flipped");
+  });
 
   // Teams tab: search, team-card → squad modal, modal close
   $("#teamSearch").addEventListener("input",e=>{ teamsState.q=e.target.value; renderTeamsGrid(); });
