@@ -635,6 +635,18 @@ select{appearance:none;padding-right:30px;
 .tv-empty{display:grid;place-items:center;flex:1;text-align:center;color:var(--muted);
   font-family:var(--f-sport);font-weight:700;font-size:clamp(18px,2.4vw,34px);letter-spacing:.1em;text-transform:uppercase}
 
+/* TV World Cup history slide */
+.tv-wc-scene{display:flex;align-items:center;justify-content:center;gap:clamp(32px,5vw,80px);flex:1;padding:clamp(16px,2vh,32px) clamp(24px,4vw,60px)}
+.tv-wc-img-wrap{flex:0 0 auto;width:clamp(260px,40vw,640px);height:clamp(200px,38vh,480px);border-radius:18px;overflow:hidden;
+  border:2px solid var(--gold);box-shadow:0 0 40px rgba(232,184,75,.35)}
+.tv-wc-img{width:100%;height:100%;object-fit:cover;display:block}
+.tv-wc-info{display:flex;flex-direction:column;gap:clamp(14px,2.2vh,28px)}
+.tv-wc-year{font-family:var(--f-display);font-size:clamp(36px,6vw,96px);color:var(--gold);line-height:1}
+.tv-wc-row{display:flex;flex-direction:column;gap:4px}
+.tv-wc-label{font-family:var(--f-sport);font-weight:700;font-size:clamp(11px,1.2vw,17px);color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+.tv-wc-val{font-family:var(--f-display);font-size:clamp(22px,3.2vw,52px);text-transform:uppercase}
+.tv-wc-val.winner{color:var(--accent2)}
+
 /* TV today votes */
 .tvtoday{display:flex;flex-direction:column;gap:clamp(10px,1.6vh,18px);flex:1;align-content:center;justify-content:center}
 .tvtoday-row{padding:clamp(12px,1.8vh,22px) clamp(18px,2.4vw,32px);border-radius:14px;background:var(--glass);border:1px solid var(--line)}
@@ -1822,14 +1834,38 @@ function renderAdmin(){
    TV MODE
    ===================================================================== */
 let tvScene=0, tvCycle=null, tvRefresh=null, tvClockT=null, tvCountdownT=null, tvPaused=false;
-const TV_SCENES = ["leaderboard","fixtures","results","stats","today","performers","movers"];
+const TV_SCENES = ["leaderboard","fixtures","results","stats","today","performers","movers","worldcup"];
 const TV_INTERVAL = 12000;
+
+const WC_HISTORY = [
+  { file:"July 30 1930.png",   date:"July 30, 1930",      host:"Uruguay",          winner:"Uruguay" },
+  { file:"June 10 1934.png",   date:"June 10, 1934",      host:"Italy",            winner:"Italy" },
+  { file:"July 16 1950.png",   date:"July 16, 1950",      host:"Brazil",           winner:"Uruguay" },
+  { file:"July 4 1954.png",    date:"July 4, 1954",       host:"Switzerland",      winner:"West Germany" },
+  { file:"June 29 1958.png",   date:"June 29, 1958",      host:"Sweden",           winner:"Brazil" },
+  { file:"July 30 1966.png",   date:"July 30, 1966",      host:"England",          winner:"England" },
+  { file:"June 21 1970.png",   date:"June 21, 1970",      host:"Mexico",           winner:"Brazil" },
+  { file:"June 1974.png",      date:"1974",               host:"West Germany",     winner:"West Germany" },
+  { file:"June 25 1978.png",   date:"June 25, 1978",      host:"Argentina",        winner:"Argentina" },
+  { file:"July 11 1982.png",   date:"July 11, 1982",      host:"Spain",            winner:"Italy" },
+  { file:"June 22 1986.png",   date:"June 22, 1986",      host:"Mexico",           winner:"Argentina" },
+  { file:"July 2 1994.png",    date:"July 2, 1994",       host:"United States",    winner:"Brazil" },
+  { file:"July 12 1998.png",   date:"July 12, 1998",      host:"France",           winner:"France" },
+  { file:"June 30 2002.png",   date:"June 30, 2002",      host:"Japan & Korea",    winner:"Brazil" },
+  { file:"July 9 2006.png",    date:"July 9, 2006",       host:"Germany",          winner:"Italy" },
+  { file:"July 11 2010.png",   date:"July 11, 2010",      host:"South Africa",     winner:"Spain" },
+  { file:"2014 Brazil.png",    date:"2014",               host:"Brazil",           winner:"Germany" },
+  { file:"July 15 2018.png",   date:"July 15, 2018",      host:"Russia",           winner:"France" },
+  { file:"December 18 2022.png",date:"December 18, 2022", host:"Qatar",            winner:"Argentina" },
+];
+let _wcPick = null;
+function pickWCImage(){ _wcPick = WC_HISTORY[Math.floor(Math.random()*WC_HISTORY.length)]; }
 
 async function openTV(){
   $("#tv").hidden=false; document.body.style.overflow="hidden";
   $("#tvBrand").innerHTML = $("#brandName").innerHTML;
   { const ts=$("#tvSparks"); if(ts) ts.innerHTML=sparkMarkup(); }   // glowing sparks for the big screen
-  tvScene=0; renderTV(); buildTicker();
+  tvScene=0; pickWCImage(); renderTV(); buildTicker();
   $("#tvDots").innerHTML = TV_SCENES.map((_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
   clearInterval(tvCycle); tvCycle=setInterval(()=>{ if(!tvPaused) nextScene(1); }, TV_INTERVAL);
   clearInterval(tvRefresh); tvRefresh=setInterval(async()=>{ try{ await refreshBoard(); }catch(e){} renderTV(); buildTicker(); }, 60000);
@@ -1843,7 +1879,11 @@ function closeTV(){
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
   setActive("home");
 }
-function nextScene(dir){ tvScene=(tvScene+dir+TV_SCENES.length)%TV_SCENES.length; renderTV(); }
+function nextScene(dir){
+  tvScene=(tvScene+dir+TV_SCENES.length)%TV_SCENES.length;
+  if(TV_SCENES[tvScene]==="worldcup") pickWCImage();
+  renderTV();
+}
 function tickTVClock(){ const d=istNow(); $("#tvClock").textContent=`${fmtClock12(d)} IST`; }
 function nextFixtureDT(){
   const up=state.fixtures.filter(f=>!f.result).map(fixtureDT).filter(d=>d.getTime()>Date.now()).sort((a,b)=>a-b);
@@ -1867,6 +1907,7 @@ function renderTV(){
     today: tvToday(),
     performers: tvPerformers(lb),
     movers: tvMovers(lb),
+    worldcup: tvWorldCup(),
   };
   stage.innerHTML = TV_SCENES.map(name=>`<div class="tv-scene" data-scene="${name}">${scenes[name]}</div>`).join("");
   const active=TV_SCENES[tvScene];
@@ -1994,6 +2035,22 @@ function tvMovers(lb){
       <div class="tvmov-rank">#${rank}</div></div>`; }).join("");
   return tvHead("Momentum","Biggest Movers",false)+`<div class="tvmov">${rows}</div>`;
 }
+function tvWorldCup(){
+  const wc = _wcPick || WC_HISTORY[0];
+  return `
+  <div class="tv-wc-scene">
+    <div class="tv-wc-img-wrap">
+      <img class="tv-wc-img" src="assets/${encodeURIComponent(wc.file)}" alt="${esc(wc.host)} ${esc(wc.date)}" onerror="this.style.opacity='0.15'">
+    </div>
+    <div class="tv-wc-info">
+      <div class="eyebrow">FIFA World Cup History</div>
+      <div class="tv-wc-year">${esc(wc.date)}</div>
+      <div class="tv-wc-row"><span class="tv-wc-label">Host</span><span class="tv-wc-val">${esc(wc.host)}</span></div>
+      <div class="tv-wc-row"><span class="tv-wc-label">Winner</span><span class="tv-wc-val winner">${esc(wc.winner)}</span></div>
+    </div>
+  </div>`;
+}
+
 function buildTicker(){
   const up=upcomingFixtures().slice(0,12);   // shared upcoming list
   const items = up.length ? up.map(f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId),d=fixtureDT(f);
