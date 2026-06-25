@@ -8,6 +8,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node scripts/seed.js",
+    "build:tv": "node scripts/build-tv.js",
+    "start:tv": "node tv-server.js",
     "test": "node --test"
   },
   "engines": { "node": ">=18" },

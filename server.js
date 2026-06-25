@@ -20,6 +20,7 @@ const { router: fixturesRoutes } = require("./src/routes/fixtures");
 const predictionRoutes = require("./src/routes/predictions");
 const leaderboardRoutes = require("./src/routes/leaderboard");
 const adminRoutes = require("./src/routes/admin");
+const publicRoutes = require("./src/routes/public");
 
 const path = require("path");
 
@@ -32,6 +33,8 @@ app.use(express.static("public", { index: false }));
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 // Serve the dashboard at the root so it's same-origin with the API.
 app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "fifa-prediction-dashboard.html")));
+// Standalone, login-free TV / kiosk display (auto-updating carousel).
+app.get("/tv", (_req, res) => res.sendFile(path.join(__dirname, "tv.html")));
 
 // ---- health -----------------------------------------------------------------
 app.get("/api/health", async (_req, res) => {
@@ -59,6 +62,7 @@ app.use("/api", fixturesRoutes);       // /api/window, /api/fixtures, /api/teams
 app.use("/api", predictionRoutes);     // /api/predictions, /api/predictions/me
 app.use("/api", leaderboardRoutes);    // /api/leaderboard
 app.use("/api/admin", adminRoutes);    // /api/admin/*
+app.use("/api/public", publicRoutes);  // /api/public/* -> read-only, no auth (TV/kiosk)
 
 // ---- football API proxy (optional, kept from original) ----------------------
 app.get("/api/wc/*", async (req, res) => {

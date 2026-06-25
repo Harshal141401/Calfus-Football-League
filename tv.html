@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Calfus FIFA League — Live Leaderboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Calfus FIFA League — TV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 /* =====================================================================
    FIFA PREDICTOR CUP — design system  (v2: amber-on-slate)
@@ -939,6 +939,10 @@ footer b{color:var(--muted)}
   .ed-host{font-size:15px}.ed-year{font-size:22px;min-width:60px}
   .ed-win{display:none}
 }
+
+/* kiosk: the overlay IS the page */
+html,body{margin:0;height:100%;background:#0B0F14;overflow:hidden}
+.tv-overlay{position:fixed;inset:0}
 </style>
 </head>
 <body>
@@ -947,194 +951,6 @@ footer b{color:var(--muted)}
 <div class="sparks" id="sparks" aria-hidden="true"></div>
 <div class="bg-vignette"></div>
 
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <img class="brand-logo" src="/assets/Picture1.png" alt="FIFA World Cup">
-      <div>
-        <div class="brand-name" id="brandName">Calfus <span>FIFA</span> League</div>
-      </div>
-    </div>
-    <nav class="nav" id="nav">
-      <button data-view="teams">Teams</button>
-      <button data-view="predict">Predict</button>
-      <button data-view="results">Results</button>
-      <button data-view="home" class="active">Leaderboard</button>
-      <button data-view="stats">Stats</button>
-      <button data-view="facts">Facts</button>
-      <button data-view="admin">Admin</button>
-      <button data-view="tv" class="tv-btn">▶ TV Mode</button>
-    </nav>
-    <div class="topbar-right">
-      <div class="clock"><span id="clock">--:--</span></div>
-    </div>
-  </div>
-</header>
-
-<main>
-  <!-- ============ HOME ============ -->
-  <section id="view-home" class="view is-active">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">Standings</div>
-        <h2>🏆 Tournament Leaderboard</h2>
-      </div>
-      <div class="spacer"></div>
-    </div>
-    <div class="lb-stats" id="homeKpis"></div>
-    <div class="podium-wrap"><div class="podium" id="podium"></div></div>
-    <div class="card lb" id="lbTable"></div>
-  </section>
-
-  <!-- ============ PREDICT ============ -->
-  <section id="view-predict" class="view">
-    <div class="section-head predict-head">
-      <div>
-        <!-- <div class="eyebrow">Mondays &amp; Thursdays</div> -->
-        <h2>Make Your Picks</h2>
-        <p class="predict-note">⏱ Each match's prediction locks <b>30 minutes before kickoff</b>.</p>
-      </div>
-      <div class="spacer"></div>
-      <!-- <img class="predict-trophy" src="./assets/hd-world-cup-fifa-trophy-transparent-png-704081694879203dnnohbitx0-removebg-preview.png" alt="FIFA World Cup trophy"/> -->
-    </div>
-    <h3 style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;font-size:18px;margin:18px 0 12px;color:var(--neon)">Open Fixtures</h3>
-    <div class="fix-grid" id="openFixtures"></div>
-  </section>
-
-  <!-- ============ RESULTS ============ -->
-  <section id="view-results" class="view">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">Full-time</div>
-        <h2>Match Results</h2>
-      </div>
-      <div class="spacer"></div>
-    </div>
-    <div class="fix-grid" id="settledFixtures"></div>
-  </section>
-
-  <!-- ============ TEAMS ============ -->
-  <section id="view-teams" class="view">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">48 Nations · 12 Groups</div>
-        <h2>Teams &amp; Squads</h2>
-      </div>
-      <div class="spacer"></div>
-    </div>
-    <div class="teams-toolbar">
-      <div class="team-search"><span class="ts-ic">🔎</span>
-        <input type="text" id="teamSearch" placeholder="Search team or player…" autocomplete="off" />
-      </div>
-    </div>
-    <div id="teamsGroups"></div>
-  </section>
-
-  <!-- team squad detail modal -->
-  <div class="sq-modal" id="teamModal" hidden>
-    <div class="sq-box">
-      <button class="sq-close" id="teamModalClose" aria-label="Close">✕</button>
-      <div class="sq-content" id="teamModalBody"></div>
-    </div>
-  </div>
-
-  <!-- ============ STATS ============ -->
-  <section id="view-stats" class="view">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">Tournament Intelligence</div>
-        <h2>Statistics</h2>
-      </div>
-    </div>
-    <div class="stat-grid" id="statTiles"></div>
-    <div class="chart-grid">
-      <div class="card chart-card">
-        <h3>Crowd vs Reality</h3>
-        <div id="weeklyChart"></div>
-      </div>
-      <div class="card chart-card">
-        <h3>Prediction Distribution</h3>
-        <div id="distChart"></div>
-        <div class="legend">
-          <span><i style="background:var(--accent2)"></i>Team A wins</span>
-          <span><i style="background:var(--gold)"></i>Draw</span>
-          <span><i style="background:var(--danger)"></i>Team B wins</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ FACTS ============ -->
-  <section id="view-facts" class="view">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">Since 1930</div>
-        <h2>Facts &amp; History</h2>
-      </div>
-      <div class="spacer"></div>
-    </div>
-    <div id="factsHighlights"></div>
-    <div class="facts-toolbar">
-      <div class="team-search"><span class="ts-ic">🔎</span>
-        <input type="text" id="factsSearch" placeholder="Search players, teams, moments…" autocomplete="off" />
-      </div>
-    </div>
-    <div class="facts-timeline" id="factsTimeline"></div>
-    <div id="factsHonours"></div>
-  </section>
-
-  <!-- ============ ADMIN ============ -->
-  <section id="view-admin" class="view">
-    <div id="adminGate"></div>
-    <div id="adminPanel" hidden>
-      <div class="section-head">
-        <div>
-          <div class="eyebrow">Control Room</div>
-          <h2>Admin Panel</h2>
-        </div>
-        <div class="spacer"></div>
-        <button class="btn btn-ghost" id="exportBtn">⬇ Export CSV</button>
-        <button class="btn btn-danger" id="resetBtn">⟲ Reset Tournament</button>
-      </div>
-      <div class="adm-grid">
-        <div class="card panel">
-          <h3>📋 Fixtures &amp; Results</h3>
-          <div class="adm-list" id="admFixList"></div>
-        </div>
-        <div>
-          <div class="card panel" style="margin-bottom:18px">
-            <h3 id="fixFormTitle">➕ Add Fixture</h3>
-            <input type="hidden" id="editFixId" value="" />
-            <div class="row2">
-              <div class="field"><label>Team A (home)</label><select id="fTeamA"></select></div>
-              <div class="field"><label>Team B (away)</label><select id="fTeamB"></select></div>
-            </div>
-            <div class="row2">
-              <div class="field"><label>Match date</label><input type="date" id="fDate" /></div>
-              <div class="field"><label>Kick-off</label><input type="time" id="fTime" value="18:30" /></div>
-            </div>
-            <div class="field"><label>Round / stage</label><input type="text" id="fRound" placeholder="e.g. Group Stage · MD3" /></div>
-            <div style="display:flex;gap:10px">
-              <button class="btn btn-primary" id="saveFixBtn">Save Fixture</button>
-              <button class="btn btn-ghost" id="cancelEditBtn" hidden>Cancel</button>
-            </div>
-          </div>
-          <div class="card panel">
-            <h3>👥 Players</h3>
-            <div class="row2">
-              <div class="field"><label>Add player</label><input type="text" id="newPlayer" placeholder="Full name" /></div>
-              <div class="field" style="display:flex;align-items:flex-end"><button class="btn btn-ghost" id="addPlayerBtn" style="width:100%">Add Player</button></div>
-            </div>
-            <div class="players-chips" id="playerChips"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
-
-
-<!-- ============ TV MODE ============ -->
 <div class="tv-overlay" id="tv" hidden>
   <div class="tv-bg">
     <svg class="tv-field" viewBox="0 0 600 380" fill="none" stroke="#E8B84B" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -1172,18 +988,9 @@ footer b{color:var(--muted)}
 </div>
 
 <div class="toast" id="toast"><span class="ic">✓</span><span id="toastMsg"></span></div>
-<div class="modal" id="modal" hidden>
-  <div class="modal-box">
-    <h3 id="modalTitle"></h3>
-    <p id="modalBody"></p>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="modalCancel">Cancel</button>
-      <button class="btn btn-danger" id="modalOk">Confirm</button>
-    </div>
-  </div>
-</div>
 
 <script>
+
 "use strict";
 /* =====================================================================
    FIFA PREDICTOR CUP — application logic
@@ -2952,7 +2759,64 @@ function renderBrand(_name){
   // "Calfus" rendered as the white logo wordmark; "FIFA" highlighted; + "League".
   return `<img class="calfus-wm" src="/assets/calfus-logo-white.png" alt="Calfus"> <span>FIFA</span> League`;
 }
-init();
+
+
+/* ===================== STANDALONE TV / KIOSK BOOTSTRAP ===================== *
+ * Runs the exact TV-mode carousel with no login, against the public read-only
+ * API. Re-fetches the board on a timer so the screen stays current.            */
+  // Point all data reads at the main app's API (cross-origin when deployed apart).
+  API.base = "https://calfus-football-league.onrender.com";
+  // Route every data read through the public, auth-free endpoints. Reassigning the
+  // hoisted apiJson binding intercepts the internal loadData()/refreshBoard() calls.
+  const _origApiJson = apiJson;
+  apiJson = async function(p, opts){
+    if(p && p.indexOf("/api/") === 0 && p.indexOf("/api/public/") !== 0){
+      p = p.replace("/api/", "/api/public/");   // /api/fixtures -> /api/public/fixtures, etc.
+    }
+    return _origApiJson(p, opts);
+  };
+
+  // A stand-in "user" so loadData()/state has the field it expects.
+  currentUser = { id: "__tv__", name: "TV", email: "" };
+
+  // openTV() tries to go fullscreen via a user gesture; the kiosk page is already
+  // full-bleed, so we render the overlay inline and start the timers directly.
+  async function bootTV(){
+    try { await loadData(); }
+    catch(e){ console.error("TV load failed", e);
+      document.getElementById("tvStage").innerHTML =
+        '<div class="tv-empty">Waiting for the server…</div>';
+      return setTimeout(bootTV, 5000);
+    }
+    try { await refreshWindow(); } catch(e){}
+
+    const tv = document.getElementById("tv");
+    tv.hidden = false;
+    document.getElementById("tvBrand").innerHTML = renderBrand();
+    const ts = document.getElementById("tvSparks"); if(ts) ts.innerHTML = sparkMarkup();
+
+    tvScene = 0; pickWC(); renderTV(); buildTicker();
+    document.getElementById("tvDots").innerHTML =
+      TV_SCENES.map((_,i)=>'<i class="'+(i===0?"on":"")+'"></i>').join("");
+
+    clearInterval(tvCycle);  tvCycle  = setInterval(()=>{ if(!tvPaused) nextScene(1); }, TV_INTERVAL);
+    clearInterval(tvClockT); tvClockT = setInterval(tickTVClock, 1000); tickTVClock();
+    clearInterval(tvCountdownT); tvCountdownT = setInterval(tickCountdown, 1000);
+    // Auto-update the board so results/picks refresh on the big screen.
+    clearInterval(tvRefresh); tvRefresh = setInterval(async ()=>{
+      try { await refreshBoard(); } catch(e){}
+      renderTV(); buildTicker();
+    }, 60000);
+  }
+
+  // Hide the exit button (nothing to exit to on a kiosk) and start.
+  function start(){
+    const x = document.getElementById("tvExit"); if(x) x.style.display = "none";
+    bootTV();
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
+
 </script>
 </body>
 </html>

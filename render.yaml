@@ -35,3 +35,21 @@ services:
         value: America/Los_Angeles
       - key: FIXTURE_TZ
         value: Asia/Kolkata
+
+  # --- Separate, login-free TV / kiosk display -------------------------------
+  # Its own service & URL, but no DB of its own: tv.html reads data cross-origin
+  # from the main app's public API (TV_API_BASE, baked in at build time).
+  # The main service above is untouched by this.
+  - type: web
+    name: calfus-fifa-tv
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm install && npm run build:tv
+    startCommand: npm run start:tv
+    healthCheckPath: /healthz
+    envVars:
+      # URL of the main app whose /api/public/* this TV page reads.
+      # Change here if the main app uses a custom domain, then redeploy.
+      - key: TV_API_BASE
+        value: https://calfus-football-league.onrender.com
