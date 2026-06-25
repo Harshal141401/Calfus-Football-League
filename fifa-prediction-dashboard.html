@@ -919,8 +919,6 @@ footer b{color:var(--muted)}
 .ed-host{font-family:var(--f-sport);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);flex:1;min-width:0}
 .ed-win{display:flex;align-items:center;gap:5px;font-family:var(--f-sport);font-weight:700;font-size:12.5px;color:var(--silver);white-space:nowrap}
 .ed-win i{font-style:normal;font-size:13px}
-.ed-count{font-family:var(--f-sport);font-weight:700;font-size:11px;color:var(--muted);background:rgba(13,18,25,.55);
-  border:1px solid var(--line);border-radius:99px;min-width:24px;height:22px;display:grid;place-items:center;padding:0 7px}
 .ed-chev{font-family:var(--f-display);font-size:22px;color:var(--muted-2);transition:transform .2s ease;flex:none}
 .ed-card.open .ed-chev{transform:rotate(90deg);color:var(--neon)}
 .ed-facts{max-height:0;overflow:hidden;transition:max-height .3s ease}
@@ -2400,7 +2398,6 @@ function renderFactsTimeline(){
         <span class="ed-year">${esc(e.year)}</span>
         <span class="ed-host">${esc(e.host||"Not held")}</span>
         ${champ?`<span class="ed-win"><i>🏆</i>${esc(champ)}</span>`:""}
-        <span class="ed-count">${e.facts.length}</span>
         <span class="ed-chev">›</span>
       </button>
       <div class="ed-facts"><ul>${facts}</ul></div>
