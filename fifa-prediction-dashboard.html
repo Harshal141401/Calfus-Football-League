@@ -683,7 +683,7 @@ select{appearance:none;padding-right:30px;
 .tv-empty{display:grid;place-items:center;flex:1;text-align:center;color:var(--muted);
   font-family:var(--f-sport);font-weight:700;font-size:clamp(18px,2.4vw,34px);letter-spacing:.1em;text-transform:uppercase}
 
-/* TV World Cup history slide */
+/* TV World Cup history slide — image + host/winner info */
 .tv-wc-scene{display:flex;align-items:center;justify-content:center;gap:clamp(32px,5vw,80px);flex:1;padding:clamp(16px,2vh,32px) clamp(24px,4vw,60px)}
 .tv-wc-img-wrap{flex:0 1 auto;max-width:clamp(260px,55vw,900px);max-height:clamp(220px,72vh,820px);border-radius:18px;overflow:hidden;
   border:2px solid var(--gold);box-shadow:0 0 40px rgba(232,184,75,.35)}
@@ -694,6 +694,16 @@ select{appearance:none;padding-right:30px;
 .tv-wc-label{font-family:var(--f-sport);font-weight:700;font-size:clamp(11px,1.2vw,17px);color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
 .tv-wc-val{font-family:var(--f-display);font-size:clamp(22px,3.2vw,52px);text-transform:uppercase}
 .tv-wc-val.winner{color:var(--accent2)}
+
+/* TV World Cup facts slide — a single random, decade-wise fact */
+.tv-fact-scene{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(18px,3vh,40px);
+  flex:1;padding:clamp(20px,3vh,48px) clamp(24px,6vw,120px);text-align:center}
+.tv-fact-era{font-family:var(--f-sport);font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  font-size:clamp(14px,1.8vw,26px);color:var(--gold)}
+.tv-fact-card{max-width:min(1100px,90%);display:flex;flex-direction:column;gap:clamp(10px,1.8vh,22px)}
+.tv-fact-date{font-family:var(--f-display);font-size:clamp(20px,2.6vw,42px);color:var(--neon);line-height:1}
+.tv-fact-text{margin:0;font-family:var(--f-display);text-transform:none;line-height:1.22;color:var(--ink);
+  font-size:clamp(24px,3.4vw,56px)}
 
 /* TV today votes */
 .tvtoday{display:flex;flex-direction:column;gap:clamp(10px,1.6vh,18px);flex:1;align-content:center;justify-content:center}
@@ -1864,8 +1874,10 @@ function renderAdmin(){
    ===================================================================== */
 let tvScene=0, tvCycle=null, tvRefresh=null, tvClockT=null, tvCountdownT=null, tvPaused=false;
 const TV_SCENES = ["leaderboard","fixtures","results","stats","today","performers","movers","worldcup"];
-const TV_INTERVAL = 12000;
+const TV_INTERVAL = 30000;
 
+/* The TV "World Cup" slide randomly shows EITHER a past-final image+info card
+   OR a decade-wise fact. pickWC() decides the mode and the content each time. */
 const WC_HISTORY = [
   { file:"July 30 1930.png",   date:"July 30, 1930",      host:"Uruguay",          winner:"Uruguay" },
   { file:"June 10 1934.png",   date:"June 10, 1934",      host:"Italy",            winner:"Italy" },
@@ -1887,14 +1899,35 @@ const WC_HISTORY = [
   { file:"July 15 2018.png",   date:"July 15, 2018",      host:"Russia",           winner:"France" },
   { file:"December 18 2022.png",date:"December 18, 2022", host:"Qatar",            winner:"Argentina" },
 ];
-let _wcPick = null;
+let _wcMode = "image";        // "image" | "fact"
+let _wcPick = null;           // chosen WC_HISTORY entry (image mode)
+let _wcFact = null;           // chosen { decade, title, year, fact } (fact mode)
+function decadeOf(year){ const y=parseInt(String(year).slice(0,4),10); return isNaN(y)?"":(Math.floor(y/10)*10)+"s"; }
 function pickWCImage(){ _wcPick = WC_HISTORY[Math.floor(Math.random()*WC_HISTORY.length)]; }
+function pickWCFact(){
+  const eds = (typeof FACTS!=="undefined" && FACTS.editions) ? FACTS.editions.filter(e=>e.facts && e.facts.length) : [];
+  if(!eds.length){ _wcFact=null; return; }
+  // bucket by decade, pick a decade at random, then an edition + fact within it
+  const byDecade={}; eds.forEach(e=>{ const d=decadeOf(e.year)||"Other"; (byDecade[d]=byDecade[d]||[]).push(e); });
+  const decades=Object.keys(byDecade);
+  const dec=decades[Math.floor(Math.random()*decades.length)];
+  const pool=byDecade[dec];
+  const ed=pool[Math.floor(Math.random()*pool.length)];
+  const fact=ed.facts[Math.floor(Math.random()*ed.facts.length)];
+  _wcFact={ decade:dec, title:ed.title, year:ed.year, fact };
+}
+// Randomly choose which kind of slide to show, then pick its content.
+function pickWC(){
+  _wcMode = Math.random() < 0.5 ? "fact" : "image";
+  if(_wcMode==="image") pickWCImage(); else pickWCFact();
+  if(_wcMode==="fact" && !_wcFact){ _wcMode="image"; pickWCImage(); }   // fall back if no facts
+}
 
 async function openTV(){
   $("#tv").hidden=false; document.body.style.overflow="hidden";
   $("#tvBrand").innerHTML = $("#brandName").innerHTML;
   { const ts=$("#tvSparks"); if(ts) ts.innerHTML=sparkMarkup(); }   // glowing sparks for the big screen
-  tvScene=0; pickWCImage(); renderTV(); buildTicker();
+  tvScene=0; pickWC(); renderTV(); buildTicker();
   $("#tvDots").innerHTML = TV_SCENES.map((_,i)=>`<i class="${i===0?"on":""}"></i>`).join("");
   clearInterval(tvCycle); tvCycle=setInterval(()=>{ if(!tvPaused) nextScene(1); }, TV_INTERVAL);
   clearInterval(tvRefresh); tvRefresh=setInterval(async()=>{ try{ await refreshBoard(); }catch(e){} renderTV(); buildTicker(); }, 60000);
@@ -1910,7 +1943,7 @@ function closeTV(){
 }
 function nextScene(dir){
   tvScene=(tvScene+dir+TV_SCENES.length)%TV_SCENES.length;
-  if(TV_SCENES[tvScene]==="worldcup") pickWCImage();
+  if(TV_SCENES[tvScene]==="worldcup") pickWC();
   renderTV();
 }
 function tickTVClock(){ const d=istNow(); $("#tvClock").textContent=`${fmtClock12(d)} IST`; }
@@ -2065,6 +2098,21 @@ function tvMovers(lb){
   return tvHead("Momentum","Biggest Movers",false)+`<div class="tvmov">${rows}</div>`;
 }
 function tvWorldCup(){
+  // Fact mode — a single random, decade-wise World Cup fact.
+  if(_wcMode==="fact" && _wcFact){
+    const wf=_wcFact;
+    const d = (typeof splitDated==="function") ? splitDated(wf.fact) : { date:"", text:wf.fact };
+    const dateTag = d.date ? `<div class="tv-fact-date">${esc(d.date)}</div>` : "";
+    return `
+    <div class="tv-fact-scene">
+      <div class="tv-fact-era">${esc(wf.decade)} · ${esc(wf.title)}</div>
+      <div class="tv-fact-card">
+        ${dateTag}
+        <p class="tv-fact-text">${esc(d.text)}</p>
+      </div>
+    </div>`;
+  }
+  // Image mode — a past final's photo with host/winner info.
   const wc = _wcPick || WC_HISTORY[0];
   return `
   <div class="tv-wc-scene">
