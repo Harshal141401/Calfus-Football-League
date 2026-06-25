@@ -626,10 +626,11 @@ select{appearance:none;padding-right:30px;
 .tv-scene-head .eyebrow{font-size:clamp(13px,1.4vw,18px);letter-spacing:.4em}
 .tv-scene-head h1{font-family:var(--f-display);font-size:clamp(40px,6vw,86px);margin:0;line-height:.9;
   text-transform:uppercase}
-/* Leaderboard scene: compact the heading so more player rows are visible. */
-.tv-scene[data-scene="leaderboard"] .tv-scene-head{margin-bottom:clamp(6px,1.1vh,12px)}
-.tv-scene[data-scene="leaderboard"] .tv-scene-head h1{font-size:clamp(30px,4vw,56px)}
-.tv-scene[data-scene="leaderboard"] .tv-scene-head .eyebrow{font-size:clamp(11px,1.1vw,15px)}
+/* Leaderboard scene: much smaller, tucked-up heading so the standings list
+   gets the most vertical room and more names are visible. */
+.tv-scene[data-scene="leaderboard"] .tv-scene-head{margin-bottom:clamp(2px,.6vh,8px);align-items:center;gap:12px}
+.tv-scene[data-scene="leaderboard"] .tv-scene-head h1{font-size:clamp(22px,2.6vw,38px);line-height:1}
+.tv-scene[data-scene="leaderboard"] .tv-scene-head .eyebrow{font-size:clamp(9px,.9vw,12px)}
 .tv-countdown{margin-left:auto;text-align:right}
 .tv-countdown .cd-label{font-family:var(--f-sport);font-weight:700;font-size:clamp(11px,1.1vw,15px);
   letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
