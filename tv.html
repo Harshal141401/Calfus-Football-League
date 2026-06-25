@@ -2776,16 +2776,27 @@ function renderBrand(_name){
   // A stand-in "user" so loadData()/state has the field it expects.
   currentUser = { id: "__tv__", name: "TV", email: "" };
 
-  // openTV() tries to go fullscreen via a user gesture; the kiosk page is already
-  // full-bleed, so we render the overlay inline and start the timers directly.
+  // The kiosk page is already full-bleed, so we render the overlay inline and run
+  // the timers directly. bootTV() retries until the data loads (the free-tier API
+  // may be cold-starting); once it succeeds it latches and never reverts to the
+  // "Waiting" state, even if a slow earlier attempt resolves late.
+  let _booted = false, _booting = false;
   async function bootTV(){
-    try { await loadData(); }
-    catch(e){ console.error("TV load failed", e);
-      document.getElementById("tvStage").innerHTML =
-        '<div class="tv-empty">Waiting for the server…</div>';
-      return setTimeout(bootTV, 5000);
+    if(_booted || _booting) return;
+    _booting = true;
+    try {
+      await loadData();
+    } catch(e){
+      _booting = false;
+      console.error("TV load failed, retrying…", e);
+      if(!_booted){
+        document.getElementById("tvStage").innerHTML =
+          '<div class="tv-empty">Connecting to the league…</div>';
+      }
+      return setTimeout(bootTV, 4000);
     }
     try { await refreshWindow(); } catch(e){}
+    _booted = true; _booting = false;
 
     const tv = document.getElementById("tv");
     tv.hidden = false;
@@ -2806,9 +2817,20 @@ function renderBrand(_name){
     }, 60000);
   }
 
+  // Allow manual advance on the kiosk: arrow keys, click, or swipe.
+  function wireKiosk(){
+    document.addEventListener("keydown", e=>{
+      if(!_booted) return;
+      if(e.key==="ArrowRight"||e.key===" ") nextScene(1);
+      else if(e.key==="ArrowLeft") nextScene(-1);
+    });
+    document.getElementById("tvStage").addEventListener("click", ()=>{ if(_booted) nextScene(1); });
+  }
+
   // Hide the exit button (nothing to exit to on a kiosk) and start.
   function start(){
     const x = document.getElementById("tvExit"); if(x) x.style.display = "none";
+    wireKiosk();
     bootTV();
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
