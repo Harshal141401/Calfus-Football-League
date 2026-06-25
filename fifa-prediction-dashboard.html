@@ -698,6 +698,13 @@ select{appearance:none;padding-right:30px;
 .tvpod .plinth .pavatar{width:clamp(80px,9vw,150px);height:clamp(80px,9vw,150px);font-size:clamp(30px,3.4vw,54px);border-radius:clamp(20px,2.4vw,40px)}
 .tvpod .p1 .pavatar{width:clamp(96px,11vw,180px);height:clamp(96px,11vw,180px);font-size:clamp(38px,4.2vw,66px)}
 .tvpod .plinth .prank{width:clamp(34px,3.4vw,58px);height:clamp(34px,3.4vw,58px);font-size:clamp(16px,1.8vw,30px)}
+/* medals scale up for the big screen */
+.tvpod .medal{width:clamp(80px,9vw,150px);height:clamp(80px,9vw,150px);font-size:clamp(30px,3.4vw,54px)}
+.tvpod .p1 .medal{width:clamp(96px,11vw,180px);height:clamp(96px,11vw,180px);font-size:clamp(38px,4.2vw,66px)}
+.tvpod .tie-list{max-width:none}
+.tvpod .tie-nm{font-size:clamp(15px,1.7vw,26px)}
+.tvpod .tie-pts{font-size:clamp(13px,1.4vw,22px)} .tvpod .tie-pts b{font-size:clamp(15px,1.6vw,26px)}
+.tvpod .tie-tag{font-size:clamp(10px,1vw,15px)}
 .tvpod .plinth .pname{font-size:clamp(20px,2.6vw,42px)}
 .tvpod .bar .rk{font-size:clamp(60px,9vw,140px)}
 .tvpod .p1 .bar{height:clamp(200px,30vh,320px)}
@@ -2184,14 +2191,27 @@ function tvPerformers(lb){
   // alphabetically-first 3 employees on 0 pts (same gate as the leaderboard scene).
   if(!lb.some(r=>r.settled>0))
     return tvHead("Spotlight","Top Performers",false)+`<div class="tv-empty">Top performers will appear once matches are settled</div>`;
-  const order=[lb[1],lb[0],lb[2]],cls=["p2","p1","p3"],rk=[2,1,3];
-  const pod=order.map((p,i)=>{ if(!p) return `<div class="plinth ${cls[i]}"></div>`;
-    const tag=rk[i]===1?`<div class="leader-tag">${TROPHY} Leader</div>`:"";
-    return `<div class="plinth ${cls[i]}"><div class="crowd">${tag}
-      <div class="pavatar" style="--av:${p.av}"><span class="pinit">${esc(initials(p.name))}</span><span class="prank">${rk[i]}</span></div>
-      <div class="pname">${esc(p.name)}</div>
-      <div class="ppts"><b>${p.points}</b> pts · ${p.correct}✓ · ${p.wrong}✗</div></div>
-      <div class="bar"><span class="rk">${rk[i]}</span></div></div>`; }).join("");
+  // Same medal + tied-rank treatment as the home podium: dense ranks (1,2,2,3),
+  // one medal per rank, and every tied player's name listed beneath it.
+  const ranked = lb.filter(r=>r.total>0);
+  const byRank = {1:[],2:[],3:[]};
+  { let lastPts=null, rank=0;
+    ranked.forEach(r=>{ if(r.points!==lastPts){ rank+=1; lastPts=r.points; } if(rank<=3) byRank[rank].push(r); }); }
+  const plinth = (rk, cls) => {
+    const players = byRank[rk];
+    if(!players.length) return `<div class="plinth ${cls}"><div class="bar"><span class="rk">${rk}</span></div></div>`;
+    const tied = players.length>1;
+    const face = tied ? `×${players.length}` : esc(initials(players[0].name));
+    const medal = `<div class="medal m${rk}"><span class="medal-init">${face}</span><span class="medal-ribbon"></span></div>`;
+    const names = tied
+      ? `<div class="tie-list">${players.map(p=>`<div class="tie-row"><span class="tie-nm">${esc(p.name)}</span><span class="tie-pts"><b>${p.points}</b> pts</span></div>`).join("")}</div>`
+      : `<div class="pname">${esc(players[0].name)}</div><div class="ppts"><b>${players[0].points}</b> pts · ${players[0].correct}✓ · ${players[0].wrong}✗</div>`;
+    const leaderTag = rk===1 ? `<div class="leader-tag">${TROPHY} ${tied?"Leaders":"Leader"}</div>` : "";
+    const tieTag = tied ? `<div class="tie-tag">Tied · ${players.length}</div>` : "";
+    return `<div class="plinth ${cls}"><div class="crowd">${leaderTag}${tieTag}${medal}${names}</div>
+      <div class="bar"><span class="rk">${rk}</span></div></div>`;
+  };
+  const pod = plinth(2,"p2") + plinth(1,"p1") + plinth(3,"p3");
   return tvHead("Spotlight","Top Performers",false)+`<div class="tvpod">${pod}</div>`;
 }
 function tvMovers(lb){
@@ -2496,16 +2516,17 @@ function wireEvents(){
       const h=Number(sh), a=Number(sa);
       const implied = h>a?"win":h<a?"lose":"draw";
       if(implied!==choice){
-        const A=teamById(state.fixtures.find(x=>x.id===fixId).teamAId);
-        const want={win:`${A.abbr} to win (home > away)`,draw:"a draw (equal score)",lose:`${A.abbr} to lose (home < away)`}[choice];
+        const fx=state.fixtures.find(x=>x.id===fixId);
+        const A=teamById(fx.teamAId), B=teamById(fx.teamBId);
+        const want={win:`${A.abbr} to win (home > away)`,draw:"a draw (equal score)",lose:`${B.abbr} to win (away > home)`}[choice];
         toast(`Your score doesn't match your pick — you picked ${want}`,"✕"); return;
       }
     }
     lockBtn.disabled=true; lockBtn.textContent="Saving…";
     try{
       await submitPrediction(fixId, choice, sh, sa);
-      const f=state.fixtures.find(x=>x.id===fixId); const A=teamById(f.teamAId);
-      const lbl={win:`${A.abbr} to win`,draw:"a draw",lose:`${A.abbr} to lose`}[choice];
+      const f=state.fixtures.find(x=>x.id===fixId); const A=teamById(f.teamAId), B=teamById(f.teamBId);
+      const lbl={win:`${A.abbr} to win`,draw:"a draw",lose:`${B.abbr} to win`}[choice];
       toast(`Pick saved — ${lbl}${sh!==""?` (${sh}–${sa})`:""} ✅`);
       renderPredict(); renderHome();
     }catch(err){ toast(err.message||"Could not save pick","✕"); renderPredict(); }
