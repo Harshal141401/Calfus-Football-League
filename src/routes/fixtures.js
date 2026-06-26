@@ -32,6 +32,7 @@ function enrich(fixture, teamsById) {
     liveAwayScore: fixture.liveAwayScore ?? null,
     liveClock: fixture.liveClock ?? null,
     lineups: fixture.lineups ?? null,
+    events: fixture.events ?? [],
     predictable: !locked,
     lockAt: windows.lockTime(fixture.kickoff).toISO(),
     locked,

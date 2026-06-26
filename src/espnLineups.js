@@ -85,4 +85,53 @@ async function fetchLineup(espnId) {
   return lineup;
 }
 
-module.exports = { fetchLineup, parseLineup, enrichClubs, resolveClub };
+/* Pull the scorer's name out of ESPN's free-text event description, since
+   `athletesInvolved` is often empty. The player sits right before the "(Team)" part,
+   after the score sentence — e.g. "Goal! A 0, B 1. Nicolas Pépé (B) left footed…". */
+function playerFromText(text) {
+  if (!text) return "";
+  const idx = text.indexOf("(");
+  if (idx < 0) return "";
+  const head = text.slice(0, idx).trim();
+  const parts = head.split(/[.!]/);
+  return parts[parts.length - 1].trim();
+}
+
+/* Parse goals + red/yellow cards from a match-summary JSON, tagged home/away. */
+function parseMatchEvents(json) {
+  const comp = json && json.header && json.header.competitions && json.header.competitions[0];
+  const sideById = {};
+  for (const c of (comp && comp.competitors) || []) {
+    sideById[String(c.id || (c.team && c.team.id))] = c.homeAway;
+  }
+  const out = [];
+  for (const k of (json && json.keyEvents) || []) {
+    const t = ((k.type && k.type.text) || "").toLowerCase();
+    let type = null;
+    if (k.scoringPlay || t.includes("goal")) type = "goal";
+    else if (t.includes("red card")) type = "red";
+    else if (t.includes("yellow card")) type = "yellow";
+    else continue;
+    const player = (k.athletesInvolved && k.athletesInvolved[0] &&
+      (k.athletesInvolved[0].displayName || k.athletesInvolved[0].shortName)) || playerFromText(k.text);
+    if (!player) continue;
+    out.push({
+      type,
+      minute: (k.clock && k.clock.displayValue) || "",
+      player,
+      side: sideById[String(k.team && k.team.id)] || "",
+      own: /own goal/i.test(k.text || ""),
+    });
+  }
+  return out;
+}
+
+async function fetchMatchEvents(espnId) {
+  const config = require("./config");
+  const base = config.ESPN_SUMMARY_BASE || config.ESPN_BASE.replace("scoreboard", "summary");
+  const r = await fetch(`${base}?event=${encodeURIComponent(espnId)}`, { signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error(`ESPN summary ${r.status}`);
+  return parseMatchEvents(await r.json());
+}
+
+module.exports = { fetchLineup, parseLineup, enrichClubs, resolveClub, parseMatchEvents, fetchMatchEvents };

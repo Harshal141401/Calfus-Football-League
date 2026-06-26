@@ -6,7 +6,7 @@ const { fetchScoreboard, parseEvents } = require("./espn");
 const { matchFixture, dayUtc } = require("./matchFixture");
 const { settleFixture } = require("./settle");
 const { notifyPredictors } = require("./notify");
-const { fetchLineup } = require("./espnLineups");
+const { fetchLineup, fetchMatchEvents } = require("./espnLineups");
 
 /* Fetch the starting XI for a matched event (once it's available) and store it on
    the fixture, mapped to Team A / Team B. Retries each tick until ESPN publishes it. */
@@ -23,6 +23,28 @@ async function syncLineup(ev, f, teamsById) {
     f.lineups = lineups;
     console.log(`[espn] lineups stored for ${f.apiId}`);
   } catch (e) { console.warn("[espn] lineup fetch failed:", e.message); }
+}
+
+/* Fetch goals + cards for a live/finished match and store them on the fixture,
+   mapped to Team A / Team B. Refreshes while live; stops once stored as final. */
+async function syncEvents(ev, f, teamsById) {
+  if (!(ev.state === "in" || ev.completed)) return;
+  if (f.eventsFinal) return;                       // already captured the final set
+  try {
+    const raw = await fetchMatchEvents(ev.espnId);
+    if (!raw.length && !ev.completed) return;      // nothing yet — retry next tick
+    const A = teamsById[String(f.teamAId)] || {};
+    const aIsHome = String(A.abbr || "").toUpperCase() === String(ev.home.abbr || "").toUpperCase()
+      || String(A.name || "").toLowerCase() === String(ev.home.name || "").toLowerCase();
+    const events = raw.map(e => ({
+      type: e.type, minute: e.minute, player: e.player, own: e.own,
+      team: e.side === "home" ? (aIsHome ? "A" : "B") : e.side === "away" ? (aIsHome ? "B" : "A") : "",
+    }));
+    await collections.fixtures().updateOne({ _id: f._id },
+      { $set: { events, eventsAt: new Date(), ...(ev.completed ? { eventsFinal: true } : {}) } });
+    f.events = events;
+    console.log(`[espn] ${events.length} events stored for ${f.apiId}${ev.completed ? " (final)" : ""}`);
+  } catch (e) { console.warn("[espn] events fetch failed:", e.message); }
 }
 
 async function runSync() {
@@ -59,6 +81,7 @@ async function runSync() {
       } });
     }
     await syncLineup(ev, f, teamsById);   // store starting XI when available
+    await syncEvents(ev, f, teamsById);   // store goals + cards when available
   }
 }
 

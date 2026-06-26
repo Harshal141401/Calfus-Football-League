@@ -508,6 +508,15 @@ select{appearance:none;padding-right:30px;
   text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line)}
 .settled-pill.correct{color:var(--accent2);background:rgba(52,199,123,.12);border-color:rgba(52,199,123,.3)}
 .settled-pill.wrong{color:#ff97a3;background:rgba(255,84,104,.12);border-color:rgba(255,84,104,.3)}
+/* match events (goals + cards) on a settled result tile */
+.ev-list{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+.ev-row{display:grid;grid-template-columns:18px 1fr auto auto;align-items:center;gap:8px;
+  font-family:var(--f-sport);font-weight:600;font-size:13px;color:var(--ink)}
+.ev-ic{text-align:center;font-size:12px}
+.ev-pl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-tm{font-weight:700;font-size:11px;color:var(--muted);letter-spacing:.04em}
+.ev-min{color:var(--gold);font-weight:700;font-size:12px;min-width:34px;text-align:right}
+.ev-empty{font-family:var(--f-sport);font-weight:600;font-size:12px;color:var(--muted);letter-spacing:.04em}
 .votes{display:flex;gap:4px;height:6px;margin-top:12px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.06)}
 .votes i{display:block;height:100%}
 .votes .v-w{background:var(--accent2)} .votes .v-d{background:var(--gold)} .votes .v-l{background:var(--danger)}
@@ -682,15 +691,18 @@ select{appearance:none;padding-right:30px;
 .tvfix-grid::-webkit-scrollbar{width:8px}
 .tvfix-grid::-webkit-scrollbar-thumb{background:rgba(232,184,75,.4);border-radius:99px}
 .tvfix-grid::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:99px}
-.tvstat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,28px);flex:1;
-  align-content:center;min-height:0}
-.tvstat{padding:clamp(16px,3vh,38px);border-radius:18px;background:var(--glass);border:1px solid var(--line);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.tvstat-val{font-family:var(--f-display);font-size:clamp(32px,5vw,66px);line-height:1;color:var(--ink)}
+.tvstat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.6vw,22px);flex:1;
+  align-content:stretch;min-height:0}
+.tvstat{padding:clamp(10px,2vh,26px) clamp(12px,1.6vw,24px);border-radius:18px;background:var(--glass);border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:0}
+.tvstat-val{font-family:var(--f-display);font-size:clamp(26px,3.6vw,52px);line-height:1.02;color:var(--ink);
+  word-break:break-word}
 .tvstat-val.neon{color:var(--neon)}
 .tvstat-val.gold{color:var(--gold)}
-.tvstat-label{margin-top:10px;font-family:var(--f-sport);font-weight:700;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--muted);font-size:clamp(11px,1.3vw,17px)}
+.tvstat-val.danger{color:var(--danger)}
+.tvstat-label{margin-top:8px;font-family:var(--f-sport);font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);font-size:clamp(10px,1.2vw,16px)}
+.tvstat-sub{margin-top:5px;font-family:var(--f-sport);font-weight:600;font-size:clamp(10px,1vw,14px);color:var(--muted-2)}
 .tvfix{padding:clamp(16px,2.4vh,30px);border-radius:18px;background:var(--glass);border:1px solid var(--line);
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(10px,2vw,24px)}
 .tvfix.is-live{border-color:rgba(255,84,104,.5);box-shadow:0 0 30px rgba(255,84,104,.16)}
@@ -1435,7 +1447,7 @@ function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
   date:f.date, time:f.time, kickoff:f.kickoff, round:f.round, group:f.group, md:f.md,
   result:f.result||null, homeScore:f.homeScore, awayScore:f.awayScore,
   liveStatus:f.liveStatus||null, liveHomeScore:f.liveHomeScore, liveAwayScore:f.liveAwayScore, liveClock:f.liveClock||null,
-  lineups:f.lineups||null,
+  lineups:f.lineups||null, events:f.events||[],
   predictable:!!f.predictable, locked:!!f.locked }; }
 function mapEmployee(e,i){ return { id:String(e.id), name:e.name, av:AVCOL[i%AVCOL.length] }; }
 
@@ -1703,19 +1715,24 @@ function fixtureCard(f,empId,isSettled,live){
     const resTxt=outcomeLabel(f.result,A,B);
     const hasScore = (f.homeScore!=null && f.awayScore!=null);
     const scoreTxt = hasScore ? `${f.homeScore}–${f.awayScore}` : "";
-    let pill="";
-    if(pred){
-      const ok=pred.choice===f.result;
-      let pts = ok? SCORE.correct : SCORE.wrong, extra="";
-      if(pred.scoreHome!=null && pred.scoreAway!=null){
-        const exact=(f.homeScore===pred.scoreHome && f.awayScore===pred.scoreAway);
-        pts += exact? SCORE.scoreExact : SCORE.scoreWrong;
-        extra = exact? ` · exact ${pred.scoreHome}–${pred.scoreAway} ✓` : ` · score ${pred.scoreHome}–${pred.scoreAway} ✗`;
-      }
-      const sign = pts>=0?`+${pts}`:`${pts}`;
-      pill=`<span class="settled-pill ${ok?"correct":"wrong"}">Your pick: ${labels[pred.choice]} · ${sign} pt${extra}</span>`;
-    } else pill=`<span class="settled-pill">No pick</span>`;
-    bottom=`<div class="fix-meta" style="margin:0 0 10px"><span>${scoreTxt?`Final · <b style="color:var(--gold)">${scoreTxt}</b>`:"Final result"}</span><span class="round">${resTxt}</span></div>${pill}`;
+    // What happened in the match: goals + cards, in order, with scorer & minute.
+    const evIcon = t => t==="goal" ? "⚽" : t==="red" ? "🟥" : "🟨";
+    const evs = (f.events||[]);
+    let detail;
+    if(evs.length){
+      detail = `<div class="ev-list">${evs.map(e=>{
+        const tm = e.team==="A" ? A.abbr : e.team==="B" ? B.abbr : "";
+        return `<div class="ev-row ev-${e.type}">
+          <span class="ev-ic">${evIcon(e.type)}</span>
+          <span class="ev-pl">${esc(e.player)}${e.own?" (OG)":""}</span>
+          ${tm?`<span class="ev-tm">${esc(tm)}</span>`:""}
+          <span class="ev-min">${esc(e.minute)}</span>
+        </div>`; }).join("")}</div>`;
+    } else {
+      // No event feed for this match — fall back to the outcome line.
+      detail = `<div class="ev-empty">Match finished${resTxt?` · ${resTxt}`:""}</div>`;
+    }
+    bottom=`<div class="fix-meta" style="margin:0 0 10px"><span>${scoreTxt?`Final · <b style="color:var(--gold)">${scoreTxt}</b>`:"Final result"}</span><span class="round">${resTxt}</span></div>${detail}`;
   } else {
     const votes = v.total? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-d" style="width:${pct("draw")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>
       <div class="vote-legend"><span>${esc(A.abbr)} ${pct("win")}%</span><span>Draw ${pct("draw")}%</span><span>${esc(B.abbr)} ${pct("lose")}%</span></div>` : "";
@@ -1807,7 +1824,9 @@ function scoreAccuracy(){
   });
   return { given, exact, pct: given ? Math.round(exact/given*100) : 0 };
 }
-function renderStats(){
+/* The exact set of Stats-page tiles (label, value, colour class, sub-label).
+   Shared by the dashboard Stats tab and the TV "Stats" scene so they always match. */
+function computeStatTiles(){
   const lb = computeLeaderboard();
   const sa = scoreAccuracy();
   const totalPreds=state.predictions.length;
@@ -1827,7 +1846,6 @@ function renderStats(){
   state.fixtures.filter(f=>f.result).forEach(f=>{ const v=voteSplit(f.id); if(v.total<2) return;
     const share=v[f.result]/v.total; if(share<upsetShare){upsetShare=share;upset=f;} });
   const upsetTxt = upset ? (()=>{ const A=teamById(upset.teamAId),B=teamById(upset.teamBId);
-    const v=voteSplit(upset.id); const wrong=v.total-v[upset.result];
     return `${A.abbr} v ${B.abbr}`; })() : "—";
   const upsetSub = upset ? (()=>{ const v=voteSplit(upset.id); const wrong=v.total-v[upset.result];
     return `${wrong}/${v.total} got it wrong`; })() : "Need more results";
@@ -1843,7 +1861,7 @@ function renderStats(){
   Object.entries(weekly).forEach(([k,pts])=>{ if(pts>topW.pts){ const[eid,wk]=k.split("|");
     topW={pts,name:(state.employees.find(e=>e.id===eid)||{}).name||"—",wk}; } });
 
-  $("#statTiles").innerHTML = [
+  return [
     ["Participants", state.employees.length, "", ""],
     ["Total predictions", totalPreds, "", ""],
     ["Prediction accuracy", acc+"%", "neon", `${correct}/${settledPreds} correct`],
@@ -1853,7 +1871,11 @@ function renderStats(){
     ["Highest weekly score", (topW.pts>-Infinity?topW.pts:"—")+" pts", "neon", `${esc(topW.name)}${topW.wk?` · ${topW.wk}`:""}`],
     ["Biggest upset", upsetTxt, "danger", upsetSub],
     ["Completed fixtures", state.fixtures.filter(f=>f.result).length, "", `of ${state.fixtures.length} total`],
-  ].map(([l,v,c,sub])=>`<div class="card stat"><div class="s-label">${l}</div>
+  ];
+}
+function renderStats(){
+  $("#statTiles").innerHTML = computeStatTiles()
+    .map(([l,v,c,sub])=>`<div class="card stat"><div class="s-label">${l}</div>
     <div class="s-val ${c}">${esc(String(v))}</div>${sub?`<div class="s-sub">${sub}</div>`:""}</div>`).join("");
 
   // Crowd vs Reality — over SETTLED matches, compare what the crowd predicted
@@ -2157,27 +2179,10 @@ function tvResults(){
   return tvHead("Full-time","Recent Results",false)+`<div class="tvfix-grid">${cards}</div>`;
 }
 function tvStats(){
-  const lb=computeLeaderboard();
-  const totalPreds=state.predictions.length;
-  const settledPreds=lb.reduce((s,r)=>s+r.settled,0);
-  const correct=lb.reduce((s,r)=>s+r.correct,0);
-  const acc=settledPreds?Math.round(correct/settledPreds*100):0;
-  const avg=state.employees.length?(lb.reduce((s,r)=>s+r.points,0)/state.employees.length).toFixed(1):"0";
-  const teamCount={};
-  state.predictions.forEach(p=>{ const f=state.fixtures.find(x=>x.id===p.fixtureId); if(!f) return;
-    [f.teamAId,f.teamBId].forEach(t=>teamCount[t]=(teamCount[t]||0)+1); });
-  let mostTeam="—",mostN=0; Object.entries(teamCount).forEach(([t,n])=>{ if(n>mostN){mostN=n;mostTeam=teamById(t).abbr;} });
-  const settledFix=state.fixtures.filter(f=>f.result).length;
-  const sa=scoreAccuracy();
-  const tiles=[
-    ["Total predictions", totalPreds, ""],
-    ["Outcome accuracy", acc+"%", "neon"],
-    ["Score accuracy", sa.pct+"%", "gold"],
-    ["Avg points / player", avg, ""],
-    ["Most predicted", mostTeam, "gold"],
-    ["Completed fixtures", `${settledFix}/${state.fixtures.length}`, ""],
-  ];
-  const cards=tiles.map(([l,v,c])=>`<div class="tvstat"><div class="tvstat-val ${c}">${esc(String(v))}</div><div class="tvstat-label">${l}</div></div>`).join("");
+  // Exact replica of the Stats page tiles (label + value + sub-label), minus the graphs.
+  const cards=computeStatTiles().map(([l,v,c,sub])=>
+    `<div class="tvstat"><div class="tvstat-val ${c}">${esc(String(v))}</div>
+      <div class="tvstat-label">${l}</div>${sub?`<div class="tvstat-sub">${sub}</div>`:""}</div>`).join("");
   return tvHead("Tournament","Stats",false)+`<div class="tvstat-grid">${cards}</div>`;
 }
 function tvToday(){
