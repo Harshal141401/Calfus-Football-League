@@ -85,12 +85,39 @@ async function runSync() {
   }
 }
 
+/* One-off (idempotent) sweep to fetch goals + cards for EVERY settled fixture,
+   not just the handful in today's default scoreboard. Walks each fixture's match
+   date, pulls that date's scoreboard, matches, and stores events. Guarded by
+   `eventsFinal`, so already-captured matches are skipped on later runs. */
+async function backfillEvents() {
+  const fixtures = await collections.fixtures().find({}).toArray();
+  const teams = await collections.teams().find({}).toArray();
+  const teamsById = Object.fromEntries(teams.map(t => [String(t.id), t]));
+  const need = fixtures.filter(f => !f.eventsFinal && (f.status === "settled" || f.result));
+  if (!need.length) return;
+  const dates = [...new Set(need.map(f => dayUtc(f.kickoff).replace(/-/g, "")))].filter(d => d.length === 8);
+  console.log(`[espn] backfill: ${need.length} fixtures over ${dates.length} dates`);
+  for (const d of dates) {
+    let json;
+    try { json = await fetchScoreboard(d); }
+    catch (e) { console.warn(`[espn] backfill scoreboard ${d}:`, e.message); continue; }
+    for (const ev of parseEvents(json)) {
+      if (!ev.completed) continue;
+      const m = matchFixture(ev, need, teamsById);
+      if (m && !m.fixture.eventsFinal) await syncEvents(ev, m.fixture, teamsById);
+    }
+  }
+  console.log("[espn] backfill done");
+}
+
 function startPoller() {
   if (!config.ESPN_POLL_ENABLED) { console.log("[espn] poller disabled (ESPN_POLL_ENABLED!=true)"); return; }
   const tick = () => runSync().catch(e => console.error("[espn] sync error:", e.message));
   setInterval(tick, config.ESPN_POLL_SEC * 1000);
   tick();
+  // Sweep historical fixtures for events once at startup (idempotent).
+  backfillEvents().catch(e => console.error("[espn] backfill error:", e.message));
   console.log(`[espn] poller started, every ${config.ESPN_POLL_SEC}s`);
 }
 
-module.exports = { runSync, startPoller };
+module.exports = { runSync, startPoller, backfillEvents };
