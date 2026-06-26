@@ -91,8 +91,22 @@ const bootstrap = `
     }, 60000);
   }
 
+  // Go edge-to-edge: the Fullscreen API needs a user gesture, so the first tap or
+  // key press anywhere on the kiosk takes it fullscreen (hiding the browser chrome).
+  function goFullscreen(){
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if(req && !document.fullscreenElement){ try { req.call(el); } catch(e){} }
+  }
+
   // Allow manual advance on the kiosk: arrow keys, click, or swipe.
   function wireKiosk(){
+    // First interaction → fullscreen (once).
+    const once = ()=>{ goFullscreen();
+      document.removeEventListener("click", once); document.removeEventListener("keydown", once); };
+    document.addEventListener("click", once);
+    document.addEventListener("keydown", once);
+
     document.addEventListener("keydown", e=>{
       if(!_booted) return;
       if(e.key==="ArrowRight"||e.key===" ") nextScene(1);
