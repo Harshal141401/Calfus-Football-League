@@ -1689,68 +1689,6 @@ function renderStats(){
   $("#statTiles").innerHTML = computeStatTiles()
     .map(([l,v,c,sub])=>`<div class="card stat"><div class="s-label">${l}</div>
     <div class="s-val ${c}">${esc(String(v))}</div>${sub?`<div class="s-sub">${sub}</div>`:""}</div>`).join("");
-
-  // Crowd vs Reality — over SETTLED matches, compare what the crowd predicted
-  // (share of A/Draw/B picks) against what actually happened (share of A/Draw/B
-  // results). Surfaces collective bias, e.g. the crowd underrating draws.
-  const settledFx = state.fixtures.filter(f=>f.result);
-  const predCnt={win:0,draw:0,lose:0}, realCnt={win:0,draw:0,lose:0};
-  settledFx.forEach(f=>{ realCnt[f.result]++; });
-  state.predictions.forEach(p=>{ const f=state.fixtures.find(x=>x.id===p.fixtureId);
-    if(f && f.result) predCnt[p.choice]++; });
-  const predTot=predCnt.win+predCnt.draw+predCnt.lose, realTot=settledFx.length;
-  const pctOf=(n,t)=>t?Math.round(n/t*100):0;
-  const cvr=[
-    {label:"Team A wins", pred:pctOf(predCnt.win,predTot),  real:pctOf(realCnt.win,realTot)},
-    {label:"Draw",        pred:pctOf(predCnt.draw,predTot), real:pctOf(realCnt.draw,realTot)},
-    {label:"Team B wins", pred:pctOf(predCnt.lose,predTot), real:pctOf(realCnt.lose,realTot)},
-  ];
-  $("#weeklyChart").innerHTML = (predTot && realTot) ? svgCrowdVsReality(cvr) :
-    `<div style="color:var(--muted);font-family:var(--f-sport);font-weight:600;padding:30px 0;text-align:center">Appears once matches are settled.</div>`;
-
-  // distribution donut
-  const dist={win:0,draw:0,lose:0};
-  state.predictions.forEach(p=>dist[p.choice]++);
-  $("#distChart").innerHTML = svgDonut([
-    {label:"Team A wins",value:dist.win,color:"#34C77B"},
-    {label:"Draw",value:dist.draw,color:"#F2C84B"},
-    {label:"Team B wins",value:dist.lose,color:"#E5544E"},
-  ]);
-}
-/* Grouped bars: per outcome, the crowd's predicted % beside the actual % so the
-   gap (collective bias) is obvious. data: [{label, pred, real}] as percentages. */
-function svgCrowdVsReality(data){
-  const W=520,H=240,pad=34,base=H-pad,plot=H-pad*2;
-  const grpW=(W-pad*2)/data.length, bw=Math.min(40,grpW*0.3), inner=8;
-  const yOf=pc=>base-plot*(pc/100);
-  let grid="",bars="";
-  for(let g=0;g<=4;g++){ const pc=g*25; const y=yOf(pc);
-    grid+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="rgba(255,255,255,.06)"/>
-      <text x="${pad-8}" y="${y+4}" text-anchor="end" fill="#5C6470" font-family="Rajdhani" font-size="12" font-weight="600">${pc}%</text>`; }
-  data.forEach((d,i)=>{ const cx=pad+grpW*i+grpW/2;
-    const xP=cx-bw-inner/2, xR=cx+inner/2;
-    const yP=yOf(d.pred), yR=yOf(d.real);
-    bars+=`<rect x="${xP}" y="${yP}" width="${bw}" height="${Math.max(1,base-yP)}" rx="4" fill="#5B6CFF"/>
-      <text x="${xP+bw/2}" y="${yP-6}" text-anchor="middle" fill="#9aa6ff" font-family="Anton" font-size="13">${d.pred}%</text>
-      <rect x="${xR}" y="${yR}" width="${bw}" height="${Math.max(1,base-yR)}" rx="4" fill="#E8B84B"/>
-      <text x="${xR+bw/2}" y="${yR-6}" text-anchor="middle" fill="#E8B84B" font-family="Anton" font-size="13">${d.real}%</text>
-      <text x="${cx}" y="${base+18}" text-anchor="middle" fill="#8A93A0" font-family="Rajdhani" font-size="12" font-weight="700">${esc(d.label)}</text>`; });
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Crowd predictions vs actual results">${grid}${bars}</svg>
-    <div class="cvr-legend"><span><i style="background:#5B6CFF"></i>Predicted</span><span><i style="background:#E8B84B"></i>Actual</span></div>`;
-}
-function svgDonut(segs){
-  const total=segs.reduce((s,x)=>s+x.value,0)||1;
-  const R=70,C=2*Math.PI*R,cx=110,cy=110; let off=0,arcs="";
-  segs.forEach(s=>{ const len=C*(s.value/total);
-    arcs+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${s.color}" stroke-width="26"
-      stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"
-      stroke-linecap="butt"/>`; off+=len; });
-  return `<svg viewBox="0 0 220 220" width="100%" style="max-width:260px;display:block;margin:0 auto" role="img" aria-label="Prediction distribution">
-    <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="26"/>
-    ${arcs}
-    <text x="${cx}" y="${cy-4}" text-anchor="middle" fill="#fff" font-family="Anton" font-size="34">${total}</text>
-    <text x="${cx}" y="${cy+18}" text-anchor="middle" fill="#8A93A0" font-family="Rajdhani" font-size="13" font-weight="700">PICKS</text>
-  </svg>`;
 }
 
 /* =====================================================================

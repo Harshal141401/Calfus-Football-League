@@ -85,15 +85,15 @@ async function runSync() {
   }
 }
 
-/* One-off (idempotent) sweep to fetch goals + cards for EVERY settled fixture,
-   not just the handful in today's default scoreboard. Walks each fixture's match
-   date, pulls that date's scoreboard, matches, and stores events. Guarded by
-   `eventsFinal`, so already-captured matches are skipped on later runs. */
+/* One-off (idempotent) sweep to fetch the starting XI + goals/cards for EVERY
+   played fixture, not just the handful in today's default scoreboard. Walks each
+   fixture's match date, pulls that date's scoreboard, matches, and stores lineups
+   + events. Guarded by `lineups`/`eventsFinal`, so captured matches are skipped. */
 async function backfillEvents() {
   const fixtures = await collections.fixtures().find({}).toArray();
   const teams = await collections.teams().find({}).toArray();
   const teamsById = Object.fromEntries(teams.map(t => [String(t.id), t]));
-  const need = fixtures.filter(f => !f.eventsFinal && (f.status === "settled" || f.result));
+  const need = fixtures.filter(f => (f.status === "settled" || f.result) && (!f.eventsFinal || !f.lineups));
   if (!need.length) return;
   const dates = [...new Set(need.map(f => dayUtc(f.kickoff).replace(/-/g, "")))].filter(d => d.length === 8);
   console.log(`[espn] backfill: ${need.length} fixtures over ${dates.length} dates`);
@@ -104,7 +104,9 @@ async function backfillEvents() {
     for (const ev of parseEvents(json)) {
       if (!ev.completed) continue;
       const m = matchFixture(ev, need, teamsById);
-      if (m && !m.fixture.eventsFinal) await syncEvents(ev, m.fixture, teamsById);
+      if (!m) continue;
+      await syncLineup(ev, m.fixture, teamsById);                       // starting XI
+      if (!m.fixture.eventsFinal) await syncEvents(ev, m.fixture, teamsById);  // goals + cards
     }
   }
   console.log("[espn] backfill done");
