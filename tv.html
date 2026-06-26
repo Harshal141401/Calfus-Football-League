@@ -4,9 +4,9 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Calfus FIFA League — TV</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
 /* =====================================================================
    FIFA PREDICTOR CUP — design system  (v2: amber-on-slate)
@@ -2856,6 +2856,8 @@ function renderBrand(_name){
   // Hide the exit button (nothing to exit to on a kiosk) and start.
   function start(){
     const x = document.getElementById("tvExit"); if(x) x.style.display = "none";
+    try { buildSparks(); } catch(e){}                  // background sparks (same as the app)
+    try { paintPitchLines(".bg-pitch"); } catch(e){}   // background pitch markings (same as the app)
     wireKiosk();
     bootTV();
   }

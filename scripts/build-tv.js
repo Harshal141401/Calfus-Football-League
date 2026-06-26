@@ -9,6 +9,11 @@ const src = fs.readFileSync(path.join(ROOT, "fifa-prediction-dashboard.html"), "
 // --- extract the single <style>…</style> ---
 const css = src.slice(src.indexOf("<style>") + 7, src.indexOf("</style>"));
 
+// --- pull the dashboard's <head> font <link> tags verbatim, so the TV page uses
+//     the exact same fonts as admin TV mode (no drift if they change later) ---
+const head = src.slice(src.indexOf("<head>"), src.indexOf("</head>"));
+const fontLinks = (head.match(/<link[^>]*(?:fonts\.googleapis|fonts\.gstatic)[^>]*>/g) || []).join("\n");
+
 // --- extract the TV overlay markup (<div class="tv-overlay" …> … </div>) ---
 const tvStart = src.indexOf('<div class="tv-overlay"');
 // the overlay closes right before the toast block
@@ -99,6 +104,8 @@ const bootstrap = `
   // Hide the exit button (nothing to exit to on a kiosk) and start.
   function start(){
     const x = document.getElementById("tvExit"); if(x) x.style.display = "none";
+    try { buildSparks(); } catch(e){}                  // background sparks (same as the app)
+    try { paintPitchLines(".bg-pitch"); } catch(e){}   // background pitch markings (same as the app)
     wireKiosk();
     bootTV();
   }
@@ -112,9 +119,7 @@ const out = `<!doctype html>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Calfus FIFA League — TV</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+${fontLinks}
 <style>${css}
 /* kiosk: the overlay IS the page */
 html,body{margin:0;height:100%;background:#0B0F14;overflow:hidden}
