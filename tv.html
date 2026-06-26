@@ -645,13 +645,13 @@ select{appearance:none;padding-right:30px;
 .tvlb::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:99px}
 /* two-column leaderboard for TV — fits ~20 names on one screen */
 .tvlb-2col{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.1vw,18px);flex:1;min-height:0}
-.tvlb-2col .tvlb{overflow:hidden;gap:clamp(3px,.45vh,6px)}
+.tvlb-2col .tvlb{overflow:hidden;gap:clamp(2px,.35vh,5px)}
 .tvlb-2col .tvlb-row{grid-template-columns:clamp(24px,1.7vw,36px) 1fr auto;gap:clamp(6px,.9vw,12px);
-  padding:clamp(3px,.5vh,6px) clamp(9px,1vw,15px)}
+  padding:clamp(2px,.35vh,5px) clamp(9px,1vw,15px)}
 .tvlb-2col .tvlb-rank{font-size:clamp(14px,1.5vw,22px)}
 .tvlb-2col .tvlb-form{display:none}
 .tvlb-2col .tvlb-name{gap:clamp(6px,.9vw,12px)}
-.tvlb-2col .tvlb-name .avatar{width:clamp(24px,1.9vw,32px);height:clamp(24px,1.9vw,32px);font-size:clamp(10px,1.1vw,15px)}
+.tvlb-2col .tvlb-name .avatar{width:clamp(22px,1.7vw,30px);height:clamp(22px,1.7vw,30px);font-size:clamp(10px,1.1vw,15px)}
 .tvlb-2col .tvlb-name .nm{font-size:clamp(12px,1.3vw,19px)}
 .tvlb-2col .tvlb-pts{font-size:clamp(17px,2vw,30px)}
 .tvlb-row{display:grid;grid-template-columns:clamp(60px,7vw,110px) 1fr auto auto;align-items:center;
@@ -2844,8 +2844,22 @@ function renderBrand(_name){
     }, 60000);
   }
 
+  // Go edge-to-edge: the Fullscreen API needs a user gesture, so the first tap or
+  // key press anywhere on the kiosk takes it fullscreen (hiding the browser chrome).
+  function goFullscreen(){
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if(req && !document.fullscreenElement){ try { req.call(el); } catch(e){} }
+  }
+
   // Allow manual advance on the kiosk: arrow keys, click, or swipe.
   function wireKiosk(){
+    // First interaction → fullscreen (once).
+    const once = ()=>{ goFullscreen();
+      document.removeEventListener("click", once); document.removeEventListener("keydown", once); };
+    document.addEventListener("click", once);
+    document.addEventListener("keydown", once);
+
     document.addEventListener("keydown", e=>{
       if(!_booted) return;
       if(e.key==="ArrowRight"||e.key===" ") nextScene(1);
