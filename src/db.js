@@ -24,6 +24,8 @@ async function connect() {
   await database.collection("credentials").createIndex({ email: 1 }, { unique: true });
   // Cache of ESPN athlete -> club name (keyed by athlete id; clubs are stable for the tournament).
   await database.collection("athleteClubs").createIndex({ at: 1 });
+  // One tournament-winner pick per employee (the optional +25 champion bet).
+  await database.collection("championPicks").createIndex({ employeeId: 1 }, { unique: true });
 
   console.log(`Connected to ${config.DB_NAME}`);
   return database;
@@ -37,6 +39,8 @@ const collections = {
   settledScores: () => database.collection("settledScores"),
   credentials: () => database.collection("credentials"),
   athleteClubs: () => database.collection("athleteClubs"),
+  championPicks: () => database.collection("championPicks"),
+  settings: () => database.collection("settings"),   // misc key/value (e.g. tournament champion)
 };
 
 module.exports = { connect, collections, client };

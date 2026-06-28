@@ -21,6 +21,7 @@ const predictionRoutes = require("./src/routes/predictions");
 const leaderboardRoutes = require("./src/routes/leaderboard");
 const adminRoutes = require("./src/routes/admin");
 const publicRoutes = require("./src/routes/public");
+const { router: championRoutes } = require("./src/routes/champion");
 
 const path = require("path");
 
@@ -61,6 +62,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", fixturesRoutes);       // /api/window, /api/fixtures, /api/teams
 app.use("/api", predictionRoutes);     // /api/predictions, /api/predictions/me
 app.use("/api", leaderboardRoutes);    // /api/leaderboard
+app.use("/api", championRoutes);       // /api/champion (tournament-winner pick)
 app.use("/api/admin", adminRoutes);    // /api/admin/*
 app.use("/api/public", publicRoutes);  // /api/public/* -> read-only, no auth (TV/kiosk)
 

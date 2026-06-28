@@ -219,7 +219,7 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .acct-menu #logoutBtn:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.4);color:#ff8a8a}
 
 /* my predictions modal */
-.mp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px;flex-wrap:wrap}
+.mp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px;flex-wrap:wrap;padding-right:52px}
 .mp-refresh{padding:8px 16px;font-size:13px}
 .mp-summary{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 16px;font-family:var(--f-sport);font-weight:600;
   font-size:13px;color:var(--muted)}
@@ -262,6 +262,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
 .section-head h2{font-family:var(--f-display);font-size:clamp(28px,5vw,46px);margin:2px 0 0;
   letter-spacing:.02em;text-transform:uppercase;line-height:.92}
 .section-head .spacer{margin-left:auto}
+.stage-select{align-self:center;font-family:var(--f-sport);font-weight:700;font-size:14px;color:var(--ink);
+  background:var(--card-2);border:1px solid var(--line);border-radius:11px;padding:10px 14px;cursor:pointer;outline:none}
+.stage-select:focus{border-color:var(--neon)}
 
 /* ---------- buttons ---------- */
 .btn{font-family:var(--f-sport);font-weight:700;letter-spacing:.06em;text-transform:uppercase;
@@ -477,6 +480,19 @@ select{appearance:none;padding-right:30px;
 .predict-head{position:relative}
 .predict-note{margin:8px 0 0;font-family:var(--f-sport);font-weight:600;font-size:13px;color:var(--muted)}
 .predict-note b{color:var(--neon);font-weight:700}
+/* tournament-winner pick (right side of the Predict header) */
+.champion-pick{align-self:center}
+.cp-box{background:var(--card-2);border:1px solid var(--line-2);border-radius:14px;padding:10px 14px;min-width:230px}
+.cp-cap{font-family:var(--f-sport);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:7px}
+.cp-select{width:100%;font-family:var(--f-sport);font-weight:700;font-size:14px;color:var(--ink);
+  background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;outline:none}
+.cp-select:focus{border-color:var(--neon)}
+.cp-val{display:flex;align-items:center;gap:8px;font-family:var(--f-display);text-transform:uppercase;
+  letter-spacing:.02em;font-size:18px;color:var(--ink)}
+.cp-lock{margin-left:auto;font-size:14px}
+.cp-empty{max-width:240px;font-family:var(--f-sport);font-weight:600;font-size:12px;color:var(--muted);
+  text-align:right;line-height:1.4}
 .predict-trophy{height:clamp(96px,12vw,150px);width:auto;align-self:center;
   filter:drop-shadow(0 10px 26px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(232,184,75,.35));
   animation:trophy-float 5.5s ease-in-out infinite}
@@ -487,11 +503,13 @@ select{appearance:none;padding-right:30px;
   color:var(--muted);margin-bottom:14px}
 .fix-meta .round{color:var(--neon)}
 .matchup{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:16px}
+.fix-venue{text-align:center;font-family:var(--f-sport);font-weight:600;font-size:12px;letter-spacing:.06em;
+  color:var(--muted);margin:-8px 0 14px}
 .team{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
 .team .tname{font-family:var(--f-display);font-size:16px;text-transform:uppercase;letter-spacing:.02em}
 .vs{font-family:var(--f-display);font-size:22px;color:var(--gold);
   text-shadow:0 0 16px rgba(232,184,75,.4)}
-.pick-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.pick-row{display:grid;grid-auto-columns:1fr;grid-auto-flow:column;gap:8px}
 .pick{font-family:var(--f-sport);font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   font-size:13px;padding:11px 6px;border-radius:11px;border:1px solid rgba(232,184,75,.55);
   background:transparent;color:var(--gold);transition:.15s;text-align:center}
@@ -1029,6 +1047,7 @@ html,body{margin:0;height:100%;background:#0B0F14;overflow:hidden}
 /* Scoring (matches the backend / the brief):
    outcome correct +3, wrong -1 · optional exact score +5, given-but-wrong -2. */
 const SCORE = { correct: 3, wrong: -1, scoreExact: 5, scoreWrong: -2 };
+const CHAMPION_BONUS = 25;   // correct tournament-winner pick
 const TOKEN_KEY = "cfl-session-token";
 
 /* ---------- BACKEND API ----------
@@ -1254,7 +1273,7 @@ function mapTeam(t){ return { id:String(t.id), name:t.name, abbr:t.abbr||"?", fl
   c1:t.c1||"#E8B84B", c2:t.c2||"#FFD700", group:t.group||"" }; }
 function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
   teamAId:String(f.teamA.id), teamBId:String(f.teamB.id),
-  date:f.date, time:f.time, kickoff:f.kickoff, round:f.round, group:f.group, md:f.md,
+  date:f.date, time:f.time, kickoff:f.kickoff, round:f.round, group:f.group, md:f.md, venue:f.venue||"",
   result:f.result||null, homeScore:f.homeScore, awayScore:f.awayScore,
   liveStatus:f.liveStatus||null, liveHomeScore:f.liveHomeScore, liveAwayScore:f.liveAwayScore, liveClock:f.liveClock||null,
   lineups:f.lineups||null, events:f.events||[],
@@ -1275,12 +1294,21 @@ async function loadData(){
     currentUserId: currentUser.id,
     meta: { tournamentName:"Calfus FIFA League"}
   };
+  await loadChampion();
+}
+/* Tournament-winner pick state: { mine, locked, lockAt, champion, picks:[{employeeId,teamId}] }.
+   Non-fatal — a failure here must never break the board. */
+let championState = { mine:null, locked:false, lockAt:null, champion:null, picks:[] };
+async function loadChampion(){
+  try{ championState = await apiJson("/api/champion"); }
+  catch(e){ /* keep last known */ }
 }
 /* refresh just the volatile bits (after a pick, or on a timer) */
 async function refreshBoard(){
   const [fixtures, preds] = await Promise.all([apiJson("/api/fixtures"), apiJson("/api/predictions")]);
   state.fixtures = fixtures.map(mapFixture);
   state.predictions = preds;
+  await loadChampion();
 }
 /* current prediction-window status (drives the gating banner) */
 async function refreshWindow(){
@@ -1333,6 +1361,13 @@ function computeLeaderboard(ignoreFixtureId){
     formBuckets[r.id].sort((a,b)=>b.when-a.when);
     r.form = formBuckets[r.id].slice(0,5);
   });
+  // Tournament-winner bonus: +25 to anyone who picked the actual champion (once set).
+  if(championState && championState.champion){
+    (championState.picks||[]).forEach(cp=>{
+      const r=byId[cp.employeeId];
+      if(r && String(cp.teamId)===String(championState.champion)){ r.points += CHAMPION_BONUS; r.championHit = true; }
+    });
+  }
   // Players with no predictions sink to the bottom (they have no real score yet);
   // everyone else is ranked by points, then correct picks, then name.
   rows.sort((a,b)=> (b.total>0)-(a.total>0) || b.points-a.points || b.correct-a.correct || a.name.localeCompare(b.name));
@@ -1503,15 +1538,83 @@ function renderPredict(){
 
   $("#openFixtures").innerHTML = openAndLive.length ? openAndLive.map(f=>fixtureCard(f,uidc,false,isLive(f))).join("")
     : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No upcoming matches right now.</div>`;
+  renderChampionPick();
+}
+/* The distinct teams playing in the Round of 32 (valid tournament-winner picks). */
+function r32Teams(){
+  const ids=new Set();
+  state.fixtures.filter(f=>stageOf(f.round)==="r32").forEach(f=>{ ids.add(String(f.teamAId)); ids.add(String(f.teamBId)); });
+  return [...ids].map(teamById).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name));
+}
+/* The right-aligned "pick the tournament winner" control in the Predict header. */
+function renderChampionPick(){
+  const host=$("#championPick"); if(!host) return;
+  const teams=r32Teams();
+  if(!teams.length){
+    host.innerHTML = `<div class="cp-empty">🏆 Tournament Winner pick opens when the Round of 32 is set</div>`;
+    return;
+  }
+  const mine=championState.mine;
+  if(championState.locked){
+    const t=mine?teamById(mine):null;
+    host.innerHTML = `<div class="cp-box cp-locked">
+      <div class="cp-cap">🏆 Your Tournament Winner</div>
+      <div class="cp-val">${t?`${badge(t,22)} ${esc(t.name)}`:"— no pick —"} <span class="cp-lock">🔒</span></div></div>`;
+    return;
+  }
+  const opts = [`<option value="">— pick the winner —</option>`]
+    .concat(teams.map(t=>`<option value="${esc(t.id)}"${mine===String(t.id)?" selected":""}>${esc(t.name)}</option>`)).join("");
+  host.innerHTML = `<div class="cp-box">
+    <div class="cp-cap">🏆 Tournament Winner</div>
+    <select class="cp-select" id="championSelect" aria-label="Pick the tournament winner">${opts}</select>
+  </div>`;
+  $("#championSelect").addEventListener("change", e=>submitChampion(e.target.value));
+}
+async function submitChampion(teamId){
+  if(!teamId) return;
+  try{
+    await apiJson("/api/champion", { method:"POST", body: JSON.stringify({ teamId }) });
+    championState.mine = teamId;
+    const t=teamById(teamId);
+    toast(`Winner pick saved — ${t?t.name:teamId} 🏆`);
+  }catch(err){ toast(err.message||"Could not save winner pick","✕"); }
 }
 /* =====================================================================
    RENDER — RESULTS  (all settled matches; cards flip to the starting XIs)
    ===================================================================== */
+// Which knockout/group stage a fixture belongs to, from its round label.
+function stageOf(round){
+  const r=String(round||"").toLowerCase();
+  if(r.includes("round of 16")) return "r16";
+  if(r.includes("round of 32")) return "r32";
+  return "group";
+}
+// The stage currently in play: the next upcoming fixture's stage, else the latest played.
+function currentStage(){
+  const up=[...state.fixtures].filter(f=>!f.result).sort((a,b)=>fixtureDT(a)-fixtureDT(b));
+  if(up.length) return stageOf(up[0].round);
+  const done=[...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a));
+  return done.length ? stageOf(done[0].round) : "group";
+}
+let resultsStage = null;   // null until first render -> defaults to the current stage
 function renderResults(){
   const uidc = state.currentUserId;
-  const settled = [...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a));   // newest first, all of them
+  const cur = currentStage();
+  if(resultsStage===null) resultsStage = cur;
+  // mark the active stage with "(Current)" in the dropdown, and reflect the selection
+  const sel=$("#resultsStage");
+  if(sel){
+    [...sel.options].forEach(o=>{
+      o.textContent = o.textContent.replace(/ \(Current\)$/,"") + (o.value===cur?" (Current)":"");
+    });
+    sel.value = resultsStage;
+  }
+  const settled = [...state.fixtures]
+    .filter(f=>f.result && stageOf(f.round)===resultsStage)
+    .sort((a,b)=>fixtureDT(b)-fixtureDT(a));
+  const label = {group:"Group Stage",r32:"Round of 32",r16:"Round of 16"}[resultsStage]||"";
   $("#settledFixtures").innerHTML = settled.length ? settled.map(f=>fixtureCard(f,uidc,true)).join("")
-    : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No results yet.</div>`;
+    : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No ${esc(label)} results yet.</div>`;
 }
 function fixtureCard(f,empId,isSettled,live){
   const A=teamById(f.teamAId), B=teamById(f.teamBId);
@@ -1562,7 +1665,10 @@ function fixtureCard(f,empId,isSettled,live){
       bottom = `${head}${yourPick}${votes}`;
     } else {
       const dis = f.predictable ? "" : "disabled";
-      const picks=["win","draw","lose"].map(c=>{
+      // Knockout matches can't end level, so the Draw option is dropped from the R-32 onward.
+      const isKO = stageOf(f.round)!=="group";
+      const choices = isKO ? ["win","lose"] : ["win","draw","lose"];
+      const picks=choices.map(c=>{
         const seld=pred&&pred.choice===c?"sel":"";
         return `<button class="pick ${c} ${seld}" ${dis} data-pick="${c}" data-fix="${f.id}">${labels[c]}</button>`;
       }).join("");
@@ -1585,6 +1691,7 @@ function fixtureCard(f,empId,isSettled,live){
     }
   }
   const liveBadge = live ? `<span class="live-badge"><span class="live-pulse"></span>Live</span>` : "";
+  const venueLine = f.venue ? `<div class="fix-venue">📍 ${esc(f.venue)}</div>` : "";
   const frontInner = `
     <div class="fix-meta"><span class="round">${liveBadge||esc(f.round||"Fixture")}</span><span>${fmtDayStr(f.date)} · ${fmtTime12(f.time)} IST</span></div>
     <div class="matchup">
@@ -1592,6 +1699,7 @@ function fixtureCard(f,empId,isSettled,live){
       <div class="vs">VS</div>
       <div class="team">${badge(B)}<span class="tname">${esc(B.name)}</span></div>
     </div>
+    ${venueLine}
     ${bottom}`;
   const lu = f.lineups;
   const hasXI = lu && ((lu.teamA && lu.teamA.length) || (lu.teamB && lu.teamB.length));
@@ -2244,6 +2352,9 @@ function wireEvents(){
   $("#teamModal").addEventListener("click",e=>{ if(e.target.id==="teamModal") closeTeamModal(); });
   document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#teamModal").hidden) closeTeamModal(); });
 
+  // Results tab: stage filter
+  $("#resultsStage").addEventListener("change",e=>{ resultsStage=e.target.value; renderResults(); });
+
   // Facts tab: search, expand/collapse an edition
   $("#factsSearch").addEventListener("input",e=>{ factsState.q=e.target.value; renderFactsTimeline(); });
   $("#factsTimeline").addEventListener("click",e=>{ const h=e.target.closest(".ed-head"); if(!h) return;
@@ -2417,6 +2528,15 @@ function rulesHTML(){
           <li><span class="chip c-w">✓</span> Prediction was <b>correct</b></li>
           <li><span class="chip c-l">✗</span> Prediction was <b>wrong</b></li>
           <li><span class="chip c-w exact">✓</span> Correct <b>and</b> exact score — the golden ring</li>
+        </ul>
+      </div>
+      <div class="lnd-card">
+        <h3>Knockouts</h3>
+        <ul>
+          <li>From the <b>Round of 32</b> onward there's <b>no Draw</b> — pick which team goes through.</li>
+          <li>Once the Round of 32 is set, pick your <b>Tournament Winner</b> in the Predict tab (top-right). It's <b>optional</b>.</li>
+          <li>You can change it until the <b>Round of 16 begins</b>, then it locks.</li>
+          <li>Call the champion right and you bag a <b>+25</b> bonus!</li>
         </ul>
       </div>
     </div>`;

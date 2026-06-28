@@ -99,6 +99,26 @@ async function main() {
   const withFlags = teams.filter(t => flagUrl(t.iso2)).length;
   console.log(`Seeded ${teamN} teams (${withFlags} with flags, ${teamN - withFlags} undecided slots)`);
 
+  // --- knockout bracket placeholder "teams" ---------------------------------
+  // R-32 fixtures reference bracket slots (group winners/runners-up, best thirds)
+  // that aren't decided yet. Seed neutral grey placeholders so those fixtures have
+  // a badge + label until the real teams are known. Ids 101-112 (winners A-L),
+  // 121-132 (runners-up A-L), 140 (best third). Replace with real teams later.
+  const GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+  const KNOCKOUT_SLOTS = [];
+  GROUPS.forEach((g, i) => {
+    KNOCKOUT_SLOTS.push({ id: String(101 + i), name: `Group ${g} Winners`,    abbr: `${g}1` });
+    KNOCKOUT_SLOTS.push({ id: String(121 + i), name: `Group ${g} Runners-up`,  abbr: `${g}2` });
+  });
+  KNOCKOUT_SLOTS.push({ id: "140", name: "Best Third-Placed Team", abbr: "3RD" });
+  for (const s of KNOCKOUT_SLOTS) {
+    await collections.teams().updateOne({ id: s.id }, { $set: {
+      id: s.id, name: s.name, abbr: s.abbr, iso2: "", group: "", flag: "",
+      c1: "#3a3f44", c2: "#23272b",   // neutral grey, same as undecided slots
+    } }, { upsert: true });
+  }
+  console.log(`Seeded ${KNOCKOUT_SLOTS.length} knockout bracket placeholders`);
+
   // --- fixtures ---
   // Driven by the verified IST schedule. Each entry's date/time is the real
   // kickoff in Asia/Kolkata; kickoff (UTC ISO) is computed from that — the source
@@ -114,6 +134,7 @@ async function main() {
       time: g.time,
       kickoff: ist.toUTC().toISO(),
       round: g.round, group: g.group || "", md: Number(g.md) || 0,
+      venue: g.venue || "",
     };
     const existing = await collections.fixtures().findOne({ apiId: base.apiId });
     if (!existing) {

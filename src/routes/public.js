@@ -64,4 +64,23 @@ router.get("/predictions", async (_req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// GET /api/public/champion -> the champion (if set) + everyone's picks once locked.
+// Picks stay hidden until the Round of 16 begins (same privacy rule as match picks).
+router.get("/champion", async (_req, res) => {
+  try {
+    const r16 = await collections.fixtures()
+      .find({ round: { $regex: "round of 16", $options: "i" } }).toArray();
+    const times = r16.map(f => new Date(f.kickoff).getTime()).filter(Number.isFinite);
+    const lockAt = times.length ? Math.min(...times) : null;
+    const locked = lockAt != null && Date.now() >= lockAt;
+    const champDoc = await collections.settings().findOne({ _id: "champion" });
+    const champion = champDoc && champDoc.teamId ? String(champDoc.teamId) : null;
+    const picks = locked
+      ? (await collections.championPicks().find({}).toArray())
+          .map(p => ({ employeeId: p.employeeId, teamId: String(p.teamId) }))
+      : [];
+    res.json({ champion, locked, lockAt: lockAt != null ? new Date(lockAt).toISOString() : null, picks });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;

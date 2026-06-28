@@ -23,6 +23,7 @@ function enrich(fixture, teamsById) {
     round: fixture.round,
     group: fixture.group,
     md: fixture.md,
+    venue: fixture.venue || "",
     status: fixture.status || "scheduled",
     result: fixture.result || null,
     homeScore: fixture.homeScore ?? null,

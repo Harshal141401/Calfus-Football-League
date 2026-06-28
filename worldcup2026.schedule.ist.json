@@ -718,5 +718,181 @@
     "round": "Group J · Matchday 3",
     "group": "J",
     "md": 3
+  },
+  {
+    "apiId": "73",
+    "teamAId": "121",
+    "teamBId": "122",
+    "date": "2026-06-29",
+    "time": "00:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Los Angeles"
+  },
+  {
+    "apiId": "74",
+    "teamAId": "103",
+    "teamBId": "126",
+    "date": "2026-06-29",
+    "time": "22:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Houston"
+  },
+  {
+    "apiId": "75",
+    "teamAId": "105",
+    "teamBId": "140",
+    "date": "2026-06-30",
+    "time": "02:00",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Foxborough"
+  },
+  {
+    "apiId": "76",
+    "teamAId": "106",
+    "teamBId": "123",
+    "date": "2026-06-30",
+    "time": "06:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Guadalajara"
+  },
+  {
+    "apiId": "77",
+    "teamAId": "125",
+    "teamBId": "129",
+    "date": "2026-06-30",
+    "time": "22:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Arlington"
+  },
+  {
+    "apiId": "78",
+    "teamAId": "109",
+    "teamBId": "140",
+    "date": "2026-07-01",
+    "time": "02:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "New Jersey"
+  },
+  {
+    "apiId": "79",
+    "teamAId": "101",
+    "teamBId": "140",
+    "date": "2026-07-01",
+    "time": "06:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Mexico City"
+  },
+  {
+    "apiId": "80",
+    "teamAId": "112",
+    "teamBId": "140",
+    "date": "2026-07-01",
+    "time": "21:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Atlanta"
+  },
+  {
+    "apiId": "81",
+    "teamAId": "107",
+    "teamBId": "140",
+    "date": "2026-07-02",
+    "time": "01:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Seattle"
+  },
+  {
+    "apiId": "82",
+    "teamAId": "104",
+    "teamBId": "140",
+    "date": "2026-07-02",
+    "time": "01:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Santa Clara"
+  },
+  {
+    "apiId": "83",
+    "teamAId": "108",
+    "teamBId": "130",
+    "date": "2026-07-02",
+    "time": "05:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Los Angeles"
+  },
+  {
+    "apiId": "84",
+    "teamAId": "131",
+    "teamBId": "132",
+    "date": "2026-07-03",
+    "time": "00:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Toronto"
+  },
+  {
+    "apiId": "85",
+    "teamAId": "102",
+    "teamBId": "140",
+    "date": "2026-07-03",
+    "time": "04:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Vancouver"
+  },
+  {
+    "apiId": "86",
+    "teamAId": "124",
+    "teamBId": "127",
+    "date": "2026-07-03",
+    "time": "08:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Arlington"
+  },
+  {
+    "apiId": "87",
+    "teamAId": "110",
+    "teamBId": "128",
+    "date": "2026-07-03",
+    "time": "23:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Miami"
+  },
+  {
+    "apiId": "88",
+    "teamAId": "111",
+    "teamBId": "140",
+    "date": "2026-07-04",
+    "time": "03:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Kansas City"
   }
 ]

@@ -46,4 +46,15 @@ router.get("/predictions/:fixtureId", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// POST /api/admin/champion  { teamId }  -> set the tournament champion (awards +25
+// to everyone who picked that team). Pass an empty/absent teamId to clear it.
+router.post("/champion", async (req, res) => {
+  try {
+    const teamId = (req.body && req.body.teamId) ? String(req.body.teamId) : null;
+    await collections.settings().updateOne({ _id: "champion" },
+      { $set: { teamId, at: new Date() } }, { upsert: true });
+    res.json({ ok: true, champion: teamId });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;
