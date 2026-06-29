@@ -385,7 +385,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
   align-items:center;gap:10px;padding:12px 14px}
 .lb-headrow{font-family:var(--f-sport);font-weight:700;font-size:11px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);
-  position:sticky;top:60px;z-index:20;background:#10151d;border-radius:8px 8px 0 0}
+  position:sticky;top:calc(var(--topbar-h,64px) + 4px);z-index:20;background:#10151d;border-radius:8px 8px 0 0}
 .lb-row{border-bottom:1px solid var(--line);transition:.16s;border-radius:10px}
 .lb-row:last-child{border-bottom:0}
 .lb-row:hover{background:rgba(232,184,75,.05)}
@@ -2890,11 +2890,18 @@ function setIdentity(){
 }
 
 /* ---------- boot ---------- */
+/* Keep the sticky leaderboard header parked right below the (variable-height,
+   possibly-wrapping) top bar by mirroring its real height into a CSS variable. */
+function syncStickyTop(){
+  const tb=document.querySelector(".topbar");
+  if(tb) document.documentElement.style.setProperty("--topbar-h", tb.offsetHeight+"px");
+}
 async function init(){
   $("#brandName").innerHTML = renderBrand("Calfus FIFA League");
   buildSparks();
   paintPitchLines(".bg-pitch");    // landscape pitch markings on the global background
   wireEvents();
+  syncStickyTop(); window.addEventListener("resize", syncStickyTop); setTimeout(syncStickyTop, 600);
   tickClock(); setInterval(tickClock,1000);
   applyAdminVisibility();          // hidden until an admin logs in
   if(!authToken){ showLanding(); return; }   // intro -> "Let's go" -> login
