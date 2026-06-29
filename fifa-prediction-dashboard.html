@@ -2264,11 +2264,13 @@ function tvToday(){
     const total = (f.pickCount!=null) ? f.pickCount : v.total;   // real headcount, shown pre-kickoff too
     const pct=k=>v.total?(v[k]/v.total*100).toFixed(0):0;
     // The win/lose split only exists once picks are revealed (after kickoff); else just the count.
-    const bar = v.total>0 ? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>` : "";
+    // When shown, label each team's share (e.g. RSA 21% · CAN 79%).
+    const split = v.total>0 ? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>
+      <div class="vote-legend"><span>${esc(A.abbr)} ${pct("win")}%</span><span>${esc(B.abbr)} ${pct("lose")}%</span></div>` : "";
     return `<div class="tvtoday-row"><div class="tvtoday-top">
         <div class="tvtoday-match">${badge(A,46)} ${esc(A.abbr)} <span style="color:var(--gold)">v</span> ${esc(B.abbr)} ${badge(B,46)}</div>
         <div class="tvtoday-count">${total} pick${total===1?"":"s"}</div></div>
-      ${bar}</div>`; }).join("");
+      ${split}</div>`; }).join("");
   return tvHead("Live Picks",label,false)+`<div class="tvtoday">${rows}</div>`;
 }
 function tvPerformers(lb){
