@@ -224,6 +224,15 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .mp-summary{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 16px;font-family:var(--f-sport);font-weight:600;
   font-size:13px;color:var(--muted)}
 .mp-summary b{color:var(--neon);font-size:15px}
+/* tournament-winner pick block in My Predictions */
+.mp-champ{margin:0 0 16px;padding:14px 16px;border-radius:12px;background:var(--card-2);
+  border:1px solid var(--line-2);border-left:3px solid var(--gold)}
+.mp-champ.correct{border-left-color:var(--accent2,#3ddc84)}
+.mp-champ.wrong{border-left-color:var(--danger,#ef4444)}
+.mp-champ-cap{font-family:var(--f-sport);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.mp-champ-team{display:flex;align-items:center;gap:9px;font-family:var(--f-display);text-transform:uppercase;
+  letter-spacing:.02em;font-size:19px;color:var(--ink);margin:6px 0 4px}
+.mp-champ-status{font-family:var(--f-sport);font-weight:700;font-size:13px;color:var(--muted)}
 .mp-list{display:flex;flex-direction:column;gap:10px}
 .mp-row{padding:12px 14px;border-radius:11px;background:var(--glass);border:1px solid var(--line);border-left:3px solid var(--line-2)}
 .mp-row.correct{border-left-color:var(--accent2,#3ddc84)}
@@ -493,6 +502,10 @@ select{appearance:none;padding-right:30px;
 .cp-lock{margin-left:auto;font-size:14px}
 .cp-empty{max-width:240px;font-family:var(--f-sport);font-weight:600;font-size:12px;color:var(--muted);
   text-align:right;line-height:1.4}
+.cp-elim{margin-left:auto;font-family:var(--f-sport);font-weight:700;font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:#ff8a8a;background:rgba(229,84,78,.16);border:1px solid rgba(229,84,78,.4);
+  padding:2px 8px;border-radius:99px}
+.cp-warn{margin-top:7px;font-family:var(--f-sport);font-weight:700;font-size:11px;color:#ff8a8a}
 .predict-trophy{height:clamp(96px,12vw,150px);width:auto;align-self:center;
   filter:drop-shadow(0 10px 26px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(232,184,75,.35));
   animation:trophy-float 5.5s ease-in-out infinite}
@@ -956,6 +969,7 @@ footer b{color:var(--muted)}
 .fh-list .hi-date{flex:none;font-family:var(--f-sport);font-weight:700;font-size:11px;letter-spacing:.04em;
   color:var(--neon);min-width:62px}
 .fh-list .hi-text{color:var(--ink);opacity:.92}
+.fh-list .hi-lines{display:flex;flex-direction:column;gap:5px;min-width:0}
 
 .facts-toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:6px 0 20px}
 .facts-timeline{position:relative;display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
@@ -966,8 +980,12 @@ footer b{color:var(--muted)}
 .ed-head{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;padding:15px 18px;background:none}
 .ed-year{font-family:var(--f-display);font-size:26px;line-height:1;color:var(--gold);min-width:74px;letter-spacing:.01em}
 .ed-host{font-family:var(--f-sport);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);flex:1;min-width:0}
-.ed-win{display:flex;align-items:center;gap:5px;font-family:var(--f-sport);font-weight:700;font-size:12.5px;color:var(--silver);white-space:nowrap}
+.ed-host-lbl{color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.12em;margin-right:6px}
+.ed-win{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-family:var(--f-sport);
+  font-weight:700;font-size:12.5px;color:var(--silver);white-space:nowrap;text-align:right}
+.ed-win .ed-champ{display:flex;align-items:center;gap:5px}
 .ed-win i{font-style:normal;font-size:13px}
+.ed-final{font-weight:600;font-size:11px;color:var(--muted);letter-spacing:.01em}
 .ed-chev{font-family:var(--f-display);font-size:22px;color:var(--muted-2);transition:transform .2s ease;flex:none}
 .ed-card.open .ed-chev{transform:rotate(90deg);color:var(--neon)}
 .ed-facts{max-height:0;overflow:hidden;transition:max-height .3s ease}
@@ -1406,8 +1424,9 @@ function renderHome(){
   // Standings are meaningless until at least one prediction has been scored.
   const hasScores = settledPreds > 0;
   const leader = lb[0];
+  const activeCount = lb.filter(r=>r.total>0).length;   // players who've made ≥1 prediction
   $("#homeKpis").innerHTML = [
-    ["Players", state.employees.length, ""],
+    ["Players", activeCount, ""],
     ["Predictions", totalPreds, ""],
     ["Accuracy", hasScores ? acc+"%" : "—", "neon"],
     ["Current Leader", hasScores && leader ? leader.name.split(" ")[0] : "—", "gold"]
@@ -1455,38 +1474,28 @@ function renderHome(){
     <div>Rank</div><div>Player</div><div>Pts</div>
     <div style="text-align:center">Correct</div><div style="text-align:center">Wrong</div>
     <div style="text-align:center">Exact</div><div style="text-align:right">Recent form</div></div>`;
-  // The podium highlights the top 3; the table lists every player (incl. ranks 1–3)
-  // so their Last-5 prediction record is visible too.
+  // Only players who've made at least one prediction appear in the table.
   // Dense ranking: players tied on points share the same rank and the next
   // distinct score is the next number — 1,2,2,3 (no gaps).
-  // Players who haven't predicted at all show "—" for points (not 0, since a real
-  // 0 can come from e.g. 1 correct + 3 wrong) and aren't given a rank.
   let lastPts=null, lastRank=0;
+  const played = lb.filter(r=>r.total>0);
   const rows = !hasScores
     ? `<div class="lb-row" style="grid-template-columns:1fr;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600;padding:24px">Standings will appear once matches are settled.</div>`
-    : lb.map((r,i)=>{
-    const hasPlayed = r.total>0;
-    let rankTxt;
-    if(!hasPlayed){ rankTxt = "–"; }
-    else {
-      if(r.points!==lastPts){ lastRank+=1; lastPts=r.points; }   // new score → next rank number
-      rankTxt = lastRank;
-    }
+    : (played.length ? played.map((r,i)=>{
+    if(r.points!==lastPts){ lastRank+=1; lastPts=r.points; }   // new score → next rank number
+    const rankTxt = lastRank;
     const mv = r.move>0 ? `<span class="mv up">▲${r.move}</span>` : r.move<0 ? `<span class="mv down">▼${-r.move}</span>` : `<span class="mv same">–</span>`;
-    const ptsCell = hasPlayed
-      ? `<div class="lb-pts" data-count="${r.points}">${r.points}</div>`
-      : `<div class="lb-pts" style="color:var(--muted-2)">–</div>`;
-    return `<div class="lb-row${(hasPlayed && typeof rankTxt==="number" && rankTxt<=3)?" top3":""}">
-      <div class="lb-rank">${rankTxt}${hasPlayed?mv:""}</div>
+    return `<div class="lb-row${rankTxt<=3?" top3":""}">
+      <div class="lb-rank">${rankTxt}${mv}</div>
       <div class="lb-player"><div class="avatar" style="background:${r.av}">${esc(initials(r.name))}</div>
         <span class="nm">${esc(r.name)}</span></div>
-      ${ptsCell}
+      <div class="lb-pts" data-count="${r.points}">${r.points}</div>
       <div class="lb-num good">${r.correct}</div>
       <div class="lb-num bad">${r.wrong}</div>
       <div class="lb-num draw">${r.drawCorrect}</div>
       <div class="form">${formChips(r.form)}</div>
     </div>`;
-  }).join("");
+  }).join("") : `<div class="lb-row" style="grid-template-columns:1fr;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600;padding:24px">No predictions yet.</div>`);
   $("#lbTable").innerHTML = head + rows;
   countUpAll($("#lbTable"));
 }
@@ -1546,20 +1555,35 @@ function r32Teams(){
   state.fixtures.filter(f=>stageOf(f.round)==="r32").forEach(f=>{ ids.add(String(f.teamAId)); ids.add(String(f.teamBId)); });
   return [...ids].map(teamById).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name));
 }
+/* Teams knocked out — the loser of any settled knockout match. (A level "draw"
+   result means the penalty winner isn't recorded yet, so neither side is dropped.) */
+function eliminatedTeamIds(){
+  const out=new Set();
+  state.fixtures.forEach(f=>{
+    if(stageOf(f.round)==="group" || !f.result) return;
+    if(f.result==="win") out.add(String(f.teamBId));
+    else if(f.result==="lose") out.add(String(f.teamAId));
+  });
+  return out;
+}
 /* The right-aligned "pick the tournament winner" control in the Predict header. */
 function renderChampionPick(){
   const host=$("#championPick"); if(!host) return;
-  const teams=r32Teams();
-  if(!teams.length){
+  const all=r32Teams();
+  if(!all.length){
     host.innerHTML = `<div class="cp-empty">🏆 Tournament Winner pick opens when the Round of 32 is set</div>`;
     return;
   }
+  const elim=eliminatedTeamIds();
+  const teams=all.filter(t=>!elim.has(String(t.id)));   // only teams still in it
   const mine=championState.mine;
+  const mineElim = mine && elim.has(String(mine));
   if(championState.locked){
     const t=mine?teamById(mine):null;
     host.innerHTML = `<div class="cp-box cp-locked">
       <div class="cp-cap">🏆 Your Tournament Winner</div>
-      <div class="cp-val">${t?`${badge(t,22)} ${esc(t.name)}`:"— no pick —"} <span class="cp-lock">🔒</span></div></div>`;
+      <div class="cp-val">${t?`${badge(t,22)} ${esc(t.name)}`:"— no pick —"}
+        ${mineElim?`<span class="cp-elim">Eliminated</span>`:`<span class="cp-lock">🔒</span>`}</div></div>`;
     return;
   }
   const opts = [`<option value="">— pick the winner —</option>`]
@@ -1567,6 +1591,7 @@ function renderChampionPick(){
   host.innerHTML = `<div class="cp-box">
     <div class="cp-cap">🏆 Tournament Winner</div>
     <select class="cp-select" id="championSelect" aria-label="Pick the tournament winner">${opts}</select>
+    ${mineElim?`<div class="cp-warn">Your pick was eliminated — choose again</div>`:""}
   </div>`;
   $("#championSelect").addEventListener("change", e=>submitChampion(e.target.value));
 }
@@ -1687,7 +1712,7 @@ function fixtureCard(f,empId,isSettled,live){
       const action = f.predictable
         ? `<button class="btn btn-primary lockin" data-fix="${f.id}">${pred?"Update pick":"Lock in pick"}</button>`
         : `<div class="locked">🔒 Predictions closed (locked 30 min before kickoff)${yourPick}</div>`;
-      bottom=`<div class="pick-row">${picks}</div>${scoreRow}${action}${votes}`;
+      bottom=`<div class="pick-row">${picks}</div>${scoreRow}${action}`;
     }
   }
   const liveBadge = live ? `<span class="live-badge"><span class="live-pulse"></span>Live</span>` : "";
@@ -1753,7 +1778,9 @@ function computeStatTiles(){
   const settledPreds=lb.reduce((s,r)=>s+r.settled,0);
   const correct=lb.reduce((s,r)=>s+r.correct,0);
   const acc= settledPreds? Math.round(correct/settledPreds*100):0;
-  const avg= state.employees.length? (lb.reduce((s,r)=>s+r.points,0)/state.employees.length).toFixed(1):0;
+  // "Players" = only those who've made at least one prediction.
+  const players = lb.filter(r=>r.total>0);
+  const avg= players.length? (players.reduce((s,r)=>s+r.points,0)/players.length).toFixed(1):0;
 
   // most predicted team (appearances in predicted fixtures)
   const teamCount={};
@@ -1782,7 +1809,7 @@ function computeStatTiles(){
     topW={pts,name:(state.employees.find(e=>e.id===eid)||{}).name||"—",wk}; } });
 
   return [
-    ["Participants", state.employees.length, "", ""],
+    ["Participants", players.length, "", ""],
     ["Total predictions", totalPreds, "", ""],
     ["Prediction accuracy", acc+"%", "neon", `${correct}/${settledPreds} correct`],
     ["Score prediction accuracy", sa.pct+"%", "gold", `${sa.exact}/${sa.given} exact`],
@@ -1988,7 +2015,7 @@ function tvHead(eyebrow,title,countdown){
 function tvLeaderboard(lb){
   if(!lb.some(r=>r.settled>0))
     return tvHead("Standings","Leaderboard",false)+`<div class="tv-empty">Standings will appear once matches are settled</div>`;
-  const top=lb.slice(0,24);
+  const top=lb.filter(r=>r.total>0).slice(0,24);   // only players with ≥1 prediction
   const row=(r,i)=>`<div class="tvlb-row r${i+1}" style="animation-delay:${i*0.04}s">
     <div class="tvlb-rank">${i+1}</div>
     <div class="tvlb-name"><div class="avatar" style="background:${r.av}">${esc(initials(r.name))}</div>
@@ -2053,9 +2080,8 @@ function tvToday(){
     const pct=k=>v.total?(v[k]/v.total*100).toFixed(0):0;
     return `<div class="tvtoday-row"><div class="tvtoday-top">
         <div class="tvtoday-match">${badge(A,46)} ${esc(A.abbr)} <span style="color:var(--gold)">v</span> ${esc(B.abbr)} ${badge(B,46)}</div>
-        <div class="tvtoday-count">${v.total} picks</div></div>
-      <div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-d" style="width:${pct("draw")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>
-      <div class="vote-legend"><span>${esc(A.abbr)} ${pct("win")}%</span><span>Draw ${pct("draw")}%</span><span>${esc(B.abbr)} ${pct("lose")}%</span></div></div>`; }).join("");
+        <div class="tvtoday-count">${v.total} pick${v.total===1?"":"s"}</div></div>
+      <div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div></div>`; }).join("");
   return tvHead("Live Picks",label,false)+`<div class="tvtoday">${rows}</div>`;
 }
 function tvPerformers(lb){
@@ -2239,12 +2265,33 @@ const WC_CHAMPIONS = {1930:"Uruguay",1934:"Italy",1938:"Italy",1950:"Uruguay",19
   1958:"Brazil",1962:"Brazil",1966:"England",1970:"Brazil",1974:"West Germany",1978:"Argentina",
   1982:"Italy",1986:"Argentina",1990:"West Germany",1994:"Brazil",1998:"France",2002:"Brazil",
   2006:"Italy",2010:"Spain",2014:"Germany",2018:"France",2022:"Argentina"};
+// Runner-up + final scoreline (who the champion beat), shown in the collapsed header.
+const WC_FINALS = {
+  1930:"Argentina 4–2", 1934:"Czechoslovakia 2–1", 1938:"Hungary 4–2", 1950:"Brazil 2–1",
+  1954:"Hungary 3–2", 1958:"Sweden 5–2", 1962:"Czechoslovakia 3–1", 1966:"West Germany 4–2",
+  1970:"Italy 4–1", 1974:"Netherlands 2–1", 1978:"Netherlands 3–1", 1982:"West Germany 3–1",
+  1986:"West Germany 3–2", 1990:"Argentina 1–0", 1994:"Italy 0–0 (3–2 pens)", 1998:"Brazil 3–0",
+  2002:"Germany 2–0", 2006:"France 1–1 (5–3 pens)", 2010:"Netherlands 1–0", 2014:"Argentina 1–0",
+  2018:"Croatia 4–2", 2022:"France 3–3 (4–2 pens)"};
 const FACT_MONTHS = /^(January|February|March|April|May|June|July|August|September|October|November|December)\b/;
 
 function splitDated(s){
   const m = s.match(/^([^:]{1,30}):\s+([\s\S]+)$/);
   if(m && (FACT_MONTHS.test(m[1]) || /\d{4}/.test(m[1]) || /^\d{4}$/.test(m[1]))) return { date:m[1].trim(), text:m[2].trim() };
   return { date:"", text:s };
+}
+/* Split a blurb into sentences, keeping abbreviations like "vs." intact. */
+function splitSentences(text){
+  const ABBR=/\b(vs|no|st|mr|mrs|ms|dr|etc|u\.s|u\.k)$/i;
+  const parts=String(text||"").split(/\.\s+/);
+  const out=[];
+  for(let i=0;i<parts.length;i++){
+    let s=parts[i];
+    while(i<parts.length-1 && ABBR.test(s)) s += ". " + parts[++i];   // re-join over an abbreviation
+    s=s.replace(/\.\s*$/,"").trim();
+    if(s) out.push(s);
+  }
+  return out;
 }
 function hlight(text,q){
   if(!q) return esc(text);
@@ -2258,8 +2305,12 @@ const edMatches = (e,q) => !q || e.host.toLowerCase().includes(q) || String(e.ye
 function renderFacts(){
   // ---- highlights band (World Cup 2026) ----
   const stats = [["48","Teams"],["104","Matches"],["3","Host Nations"]];
+  // 2026 highlights: each fact is one bullet; if it has two sentences they stack
+  // one below the other inside that bullet (not split across the grid columns).
   const hi = FACTS.highlights.map(h=>{ const d=splitDated(h);
-    return `<li>${d.date?`<span class="hi-date">${esc(d.date)}</span>`:""}<span class="hi-text">${esc(d.text)}</span></li>`; }).join("");
+    const lines = splitSentences(d.text).map(s=>`<span class="hi-text">${esc(s)}</span>`).join("");
+    return `<li>${d.date?`<span class="hi-date">${esc(d.date)}</span>`:""}<span class="hi-lines">${lines}</span></li>`;
+  }).join("");
   $("#factsHighlights").innerHTML = `
     <div class="facts-hero">
       <div class="fh-badge">World Cup 2026</div>
@@ -2281,15 +2332,17 @@ function renderFactsTimeline(){
     return;
   }
   $("#factsTimeline").innerHTML = eds.map(e=>{
-    const champ = WC_CHAMPIONS[parseInt(e.year,10)];
+    const yr = parseInt(e.year,10);
+    const champ = WC_CHAMPIONS[yr];
+    const final = WC_FINALS[yr];
     const isOpen = q ? true : !!factsState.open[e.title];   // searching auto-expands matches
     const facts = e.facts.map(f=>{ const d=splitDated(f);
       return `<li>${d.date?`<span class="ef-date">${esc(d.date)}</span>`:""}<span class="ef-text">${hlight(d.text,q)}</span></li>`; }).join("");
     return `<div class="ed-card${isOpen?" open":""}" data-ed="${esc(e.title)}">
       <button class="ed-head" type="button">
         <span class="ed-year">${esc(e.year)}</span>
-        <span class="ed-host">${esc(e.host||"Not held")}</span>
-        ${champ?`<span class="ed-win"><i>🏆</i>${esc(champ)}</span>`:""}
+        <span class="ed-host">${e.host?`<span class="ed-host-lbl">Host</span> ${esc(e.host)}`:"Not held"}</span>
+        ${champ?`<span class="ed-win"><span class="ed-champ"><i>🏆</i>${esc(champ)}</span>${final?`<span class="ed-final">def. ${esc(final)}</span>`:""}</span>`:""}
         <span class="ed-chev">›</span>
       </button>
       <div class="ed-facts"><ul>${facts}</ul></div>
@@ -2568,9 +2621,33 @@ function myPredictionsHTML(){
     .map(p=>({ p, f: state.fixtures.find(x=>x.id===p.fixtureId) }))
     .filter(x=>x.f)
     .sort((a,b)=>fixtureDT(b.f)-fixtureDT(a.f));   // most recent first
-  if(!mine.length) return `<div class="mp-empty">You haven't made any predictions yet.</div>`;
 
-  let settledCount=0, correctCount=0, totalPts=0;
+  // Tournament-winner pick block (with elimination / champion status).
+  let champBlock="", champPts=0;
+  if(championState && championState.mine){
+    const t=teamById(championState.mine);
+    if(t){
+      const elim = eliminatedTeamIds().has(String(championState.mine));
+      let st, cls="";
+      if(championState.champion){
+        if(String(championState.champion)===String(championState.mine)){ st=`🏆 Champion! +${CHAMPION_BONUS}`; cls="correct"; champPts=CHAMPION_BONUS; }
+        else { st="✗ Did not win the tournament"; cls="wrong"; }
+      } else if(elim){ st="❌ Your team has been eliminated"; cls="wrong"; }
+      else { st="✅ Still in the tournament"; cls=""; }
+      champBlock = `<div class="mp-champ ${cls}">
+        <div class="mp-champ-cap">🏆 Tournament Winner pick</div>
+        <div class="mp-champ-team">${badge(t,24)} <b>${esc(t.name)}</b></div>
+        <div class="mp-champ-status">${st}</div></div>`;
+    }
+  }
+
+  if(!mine.length){
+    return champBlock
+      ? champBlock + `<div class="mp-empty">No match predictions yet.</div>`
+      : `<div class="mp-empty">You haven't made any predictions yet.</div>`;
+  }
+
+  let settledCount=0, correctCount=0, totalPts=champPts;
   const rows = mine.map(({p,f})=>{
     const A=teamById(f.teamAId), B=teamById(f.teamBId);
     const labels={win:outcomeLabel("win",A,B),draw:"Draw",lose:outcomeLabel("lose",A,B)};
@@ -2608,7 +2685,7 @@ function myPredictionsHTML(){
     <span><b>${correctCount}</b>/${settledCount} correct</span>
     <span><b>${totalPts>=0?"+":""}${totalPts}</b> pts</span>
   </div>`;
-  return summary + `<div class="mp-list">${rows}</div>`;
+  return champBlock + summary + `<div class="mp-list">${rows}</div>`;
 }
 function showMyPredictions(){
   let el=$("#myPredModal");
