@@ -379,12 +379,13 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
 .kpi .k-val.neon{color:var(--neon)}
 .kpi .k-val.gold{color:var(--gold)}
 
-.lb{padding:6px}
+.lb{padding:6px;overflow:visible}
 .lb-headrow,.lb-row{display:grid;
   grid-template-columns:54px 1.7fr .8fr .7fr .7fr .7fr 1.5fr;
   align-items:center;gap:10px;padding:12px 14px}
 .lb-headrow{font-family:var(--f-sport);font-weight:700;font-size:11px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+  text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);
+  position:sticky;top:60px;z-index:20;background:#10151d;border-radius:8px 8px 0 0}
 .lb-row{border-bottom:1px solid var(--line);transition:.16s;border-radius:10px}
 .lb-row:last-child{border-bottom:0}
 .lb-row:hover{background:rgba(232,184,75,.05)}
