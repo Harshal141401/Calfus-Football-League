@@ -728,62 +728,62 @@
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Los Angeles"
+    "venue": "Los Angeles Stadium"
   },
   {
     "apiId": "74",
     "teamAId": "17",
     "teamBId": "14",
-    "date": "2026-06-29",
-    "time": "22:30",
+    "date": "2026-06-30",
+    "time": "02:00",
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Houston"
+    "venue": "Boston Stadium"
   },
   {
     "apiId": "75",
     "teamAId": "21",
     "teamBId": "10",
     "date": "2026-06-30",
-    "time": "02:00",
+    "time": "06:30",
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Foxborough"
+    "venue": "Monterrey Stadium"
   },
   {
     "apiId": "76",
     "teamAId": "9",
     "teamBId": "22",
-    "date": "2026-06-30",
-    "time": "06:30",
+    "date": "2026-06-29",
+    "time": "22:30",
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Guadalajara"
+    "venue": "Houston Stadium"
   },
   {
     "apiId": "77",
     "teamAId": "33",
     "teamBId": "23",
-    "date": "2026-06-30",
-    "time": "22:30",
-    "round": "Round of 32",
-    "group": "",
-    "md": 0,
-    "venue": "Arlington"
-  },
-  {
-    "apiId": "78",
-    "teamAId": "19",
-    "teamBId": "36",
     "date": "2026-07-01",
     "time": "02:30",
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "New Jersey"
+    "venue": "New York New Jersey Stadium"
+  },
+  {
+    "apiId": "78",
+    "teamAId": "19",
+    "teamBId": "36",
+    "date": "2026-06-30",
+    "time": "22:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Dallas Stadium"
   },
   {
     "apiId": "79",
@@ -794,7 +794,7 @@
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Mexico City"
+    "venue": "Mexico City Stadium"
   },
   {
     "apiId": "80",
@@ -805,18 +805,18 @@
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Atlanta"
+    "venue": "Atlanta Stadium"
   },
   {
     "apiId": "81",
     "teamAId": "13",
     "teamBId": "6",
     "date": "2026-07-02",
-    "time": "01:30",
+    "time": "05:30",
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Seattle"
+    "venue": "San Francisco Bay Area Stadium"
   },
   {
     "apiId": "82",
@@ -827,18 +827,18 @@
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Santa Clara"
+    "venue": "Seattle Stadium"
   },
   {
     "apiId": "83",
     "teamAId": "41",
     "teamBId": "46",
-    "date": "2026-07-02",
-    "time": "05:30",
+    "date": "2026-07-03",
+    "time": "04:30",
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Los Angeles"
+    "venue": "Toronto Stadium"
   },
   {
     "apiId": "84",
@@ -849,50 +849,50 @@
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Toronto"
+    "venue": "Los Angeles Stadium"
   },
   {
     "apiId": "85",
     "teamAId": "8",
     "teamBId": "38",
     "date": "2026-07-03",
-    "time": "04:30",
+    "time": "08:30",
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Vancouver"
+    "venue": "BC Place Vancouver"
   },
   {
     "apiId": "86",
     "teamAId": "37",
     "teamBId": "30",
-    "date": "2026-07-03",
-    "time": "08:30",
-    "round": "Round of 32",
-    "group": "",
-    "md": 0,
-    "venue": "Arlington"
-  },
-  {
-    "apiId": "87",
-    "teamAId": "44",
-    "teamBId": "47",
-    "date": "2026-07-03",
-    "time": "23:30",
-    "round": "Round of 32",
-    "group": "",
-    "md": 0,
-    "venue": "Miami"
-  },
-  {
-    "apiId": "88",
-    "teamAId": "15",
-    "teamBId": "26",
     "date": "2026-07-04",
     "time": "03:30",
     "round": "Round of 32",
     "group": "",
     "md": 0,
-    "venue": "Kansas City"
+    "venue": "Miami Stadium"
+  },
+  {
+    "apiId": "87",
+    "teamAId": "44",
+    "teamBId": "47",
+    "date": "2026-07-04",
+    "time": "07:00",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Kansas City Stadium"
+  },
+  {
+    "apiId": "88",
+    "teamAId": "15",
+    "teamBId": "26",
+    "date": "2026-07-03",
+    "time": "23:30",
+    "round": "Round of 32",
+    "group": "",
+    "md": 0,
+    "venue": "Dallas Stadium"
   }
 ]
