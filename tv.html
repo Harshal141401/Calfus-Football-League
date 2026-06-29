@@ -1295,7 +1295,7 @@ function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
   date:f.date, time:f.time, kickoff:f.kickoff, round:f.round, group:f.group, md:f.md, venue:f.venue||"",
   result:f.result||null, homeScore:f.homeScore, awayScore:f.awayScore,
   liveStatus:f.liveStatus||null, liveHomeScore:f.liveHomeScore, liveAwayScore:f.liveAwayScore, liveClock:f.liveClock||null,
-  lineups:f.lineups||null, events:f.events||[],
+  lineups:f.lineups||null, events:f.events||[], pickCount:f.pickCount,
   predictable:!!f.predictable, locked:!!f.locked }; }
 function mapEmployee(e,i){ return { id:String(e.id), name:e.name, av:AVCOL[i%AVCOL.length] }; }
 
@@ -2078,11 +2078,14 @@ function tvToday(){
   if(!fx.length){ fx=[...state.fixtures].filter(f=>!f.result).sort((a,b)=>fixtureDT(a)-fixtureDT(b)).slice(0,3); label="This Week's Picks"; }
   if(!fx.length) return tvHead("Live Picks",label,false)+`<div class="tv-empty">No open predictions</div>`;
   const rows=fx.map(f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId),v=voteSplit(f.id);
+    const total = (f.pickCount!=null) ? f.pickCount : v.total;   // real headcount, shown pre-kickoff too
     const pct=k=>v.total?(v[k]/v.total*100).toFixed(0):0;
+    // The win/lose split only exists once picks are revealed (after kickoff); else just the count.
+    const bar = v.total>0 ? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>` : "";
     return `<div class="tvtoday-row"><div class="tvtoday-top">
         <div class="tvtoday-match">${badge(A,46)} ${esc(A.abbr)} <span style="color:var(--gold)">v</span> ${esc(B.abbr)} ${badge(B,46)}</div>
-        <div class="tvtoday-count">${v.total} pick${v.total===1?"":"s"}</div></div>
-      <div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div></div>`; }).join("");
+        <div class="tvtoday-count">${total} pick${total===1?"":"s"}</div></div>
+      ${bar}</div>`; }).join("");
   return tvHead("Live Picks",label,false)+`<div class="tvtoday">${rows}</div>`;
 }
 function tvPerformers(lb){

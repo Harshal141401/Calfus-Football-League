@@ -50,12 +50,23 @@ router.get("/window", requireAuth, (_req, res) => {
   res.json({ serverTime: windows.now().toISO(), open: true, lockBeforeMin: config.LOCK_BEFORE_MIN });
 });
 
+// Per-fixture total prediction count (safe to expose pre-kickoff — it's only a
+// headcount, not who picked what or the win/draw/lose split).
+async function pickCounts() {
+  const rows = await collections.predictions()
+    .aggregate([{ $group: { _id: "$fixtureId", n: { $sum: 1 } } }]).toArray();
+  const out = {};
+  rows.forEach(r => { out[String(r._id)] = r.n; });
+  return out;
+}
+
 // GET /api/fixtures -> all fixtures, enriched
 router.get("/fixtures", requireAuth, async (_req, res) => {
   try {
     const tmap = await teamMap();
     const docs = await collections.fixtures().find({}).sort({ kickoff: 1 }).toArray();
-    res.json(docs.map(f => enrich(f, tmap)));
+    const counts = await pickCounts();
+    res.json(docs.map(f => ({ ...enrich(f, tmap), pickCount: counts[String(f._id)] || 0 })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -73,4 +84,4 @@ router.get("/teams", async (_req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-module.exports = { router, enrich, teamMap };
+module.exports = { router, enrich, teamMap, pickCounts };

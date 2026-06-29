@@ -5,7 +5,7 @@ const express = require("express");
 const { collections } = require("../db");
 const windows = require("../windows");
 const config = require("../config");
-const { enrich, teamMap } = require("./fixtures");
+const { enrich, teamMap, pickCounts } = require("./fixtures");
 
 const router = express.Router();
 
@@ -38,7 +38,8 @@ router.get("/fixtures", async (_req, res) => {
   try {
     const tmap = await teamMap();
     const docs = await collections.fixtures().find({}).sort({ kickoff: 1 }).toArray();
-    res.json(docs.map(f => enrich(f, tmap)));
+    const counts = await pickCounts();
+    res.json(docs.map(f => ({ ...enrich(f, tmap), pickCount: counts[String(f._id)] || 0 })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
