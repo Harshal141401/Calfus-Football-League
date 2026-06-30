@@ -1570,10 +1570,13 @@ function computeLeaderboard(ignoreFixtureId){
     // optional exact-score bonus, independent of the outcome pick
     let exact = false;
     if(p.scoreHome!=null && p.scoreAway!=null){
-      exact = (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
+      const exactReg = (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
+      // Exact +5 only counts when the team pick is also right. (Only diverges on a pens-decided
+      // knockout: a level score can be exact yet the picked team still loses the shootout.)
+      exact = exactReg && ok;
       // Penalty hedge: a wrong score isn't punished if they flagged penalties and it went to pens.
-      const forgive = !exact && p.penalty && f.penalties;
-      r.points += exact ? SCORE.scoreExact : (forgive ? 0 : SCORE.scoreWrong);
+      const forgive = p.penalty && f.penalties;
+      r.points += exact ? SCORE.scoreExact : ((exactReg || forgive) ? 0 : SCORE.scoreWrong);
       if(exact) r.drawCorrect++;   // reuse this column as "exact-score hits"
     }
     formBuckets[r.id].push({ when:fixtureDT(f).getTime(), ok, exact, type:p.choice });
@@ -1961,11 +1964,13 @@ function fixtureCard(f,empId,isSettled,live){
    leaderboard scoring): outcome +3/-1, plus optional exact-score +5/-2. */
 function predPoints(p, f){
   if(!f || !f.result) return 0;
-  let pts = (p.choice===f.result) ? SCORE.correct : SCORE.wrong;
+  const ok = (p.choice===f.result);
+  let pts = ok ? SCORE.correct : SCORE.wrong;
   if(p.scoreHome!=null && p.scoreAway!=null){
-    const exact = (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
-    const forgive = !exact && p.penalty && f.penalties;
-    pts += exact ? SCORE.scoreExact : (forgive ? 0 : SCORE.scoreWrong);
+    const exactReg = (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
+    const exact = exactReg && ok;   // exact bonus only credited with a correct team pick
+    const forgive = p.penalty && f.penalties;
+    pts += exact ? SCORE.scoreExact : ((exactReg || forgive) ? 0 : SCORE.scoreWrong);
   }
   return pts;
 }
@@ -2809,8 +2814,10 @@ function rulesHTML(){
         <h3>Knockouts</h3>
         <ul>
           <li>From the <b>Round of 32</b> onward there's <b>no Draw</b> — pick which team goes through.</li>
-          <li>Predicting a score? Flip <b>"Goes to penalties"</b> on the card. If the match is
-              decided on penalties, a <b>wrong scoreline costs you nothing</b> (no −2) — an exact hit still scores +5.</li>
+          <li>Predicting a score? Flip <b>"Goes to penalties"</b> on the card. If the match goes
+              to penalties, a <b>wrong scoreline costs you nothing</b> (no −2). The exact-score <b>+5
+              only counts if you also pick the team that advances</b> — nail the 90-minute score but
+              back the shootout loser and you just take the −1 for the wrong pick.</li>
           <li>Once the Round of 32 is set, pick your <b>Tournament Winner</b> in the Predict tab (top-right). It's <b>optional</b>.</li>
           <li>You can change it until the <b>Round of 16 begins</b>, then it locks.</li>
           <li>Call the champion right and you bag a <b>+25</b> bonus!</li>
@@ -2884,10 +2891,11 @@ function myPredictionsHTML(){
       if(ok) correctCount++;
       let pts = ok? SCORE.correct : SCORE.wrong, extra="";
       if(p.scoreHome!=null && p.scoreAway!=null){
-        const exact=(f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
-        const forgive = !exact && p.penalty && f.penalties;
-        pts += exact? SCORE.scoreExact : (forgive ? 0 : SCORE.scoreWrong);
-        extra = exact? ` · exact ✓` : (forgive ? ` · score ✗ (pens, no penalty)` : ` · score ✗`);
+        const exactReg=(f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
+        const exact = exactReg && ok;
+        const forgive = p.penalty && f.penalties;
+        pts += exact? SCORE.scoreExact : ((exactReg || forgive) ? 0 : SCORE.scoreWrong);
+        extra = exact? ` · exact ✓` : (exactReg ? ` · exact score, wrong team` : (forgive ? ` · score ✗ (pens, no penalty)` : ` · score ✗`));
       }
       totalPts += pts;
       cls = ok? "correct" : "wrong";

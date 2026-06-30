@@ -37,11 +37,15 @@ function scorePrediction(pred, fixture) {
   let exactCorrect = false;
   let scorePoints = 0;
   if (gaveScore) {
-    exactCorrect = pred.scoreHome === fixture.homeScore && pred.scoreAway === fixture.awayScore;
-    // Penalty hedge: if the player flagged penalties and the match was indeed decided
-    // on penalties, a wrong scoreline isn't punished (no -2); an exact hit still scores.
-    const forgive = !exactCorrect && pred.penalty && fixture.penalties;
-    scorePoints = exactCorrect ? POINTS.SCORE_CORRECT : (forgive ? 0 : POINTS.SCORE_WRONG);
+    const exactReg = pred.scoreHome === fixture.homeScore && pred.scoreAway === fixture.awayScore;
+    // The exact-score +5 is only credited when the outcome pick is also correct. This only
+    // diverges on a pens-decided knockout, where a level regulation score can be exact yet the
+    // picked team still goes out — there we award neither the +5 nor the -2 (just the -1 above).
+    exactCorrect = exactReg && winCorrect;
+    // Penalty hedge: a wrong scoreline isn't punished if the player flagged penalties and the
+    // match did go to penalties.
+    const forgive = pred.penalty && fixture.penalties;
+    scorePoints = exactCorrect ? POINTS.SCORE_CORRECT : ((exactReg || forgive) ? 0 : POINTS.SCORE_WRONG);
   }
 
   return {

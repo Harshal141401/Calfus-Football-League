@@ -36,6 +36,29 @@ test("score given but wrong AND outcome wrong: -1 - 2 = -3", () => {
   assert.equal(s.points, -3);
 });
 
+test("pens: level score, exact + correct team (won shootout): +3 + 5 = 8", () => {
+  const f = { homeScore: 1, awayScore: 1, penalties: true, penaltyHome: 4, penaltyAway: 3 }; // A wins on pens
+  const s = scorePrediction({ choice: "win", scoreHome: 1, scoreAway: 1, penalty: true }, f);
+  assert.equal(s.exactCorrect, true);
+  assert.equal(s.points, 8);
+});
+
+test("pens: exact regulation score but WRONG team (lost shootout): only -1, no +5", () => {
+  const f = { homeScore: 1, awayScore: 1, penalties: true, penaltyHome: 3, penaltyAway: 4 }; // A loses on pens
+  const s = scorePrediction({ choice: "win", scoreHome: 1, scoreAway: 1, penalty: true }, f);
+  assert.equal(s.winCorrect, false);
+  assert.equal(s.exactCorrect, false);
+  assert.equal(s.scorePoints, 0);   // nailed the 90-min score, wrong team — no bonus, no -2
+  assert.equal(s.points, -1);
+});
+
+test("pens hedge: wrong score, correct team, flagged pens: +3 + 0 = 3", () => {
+  const f = { homeScore: 1, awayScore: 1, penalties: true, penaltyHome: 4, penaltyAway: 3 }; // A wins on pens
+  const s = scorePrediction({ choice: "win", scoreHome: 2, scoreAway: 2, penalty: true }, f);
+  assert.equal(s.scorePoints, 0);   // wrong scoreline forgiven by the penalty flag
+  assert.equal(s.points, 3);
+});
+
 test("no score given: no effect from the score line", () => {
   const f = { homeScore: 2, awayScore: 1 };
   const s = scorePrediction({ choice: "win", scoreHome: null, scoreAway: null }, f);
