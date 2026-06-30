@@ -794,6 +794,14 @@ select{appearance:none;padding-right:30px;
 .tvmov-name{font-family:var(--f-display);font-size:clamp(22px,3vw,46px);text-transform:uppercase}
 .tvmov-delta{font-family:var(--f-sport);font-weight:700;font-size:clamp(16px,2vw,30px);color:var(--muted)}
 .tvmov-rank{font-family:var(--f-display);font-size:clamp(20px,2.4vw,40px);color:var(--gold)}
+/* two-column movers for TV — fits many more when lots of players shift */
+.tvmov-2col{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.1vw,18px);flex:1;min-height:0}
+.tvmov-2col .tvmov{overflow:hidden;justify-content:flex-start;gap:clamp(4px,.7vh,10px)}
+.tvmov-2col .tvmov-row{gap:clamp(8px,1vw,16px);padding:clamp(6px,1vh,12px) clamp(10px,1.4vw,20px)}
+.tvmov-2col .tvmov-arrow{font-size:clamp(18px,1.9vw,32px)}
+.tvmov-2col .tvmov-name{font-size:clamp(15px,1.5vw,26px)}
+.tvmov-2col .tvmov-delta{font-size:clamp(11px,1.1vw,18px)}
+.tvmov-2col .tvmov-rank{font-size:clamp(14px,1.4vw,24px)}
 .tv-empty{display:grid;place-items:center;flex:1;text-align:center;color:var(--muted);
   font-family:var(--f-sport);font-weight:700;font-size:clamp(18px,2.4vw,34px);letter-spacing:.1em;text-transform:uppercase}
 
@@ -2159,15 +2167,24 @@ function tvPerformers(lb){
   return tvHead("Spotlight","Top Performers",false)+`<div class="tvpod">${pod}</div>`;
 }
 function tvMovers(lb){
-  const movers=lb.filter(r=>r.move!==0).sort((a,b)=>Math.abs(b.move)-Math.abs(a.move)).slice(0,6);
+  // Show every player who changed rank (not just a top handful), capped only at what
+  // fits legibly on screen. Beyond 8 we split into two columns like the leaderboard.
+  const movers=lb.filter(r=>r.move!==0).sort((a,b)=>Math.abs(b.move)-Math.abs(a.move)).slice(0,24);
   if(!movers.length) return tvHead("Momentum","Biggest Movers",false)+`<div class="tv-empty">Standings unchanged — enter a result to see movement</div>`;
-  const rows=movers.map((r,i)=>{ const rank=lb.findIndex(x=>x.id===r.id)+1;
+  const row=r=>{ const rank=lb.findIndex(x=>x.id===r.id)+1;
     const up=r.move>0;
     return `<div class="tvmov-row"><div class="tvmov-arrow ${up?"up":"down"}">${up?"▲":"▼"}</div>
       <div class="tvmov-name">${esc(r.name)}</div>
       <div class="tvmov-delta">${up?"+":""}${r.move} place${Math.abs(r.move)>1?"s":""}</div>
-      <div class="tvmov-rank">#${rank}</div></div>`; }).join("");
-  return tvHead("Momentum","Biggest Movers",false)+`<div class="tvmov">${rows}</div>`;
+      <div class="tvmov-rank">#${rank}</div></div>`; };
+  if(movers.length<=8){
+    return tvHead("Momentum","Biggest Movers",false)+`<div class="tvmov">${movers.map(row).join("")}</div>`;
+  }
+  const half=Math.ceil(movers.length/2);
+  const left=movers.slice(0,half).map(row).join("");
+  const right=movers.slice(half).map(row).join("");
+  return tvHead("Momentum","Biggest Movers",false)+
+    `<div class="tvmov-2col"><div class="tvmov">${left}</div><div class="tvmov">${right}</div></div>`;
 }
 function tvWorldCup(){
   // Fact mode — a single random, decade-wise World Cup fact.
