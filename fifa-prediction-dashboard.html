@@ -260,6 +260,26 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
   border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);font-size:15px;line-height:1}
 .rules-close:hover{background:rgba(255,255,255,.14)}
 
+/* "What's New" popup — reuses the rules modal shell with a tighter card */
+.wn-box{width:min(560px,100%)}
+.wn-eyebrow{font-family:var(--f-sport);font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  font-size:11px;color:var(--gold);margin-bottom:6px}
+.wn-box .rules-title{margin:0 0 16px}
+.wn-list{display:flex;flex-direction:column;gap:14px}
+.wn-item{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;
+  padding:14px 16px;border-radius:12px;background:var(--card-2);border:1px solid var(--line);border-left:3px solid var(--gold)}
+.wn-icon{font-size:24px;line-height:1.1}
+.wn-h{font-family:var(--f-sport);font-weight:700;font-size:15px;color:var(--ink);margin-bottom:3px}
+.wn-b{font-family:var(--f-sport);font-size:13px;line-height:1.5;color:var(--muted)}
+.wn-b b{color:var(--ink)}
+.wn-foot{display:flex;align-items:center;gap:14px;margin-top:20px}
+.wn-ok{font-family:var(--f-sport);font-weight:700;font-size:14px;cursor:pointer;padding:10px 22px;border-radius:10px;
+  border:1px solid var(--neon);background:var(--neon);color:#0a0f16}
+.wn-ok:hover{filter:brightness(1.08)}
+.wn-link{font-family:var(--f-sport);font-weight:600;font-size:13px;cursor:pointer;background:none;border:none;
+  color:var(--muted);text-decoration:underline}
+.wn-link:hover{color:var(--neon)}
+
 /* ---------- layout ---------- */
 main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
 .view{display:none;animation:viewin .5s ease both}
@@ -1283,6 +1303,16 @@ const TOKEN_KEY = "cfl-session-token";
 const API = { base: (location.protocol === "file:" || location.port === "5500") ? "http://localhost:4000" : "" };
 
 const ADMIN_TOKEN_KEY = "cfl-admin-token";
+// "What's New" popup: bump WHATSNEW_VERSION whenever WHATSNEW_ITEMS changes, and every
+// signed-in user sees the modal once on their next login. Stored per-browser.
+const WHATSNEW_KEY = "cfl-whatsnew-seen";
+const WHATSNEW_VERSION = "2026-07-penalties";
+const WHATSNEW_ITEMS = [
+  ["🥅","Penalty shootouts","Knockouts decided on penalties now resolve to a real winner, and results show the shootout score — e.g. <b>1–1 · Penalties: 4–3</b>."],
+  ["🎚️","“Goes to penalties” hedge","Predicting an exact knockout score? Flip the toggle on the card. If the match does go to penalties, a <b>wrong scoreline costs you nothing</b> (no −2)."],
+  ["🎯","Exact-score rule","The <b>+5</b> exact-score bonus now only counts when you also pick the team that advances. Back the shootout loser with a perfect 90-minute score and you just take the −1 for the wrong pick."],
+  ["📺","Sharper TV board","The big-screen Leaderboard and Biggest Movers now share the same ranking, and many more movers fit on screen."],
+];
 let authToken = localStorage.getItem(TOKEN_KEY) || null;
 let adminToken = localStorage.getItem(ADMIN_TOKEN_KEY) || null;
 let currentUser = null;     // { id, name, email }
@@ -2874,6 +2904,47 @@ function showRules(){
 }
 function hideRules(){ const el=$("#rulesModal"); if(el) el.hidden=true; document.body.style.overflow=""; }
 
+/* ---------- "What's New" popup (shown once per user per version) ---------- */
+function whatsNewHTML(){
+  const items = WHATSNEW_ITEMS.map(([icon,title,body])=>
+    `<div class="wn-item"><div class="wn-icon">${icon}</div>
+      <div><div class="wn-h">${title}</div><div class="wn-b">${body}</div></div></div>`).join("");
+  return `<div class="wn-list">${items}</div>
+    <div class="wn-foot"><button class="wn-ok" id="wnOk">Got it</button>
+      <button class="wn-link" id="wnRules">See full rules</button></div>`;
+}
+function showWhatsNew(){
+  let el=$("#whatsNewModal");
+  if(!el){
+    el=document.createElement("div");
+    el.id="whatsNewModal"; el.className="rules-modal"; el.hidden=true;
+    el.innerHTML=`
+      <div class="rules-box wn-box">
+        <button class="rules-close" id="wnClose" aria-label="Close">✕</button>
+        <div class="wn-eyebrow">Just shipped</div>
+        <h2 class="rules-title">What's New</h2>
+        ${whatsNewHTML()}
+      </div>`;
+    document.body.appendChild(el);
+    const close=()=>hideWhatsNew();
+    $("#wnClose").addEventListener("click", close);
+    $("#wnOk").addEventListener("click", close);
+    $("#wnRules").addEventListener("click", ()=>{ close(); showRules(); });
+    el.addEventListener("click", e=>{ if(e.target.id==="whatsNewModal") close(); });
+  }
+  el.hidden=false; document.body.style.overflow="hidden";
+}
+function hideWhatsNew(){
+  const el=$("#whatsNewModal"); if(el) el.hidden=true; document.body.style.overflow="";
+  try{ localStorage.setItem(WHATSNEW_KEY, WHATSNEW_VERSION); }catch(e){}   // mark seen
+}
+// Show the popup once after sign-in if this user's browser hasn't seen this version.
+function maybeShowWhatsNew(){
+  let seen=null; try{ seen=localStorage.getItem(WHATSNEW_KEY); }catch(e){}
+  if(seen===WHATSNEW_VERSION) return;
+  showWhatsNew();
+}
+
 /* ---------- my predictions (account menu) ---------- */
 function myPredictionsHTML(){
   if(!currentUser || !state) return `<div class="mp-empty">Sign in to see your predictions.</div>`;
@@ -3196,6 +3267,7 @@ async function startSession(){
   await refreshWindow();
   clearInterval(window._winTimer); window._winTimer=setInterval(refreshWindow, 60000);
   startBoardPolling();
+  if(!isCurrentUserAdmin()) maybeShowWhatsNew();   // players see the "What's New" popup once
 }
 function renderBrand(_name){
   // "Calfus" rendered as the white logo wordmark; "FIFA" highlighted; + "League".
