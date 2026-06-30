@@ -560,6 +560,18 @@ select{appearance:none;padding-right:30px;
 
 /* ---- score predictor (scoreboard style) ---- */
 .score-pred{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 4px}
+/* penalties hedge toggle — bottom-right of a knockout card (sliding switch) */
+.pen-row{display:flex;justify-content:flex-end;margin:8px 0 2px}
+.pen-toggle{display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-family:var(--f-sport);
+  font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pen-toggle input{position:absolute;opacity:0;width:0;height:0}   /* hidden; still the source of truth */
+.pen-switch{position:relative;width:34px;height:18px;flex:none;border-radius:99px;
+  background:rgba(255,255,255,.12);border:1px solid var(--line);transition:background .15s,border-color .15s}
+.pen-switch::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;
+  background:#fff;transition:transform .15s}
+.pen-check:checked + .pen-switch{background:var(--neon);border-color:var(--neon)}
+.pen-check:checked + .pen-switch::after{transform:translateX(16px)}
+.pen-toggle input:disabled ~ .pen-switch{opacity:.45}
 .score-pred .sp-cap{font-family:var(--f-sport);font-weight:700;font-size:10px;letter-spacing:.22em;
   text-transform:uppercase;color:var(--muted)}
 .sp-board{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:13px;
@@ -747,6 +759,10 @@ select{appearance:none;padding-right:30px;
 .tvfix .badge{--bsz:clamp(56px,6vw,108px)}
 .tvfix .tname{font-size:clamp(18px,2.2vw,38px)}
 .tvfix .vs{font-size:clamp(28px,3.6vw,56px)}
+.tvfix-pens{font-family:var(--f-sport);font-weight:600;font-size:clamp(10px,1.1vw,15px);color:var(--muted);letter-spacing:.04em;margin-top:4px}
+.tvfix-pens .pw{color:var(--ink);font-weight:800}
+.pens-line{text-align:center;font-family:var(--f-sport);font-weight:600;font-size:12px;color:var(--muted);letter-spacing:.04em;margin:-4px 0 10px}
+.pens-line .pw{color:var(--ink);font-weight:800}
 
 /* TV podium */
 .tvpod{display:grid;grid-template-columns:1fr 1.2fr 1fr;align-items:end;gap:clamp(20px,3vw,50px);
@@ -1296,6 +1312,7 @@ function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
   result:f.result||null, homeScore:f.homeScore, awayScore:f.awayScore,
   liveStatus:f.liveStatus||null, liveHomeScore:f.liveHomeScore, liveAwayScore:f.liveAwayScore, liveClock:f.liveClock||null,
   lineups:f.lineups||null, events:f.events||[], pickCount:f.pickCount,
+  penalties:!!f.penalties, penaltyHome:f.penaltyHome, penaltyAway:f.penaltyAway,
   predictable:!!f.predictable, locked:!!f.locked }; }
 function mapEmployee(e,i){ return { id:String(e.id), name:e.name, av:AVCOL[i%AVCOL.length] }; }
 
@@ -1334,8 +1351,8 @@ async function refreshWindow(){
   try{ windowState = await apiJson("/api/window"); renderWindowBanner(); }catch(e){ /* keep last known */ }
 }
 /* create or update the caller's pick for a fixture, then reload the board */
-async function submitPrediction(fixtureId, choice, scoreHome, scoreAway){
-  const body = { fixtureId, choice };
+async function submitPrediction(fixtureId, choice, scoreHome, scoreAway, penalty){
+  const body = { fixtureId, choice, penalty: !!penalty };
   if(scoreHome!=="" && scoreHome!=null && scoreAway!=="" && scoreAway!=null){
     body.scoreHome = Number(scoreHome); body.scoreAway = Number(scoreAway);
   }
@@ -1371,7 +1388,9 @@ function computeLeaderboard(ignoreFixtureId){
     let exact = false;
     if(p.scoreHome!=null && p.scoreAway!=null){
       exact = (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
-      r.points += exact ? SCORE.scoreExact : SCORE.scoreWrong;
+      // Penalty hedge: a wrong score isn't punished if they flagged penalties and it went to pens.
+      const forgive = !exact && p.penalty && f.penalties;
+      r.points += exact ? SCORE.scoreExact : (forgive ? 0 : SCORE.scoreWrong);
       if(exact) r.drawCorrect++;   // reuse this column as "exact-score hits"
     }
     formBuckets[r.id].push({ when:fixtureDT(f).getTime(), ok, exact, type:p.choice });
@@ -1673,7 +1692,10 @@ function fixtureCard(f,empId,isSettled,live){
       // No event feed for this match — fall back to the outcome line.
       detail = `<div class="ev-empty">Match finished${resTxt?` · ${resTxt}`:""}</div>`;
     }
-    bottom=`<div class="fix-meta" style="margin:0 0 10px"><span>${scoreTxt?`Final · <b style="color:var(--gold)">${scoreTxt}</b>`:"Final result"}</span><span class="round">${resTxt}</span></div>${detail}`;
+    const pensLine = f.penalties && f.penaltyHome!=null && f.penaltyAway!=null
+      ? `<div class="pens-line">Penalties: <span class="${f.penaltyHome>f.penaltyAway?"pw":""}">${f.penaltyHome}</span> - <span class="${f.penaltyAway>f.penaltyHome?"pw":""}">${f.penaltyAway}</span></div>`
+      : "";
+    bottom=`<div class="fix-meta" style="margin:0 0 10px"><span>${scoreTxt?`Final · <b style="color:var(--gold)">${scoreTxt}</b>`:"Final result"}</span><span class="round">${resTxt}</span></div>${pensLine}${detail}`;
   } else {
     const votes = v.total? `<div class="votes"><i class="v-w" style="width:${pct("win")}%"></i><i class="v-d" style="width:${pct("draw")}%"></i><i class="v-l" style="width:${pct("lose")}%"></i></div>
       <div class="vote-legend"><span>${esc(A.abbr)} ${pct("win")}%</span><span>Draw ${pct("draw")}%</span><span>${esc(B.abbr)} ${pct("lose")}%</span></div>` : "";
@@ -1709,11 +1731,16 @@ function fixtureCard(f,empId,isSettled,live){
             <span class="sp-team">${esc(B.abbr)}</span>
           </div>
         </div>`;
+      // Knockouts can go to penalties — let players hedge their scoreline. Bottom-right toggle.
+      const penRow = isKO ? `<div class="pen-row"><label class="pen-toggle">
+          <span>Goes to penalties</span>
+          <input type="checkbox" class="pen-check" data-fix="${f.id}" ${pred&&pred.penalty?"checked":""} ${dis}>
+          <span class="pen-switch" aria-hidden="true"></span></label></div>` : "";
       const yourPick = pred?` · your pick: ${labels[pred.choice]}`:"";
       const action = f.predictable
         ? `<button class="btn btn-primary lockin" data-fix="${f.id}">${pred?"Update pick":"Lock in pick"}</button>`
         : `<div class="locked">🔒 Predictions closed (locked 30 min before kickoff)${yourPick}</div>`;
-      bottom=`<div class="pick-row">${picks}</div>${scoreRow}${action}`;
+      bottom=`<div class="pick-row">${picks}</div>${scoreRow}${penRow}${action}`;
     }
   }
   const liveBadge = live ? `<span class="live-badge"><span class="live-pulse"></span>Live</span>` : "";
@@ -1753,7 +1780,9 @@ function predPoints(p, f){
   if(!f || !f.result) return 0;
   let pts = (p.choice===f.result) ? SCORE.correct : SCORE.wrong;
   if(p.scoreHome!=null && p.scoreAway!=null){
-    pts += (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway) ? SCORE.scoreExact : SCORE.scoreWrong;
+    const exact = (f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
+    const forgive = !exact && p.penalty && f.penalties;
+    pts += exact ? SCORE.scoreExact : (forgive ? 0 : SCORE.scoreWrong);
   }
   return pts;
 }
@@ -2058,9 +2087,11 @@ function tvResults(){
   if(!done.length) return tvHead("Full-time","Recent Results",false)+`<div class="tv-empty">No results yet</div>`;
   const cards=done.map(f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId);
     const hs=f.homeScore!=null?f.homeScore:"–", as=f.awayScore!=null?f.awayScore:"–";
+    const pens=f.penalties && f.penaltyHome!=null && f.penaltyAway!=null
+      ? `<div class="tvfix-pens">Penalties: <span class="${f.penaltyHome>f.penaltyAway?"pw":""}">${f.penaltyHome}</span> - <span class="${f.penaltyAway>f.penaltyHome?"pw":""}">${f.penaltyAway}</span></div>` : "";
     return `<div class="tvfix"><div class="when">${fmtDayStr(f.date)} · ${esc(f.round||"")}</div>
       <div class="team">${badge(A)}<span class="tname">${esc(A.abbr)}</span></div>
-      <div class="vs" style="color:var(--gold);font-family:var(--f-display);font-size:clamp(18px,2.4vw,30px)">${hs}–${as}</div>
+      <div class="vs" style="color:var(--gold);font-family:var(--f-display);font-size:clamp(18px,2.4vw,30px)">${hs}–${as}${pens}</div>
       <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; }).join("");
   return tvHead("Full-time","Recent Results",false)+`<div class="tvfix-grid">${cards}</div>`;
 }
@@ -2444,9 +2475,11 @@ function wireEvents(){
     const sel=card.querySelector("button[data-pick].sel");
     if(!sel){ toast("Pick an outcome first","✕"); return; }
     const choice=sel.dataset.pick;
+    const penChk=card.querySelector(".pen-check"); const penalty=!!(penChk && penChk.checked);
     const sh=card.querySelector(".sc-h").value, sa=card.querySelector(".sc-a").value;
     if((sh==="")!==(sa==="")){ toast("Enter both scores, or leave both blank","✕"); return; }
-    if(sh!=="" && sa!==""){
+    // With the penalty hedge a level score is allowed with a decisive pick, so skip the match-check.
+    if(sh!=="" && sa!=="" && !penalty){
       const h=Number(sh), a=Number(sa);
       const implied = h>a?"win":h<a?"lose":"draw";
       if(implied!==choice){
@@ -2458,7 +2491,7 @@ function wireEvents(){
     }
     lockBtn.disabled=true; lockBtn.textContent="Saving…";
     try{
-      await submitPrediction(fixId, choice, sh, sa);
+      await submitPrediction(fixId, choice, sh, sa, penalty);
       const f=state.fixtures.find(x=>x.id===fixId); const A=teamById(f.teamAId), B=teamById(f.teamBId);
       const lbl={win:`${A.abbr} to win`,draw:"a draw",lose:`${B.abbr} to win`}[choice];
       toast(`Pick saved — ${lbl}${sh!==""?` (${sh}–${sa})`:""} ✅`);
@@ -2593,6 +2626,8 @@ function rulesHTML(){
         <h3>Knockouts</h3>
         <ul>
           <li>From the <b>Round of 32</b> onward there's <b>no Draw</b> — pick which team goes through.</li>
+          <li>Predicting a score? Flip <b>"Goes to penalties"</b> on the card. If the match is
+              decided on penalties, a <b>wrong scoreline costs you nothing</b> (no −2) — an exact hit still scores +5.</li>
           <li>Once the Round of 32 is set, pick your <b>Tournament Winner</b> in the Predict tab (top-right). It's <b>optional</b>.</li>
           <li>You can change it until the <b>Round of 16 begins</b>, then it locks.</li>
           <li>Call the champion right and you bag a <b>+25</b> bonus!</li>
@@ -2667,8 +2702,9 @@ function myPredictionsHTML(){
       let pts = ok? SCORE.correct : SCORE.wrong, extra="";
       if(p.scoreHome!=null && p.scoreAway!=null){
         const exact=(f.homeScore===p.scoreHome && f.awayScore===p.scoreAway);
-        pts += exact? SCORE.scoreExact : SCORE.scoreWrong;
-        extra = exact? ` · exact ✓` : ` · score ✗`;
+        const forgive = !exact && p.penalty && f.penalties;
+        pts += exact? SCORE.scoreExact : (forgive ? 0 : SCORE.scoreWrong);
+        extra = exact? ` · exact ✓` : (forgive ? ` · score ✗ (pens, no penalty)` : ` · score ✗`);
       }
       totalPts += pts;
       cls = ok? "correct" : "wrong";

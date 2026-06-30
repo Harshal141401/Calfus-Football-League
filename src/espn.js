@@ -37,6 +37,8 @@ function side(c) {
     abbr: (c.team?.abbreviation || "").toUpperCase(),
     name: c.team?.displayName || c.team?.name || "",
     score: Number(c.score),
+    // Penalty-shootout score, when the match was decided on penalties (else null).
+    shootout: (c.shootoutScore != null && c.shootoutScore !== "") ? Number(c.shootoutScore) : null,
   };
 }
 

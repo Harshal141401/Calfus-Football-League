@@ -50,8 +50,12 @@ router.post("/predictions", requireAuth, async (req, res) => {
     if ((scoreHome === null) !== (scoreAway === null)) {
       return res.status(400).json({ error: "Provide both scoreHome and scoreAway, or neither." });
     }
-    // The predicted scoreline must agree with the outcome pick (no "win" with a 0–0 draw).
-    if (scoreHome !== null) {
+    // "Goes to penalties" hedge — a knockout can end level (a draw scoreline) yet a
+    // team still advances, so when penalty is set we allow a level score with win/lose.
+    const penalty = !!(req.body && req.body.penalty);
+    // The predicted scoreline must agree with the outcome pick (no "win" with a 0–0 draw),
+    // unless the player flagged penalties (then a level score with a decisive pick is fine).
+    if (scoreHome !== null && !penalty) {
       const implied = scoreHome > scoreAway ? "win" : scoreHome < scoreAway ? "lose" : "draw";
       if (implied !== choice) {
         return res.status(400).json({ error: "Your predicted score doesn't match your pick (e.g. a win can't be a draw scoreline)." });
@@ -63,7 +67,7 @@ router.post("/predictions", requireAuth, async (req, res) => {
       { employeeId: req.user.id, fixtureId: String(_id) },
       {
         $set: {
-          choice, scoreHome, scoreAway,
+          choice, scoreHome, scoreAway, penalty,
           employeeName: req.user.name, employeeEmail: req.user.email,
           updatedAt: now,
         },
@@ -72,7 +76,7 @@ router.post("/predictions", requireAuth, async (req, res) => {
       { upsert: true }
     );
 
-    res.json({ ok: true, fixtureId: String(_id), choice, scoreHome, scoreAway });
+    res.json({ ok: true, fixtureId: String(_id), choice, scoreHome, scoreAway, penalty });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -95,6 +99,7 @@ router.get("/predictions", requireAuth, async (req, res) => {
       choice: p.choice,
       scoreHome: p.scoreHome ?? null,
       scoreAway: p.scoreAway ?? null,
+      penalty: !!p.penalty,
     })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

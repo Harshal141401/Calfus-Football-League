@@ -29,10 +29,15 @@ function matchFixture(event, fixtures, teamsById) {
     // Map ESPN scores to Team A / Team B by team identity (not ESPN home/away).
     const aIsHome = normAbbr(A.abbr) === normAbbr(event.home.abbr) ||
       String(A.name || "").toLowerCase() === event.home.name.toLowerCase();
+    const penaltyHome = aIsHome ? event.home.shootout : event.away.shootout;
+    const penaltyAway = aIsHome ? event.away.shootout : event.home.shootout;
     return {
       fixture: f,
       homeScore: aIsHome ? event.home.score : event.away.score,
       awayScore: aIsHome ? event.away.score : event.home.score,
+      penalties: penaltyHome != null && penaltyAway != null,
+      penaltyHome: penaltyHome != null ? penaltyHome : null,
+      penaltyAway: penaltyAway != null ? penaltyAway : null,
     };
   }
   return null;

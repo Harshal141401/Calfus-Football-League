@@ -25,7 +25,7 @@ router.post("/fixtures/:id/settle", async (req, res) => {
   const _id = toObjectId(req.params.id);
   if (!_id) return res.status(400).json({ error: "Invalid fixture id" });
   try {
-    res.json(await settleFixture(_id, req.body.homeScore, req.body.awayScore));
+    res.json(await settleFixture(_id, req.body.homeScore, req.body.awayScore, req.body.penalties, req.body.penaltyHome, req.body.penaltyAway));
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 

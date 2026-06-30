@@ -61,6 +61,7 @@ router.get("/predictions", async (_req, res) => {
       choice: p.choice,
       scoreHome: p.scoreHome ?? null,
       scoreAway: p.scoreAway ?? null,
+      penalty: !!p.penalty,
     })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

@@ -31,7 +31,7 @@ async function syncEvents(ev, f, teamsById) {
   if (!(ev.state === "in" || ev.completed)) return;
   if (f.eventsFinal) return;                       // already captured the final set
   try {
-    const raw = await fetchMatchEvents(ev.espnId);
+    const { events: raw, penalties } = await fetchMatchEvents(ev.espnId);
     if (!raw.length && !ev.completed) return;      // nothing yet — retry next tick
     const A = teamsById[String(f.teamAId)] || {};
     const aIsHome = String(A.abbr || "").toUpperCase() === String(ev.home.abbr || "").toUpperCase()
@@ -41,9 +41,9 @@ async function syncEvents(ev, f, teamsById) {
       team: e.side === "home" ? (aIsHome ? "A" : "B") : e.side === "away" ? (aIsHome ? "B" : "A") : "",
     }));
     await collections.fixtures().updateOne({ _id: f._id },
-      { $set: { events, eventsAt: new Date(), ...(ev.completed ? { eventsFinal: true } : {}) } });
-    f.events = events;
-    console.log(`[espn] ${events.length} events stored for ${f.apiId}${ev.completed ? " (final)" : ""}`);
+      { $set: { events, penalties: !!penalties, eventsAt: new Date(), ...(ev.completed ? { eventsFinal: true } : {}) } });
+    f.events = events; f.penalties = !!penalties;
+    console.log(`[espn] ${events.length} events stored for ${f.apiId}${penalties ? " (pens)" : ""}${ev.completed ? " (final)" : ""}`);
   } catch (e) { console.warn("[espn] events fetch failed:", e.message); }
 }
 
@@ -66,9 +66,14 @@ async function runSync() {
       // Settle once (skip if admin already settled). Notify is gated separately so a
       // failed email retries next tick even though the fixture is already settled.
       if (f.status === "scheduled") {
-        await settleFixture(f._id, m.homeScore, m.awayScore);
-        f.status = "settled";
-        console.log(`[espn] auto-settled ${f.apiId}: ${m.homeScore}-${m.awayScore}`);
+        await settleFixture(f._id, m.homeScore, m.awayScore, m.penalties, m.penaltyHome, m.penaltyAway);
+        f.status = "settled"; f.penalties = m.penalties;
+        console.log(`[espn] auto-settled ${f.apiId}: ${m.homeScore}-${m.awayScore}${m.penalties ? ` (${m.penaltyHome}-${m.penaltyAway} pens)` : ""}`);
+      } else if (f.status === "settled" && m.penalties && f.penaltyHome == null) {
+        // Already settled before the shootout result was available — patch it in + re-score.
+        await settleFixture(f._id, m.homeScore, m.awayScore, m.penalties, m.penaltyHome, m.penaltyAway);
+        f.penalties = true;
+        console.log(`[espn] added pens to ${f.apiId}: ${m.penaltyHome}-${m.penaltyAway}`);
       }
       if (f.status === "settled" && !f.notifiedAt) {
         await notifyPredictors(f._id);

@@ -106,6 +106,7 @@ function parseMatchEvents(json) {
   }
   const out = [];
   for (const k of (json && json.keyEvents) || []) {
+    if (k.shootout === true) continue;   // exclude penalty-shootout kicks from the goals list
     const t = ((k.type && k.type.text) || "").toLowerCase();
     let type = null;
     if (k.scoringPlay || t.includes("goal")) type = "goal";
@@ -126,12 +127,19 @@ function parseMatchEvents(json) {
   return out;
 }
 
+/* Did the match go to a penalty shootout? ESPN tags shootout events with shootout:true. */
+function wentToPenalties(json) {
+  return ((json && json.keyEvents) || []).some(k =>
+    k.shootout === true || /penalt(y|ies).*(shoot)/i.test((k.type && k.type.text) || ""));
+}
+
 async function fetchMatchEvents(espnId) {
   const config = require("./config");
   const base = config.ESPN_SUMMARY_BASE || config.ESPN_BASE.replace("scoreboard", "summary");
   const r = await fetch(`${base}?event=${encodeURIComponent(espnId)}`, { signal: AbortSignal.timeout(10000) });
   if (!r.ok) throw new Error(`ESPN summary ${r.status}`);
-  return parseMatchEvents(await r.json());
+  const json = await r.json();
+  return { events: parseMatchEvents(json), penalties: wentToPenalties(json) };
 }
 
-module.exports = { fetchLineup, parseLineup, enrichClubs, resolveClub, parseMatchEvents, fetchMatchEvents };
+module.exports = { fetchLineup, parseLineup, enrichClubs, resolveClub, parseMatchEvents, wentToPenalties, fetchMatchEvents };
