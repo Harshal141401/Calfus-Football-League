@@ -1613,8 +1613,17 @@ function leaderboardWithMovement(){
   const cur = computeLeaderboard();
   const prevId = latestSettledFixtureId();
   const prev = prevId ? computeLeaderboard(prevId) : cur;
-  const prevRank = Object.fromEntries(prev.map((r,i)=>[r.id,i]));
-  return cur.map((r,i)=>({ ...r, move: (prevRank[r.id]??i) - i }));
+  // Dense rank (ties share a number: 1,2,2,3…) for ranked players, so both the displayed
+  // rank and the movement delta match the standings rather than raw array position.
+  const denseRanks = rows => { let lastPts=null, rank=0; const out={};
+    rows.forEach(r=>{ if(r.total>0){ if(r.points!==lastPts){ rank+=1; lastPts=r.points; } out[r.id]=rank; } });
+    return out; };
+  const curRank = denseRanks(cur), prevRank = denseRanks(prev);
+  return cur.map(r=>{
+    const rk = curRank[r.id] ?? null;
+    const move = rk==null ? 0 : (prevRank[r.id] ?? rk) - rk;   // up = climbed, down = dropped
+    return { ...r, rank: rk, move };
+  });
 }
 
 /* ---------- prediction helpers ---------- */
@@ -2352,9 +2361,9 @@ function tvPerformers(lb){
 function tvMovers(lb){
   // Show every player who changed rank (not just a top handful), capped only at what
   // fits legibly on screen. Beyond 8 we split into two columns like the leaderboard.
-  const movers=lb.filter(r=>r.move!==0).sort((a,b)=>Math.abs(b.move)-Math.abs(a.move)).slice(0,24);
+  const movers=lb.filter(r=>r.move!==0).sort((a,b)=>b.move-a.move).slice(0,24);   // descending: top climbers → biggest fallers
   if(!movers.length) return tvHead("Momentum","Biggest Movers",false)+`<div class="tv-empty">Standings unchanged — enter a result to see movement</div>`;
-  const row=r=>{ const rank=lb.findIndex(x=>x.id===r.id)+1;
+  const row=r=>{ const rank=r.rank;
     const up=r.move>0;
     return `<div class="tvmov-row"><div class="tvmov-arrow ${up?"up":"down"}">${up?"▲":"▼"}</div>
       <div class="tvmov-name">${esc(r.name)}</div>
