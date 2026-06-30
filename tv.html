@@ -2051,8 +2051,12 @@ function tvLeaderboard(lb){
   if(!lb.some(r=>r.settled>0))
     return tvHead("Standings","Leaderboard",false)+`<div class="tv-empty">Standings will appear once matches are settled</div>`;
   const top=lb.filter(r=>r.total>0).slice(0,24);   // only players with ≥1 prediction
-  const row=(r,i)=>`<div class="tvlb-row r${i+1}" style="animation-delay:${i*0.04}s">
-    <div class="tvlb-rank">${i+1}</div>
+  // Dense ranking to match the dashboard standings: players tied on points share a
+  // rank number, and the next distinct score is the next number — 1,2,2,3 (no gaps).
+  let lastPts=null, rank=0;
+  const ranks = top.map(r=>{ if(r.points!==lastPts){ rank+=1; lastPts=r.points; } return rank; });
+  const row=(r,i)=>`<div class="tvlb-row r${ranks[i]}" style="animation-delay:${i*0.04}s">
+    <div class="tvlb-rank">${ranks[i]}</div>
     <div class="tvlb-name"><div class="avatar" style="background:${r.av}">${esc(initials(r.name))}</div>
       <span class="nm">${esc(r.name)}</span></div>
     <div class="tvlb-form">${formChips(r.form)}</div>
