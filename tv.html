@@ -735,9 +735,11 @@ select{appearance:none;padding-right:30px;
 .tvlb::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:99px}
 /* two-column leaderboard for TV — fits ~20 names on one screen */
 .tvlb-2col{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,1.1vw,18px);flex:1;min-height:0}
-.tvlb-2col .tvlb{overflow:hidden;gap:clamp(2px,.35vh,5px)}
+.tvlb-2col .tvlb{overflow:hidden;gap:clamp(2px,.35vh,5px);justify-content:center}
+/* Each column shares its height across its rows so every rank fits — no row is ever
+   clipped by overflow (previously #10, the last row of the left column, got cut off). */
 .tvlb-2col .tvlb-row{grid-template-columns:clamp(24px,1.7vw,36px) 1fr auto;gap:clamp(6px,.9vw,12px);
-  padding:clamp(2px,.35vh,5px) clamp(9px,1vw,15px)}
+  padding:clamp(2px,.35vh,5px) clamp(9px,1vw,15px);flex:1 1 0;min-height:0;max-height:clamp(40px,6.2vh,60px)}
 .tvlb-2col .tvlb-rank{font-size:clamp(14px,1.5vw,22px)}
 .tvlb-2col .tvlb-form{display:none}
 .tvlb-2col .tvlb-name{gap:clamp(6px,.9vw,12px)}
