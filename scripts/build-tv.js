@@ -133,6 +133,7 @@ const out = `<!doctype html>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Calfus FIFA League — TV</title>
+<link rel="icon" type="image/png" href="/assets/football1.png" />
 ${fontLinks}
 <style>${css}
 /* kiosk: the overlay IS the page */

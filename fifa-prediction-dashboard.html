@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Calfus FIFA League — Live Leaderboard</title>
+<link rel="icon" type="image/png" href="/assets/football1.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -279,6 +280,16 @@ button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit
 .wn-link{font-family:var(--f-sport);font-weight:600;font-size:13px;cursor:pointer;background:none;border:none;
   color:var(--muted);text-decoration:underline}
 .wn-link:hover{color:var(--neon)}
+/* headstart "Congratulations" popup */
+.cg-box{width:min(430px,100%);text-align:center}
+.cg-emoji{font-size:46px;line-height:1;margin-bottom:4px}
+.cg-box .rules-title{margin:0 0 4px}
+.cg-pts{display:flex;align-items:baseline;justify-content:center;gap:9px;margin:8px 0 14px}
+.cg-pts span{font-family:var(--f-display);font-size:clamp(48px,9vw,74px);line-height:1;color:var(--gold)}
+.cg-pts small{font-family:var(--f-sport);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.cg-body{font-family:var(--f-sport);font-size:14px;line-height:1.55;color:var(--muted);margin:0 auto 18px;max-width:340px}
+.cg-body b{color:var(--ink)}
+.cg-box .wn-ok{margin:0 auto;display:block}
 
 /* ---------- layout ---------- */
 main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
@@ -1306,6 +1317,7 @@ const ADMIN_TOKEN_KEY = "cfl-admin-token";
 // "What's New" popup: bump WHATSNEW_VERSION whenever WHATSNEW_ITEMS changes, and every
 // signed-in user sees the modal once on their next login. Stored per-browser.
 const WHATSNEW_KEY = "cfl-whatsnew-seen";
+const CONGRATS_KEY = "cfl-congrats-seen";   // headstart welcome popup, once per browser
 const WHATSNEW_VERSION = "2026-07-penalties";
 const WHATSNEW_ITEMS = [
   ["🥅","Penalty shootouts","Knockouts decided on penalties now resolve to a real winner, and results show the shootout score — e.g. <b>1–1 · Penalties: 4–3</b>."],
@@ -1535,7 +1547,7 @@ function mapFixture(f){ return { id:String(f.id), apiId:f.apiId,
   lineups:f.lineups||null, events:f.events||[], pickCount:f.pickCount,
   penalties:!!f.penalties, penaltyHome:f.penaltyHome, penaltyAway:f.penaltyAway,
   predictable:!!f.predictable, locked:!!f.locked }; }
-function mapEmployee(e,i){ return { id:String(e.id), name:e.name, av:AVCOL[i%AVCOL.length] }; }
+function mapEmployee(e,i){ return { id:String(e.id), name:e.name, av:AVCOL[i%AVCOL.length], headstart:Number(e.headstart)||0, registered:!!e.registered }; }
 
 /* ---------- load the whole board from the backend ---------- */
 async function loadData(){
@@ -1590,8 +1602,9 @@ function rerenderCurrent(){
 /* ---------- scoring + leaderboard engine ---------- */
 function computeLeaderboard(ignoreFixtureId){
   const rows = state.employees.map(e=>({
-    id:e.id, name:e.name, av:e.av,
-    points:0, correct:0, wrong:0, drawCorrect:0, total:0, settled:0, form:[]
+    id:e.id, name:e.name, av:e.av, headstart:(e.headstart||0), registered:!!e.registered,
+    points:(e.headstart||0),   // one-time base (new joiners 29 / floored-to-13); scoring adds on top
+    correct:0, wrong:0, drawCorrect:0, total:0, settled:0, form:[]
   }));
   const byId = Object.fromEntries(rows.map(r=>[r.id,r]));
   // newest-settled-first list per player for "recent form"
@@ -1630,9 +1643,10 @@ function computeLeaderboard(ignoreFixtureId){
       if(r && String(cp.teamId)===String(championState.champion)){ r.points += CHAMPION_BONUS; r.championHit = true; }
     });
   }
-  // Players with no predictions sink to the bottom (they have no real score yet);
-  // everyone else is ranked by points, then correct picks, then name.
-  rows.sort((a,b)=> (b.total>0)-(a.total>0) || b.points-a.points || b.correct-a.correct || a.name.localeCompare(b.name));
+  // A player appears on the board if they've predicted, or carry a one-time headstart
+  // AND have registered. New joiners / floored players stay in the DB but hidden until sign-up.
+  rows.forEach(r=>{ r.ranked = r.total>0 || (r.headstart>0 && r.registered); });
+  rows.sort((a,b)=> (b.ranked?1:0)-(a.ranked?1:0) || b.points-a.points || b.correct-a.correct || a.name.localeCompare(b.name));
   return rows;
 }
 function latestSettledFixtureId(){
@@ -1646,7 +1660,7 @@ function leaderboardWithMovement(){
   // Dense rank (ties share a number: 1,2,2,3…) for ranked players, so both the displayed
   // rank and the movement delta match the standings rather than raw array position.
   const denseRanks = rows => { let lastPts=null, rank=0; const out={};
-    rows.forEach(r=>{ if(r.total>0){ if(r.points!==lastPts){ rank+=1; lastPts=r.points; } out[r.id]=rank; } });
+    rows.forEach(r=>{ if(r.ranked){ if(r.points!==lastPts){ rank+=1; lastPts=r.points; } out[r.id]=rank; } });
     return out; };
   const curRank = denseRanks(cur), prevRank = denseRanks(prev);
   return cur.map(r=>{
@@ -1677,7 +1691,7 @@ function renderHome(){
   // Standings are meaningless until at least one prediction has been scored.
   const hasScores = settledPreds > 0;
   const leader = lb[0];
-  const activeCount = lb.filter(r=>r.total>0).length;   // players who've made ≥1 prediction
+  const activeCount = lb.filter(r=>r.ranked).length;   // players who've made ≥1 prediction
   $("#homeKpis").innerHTML = [
     ["Players", activeCount, ""],
     ["Predictions", totalPreds, ""],
@@ -1688,7 +1702,7 @@ function renderHome(){
   // podium (order on stage: 2 - 1 - 3) — blank until scoring starts.
   // Dense ranks (1,2,2,3…): group players who share a podium rank so a tie shows
   // every tied player's medal (initials + points) in the same plinth.
-  const ranked = lb.filter(r=>r.total>0);   // only players who have predicted can hold a rank
+  const ranked = lb.filter(r=>r.ranked);   // only players who have predicted can hold a rank
   const byRank = {1:[],2:[],3:[]};
   { let lastPts=null, rank=0;
     ranked.forEach(r=>{ if(r.points!==lastPts){ rank+=1; lastPts=r.points; } if(rank<=3) byRank[rank].push(r); }); }
@@ -1731,7 +1745,7 @@ function renderHome(){
   // Dense ranking: players tied on points share the same rank and the next
   // distinct score is the next number — 1,2,2,3 (no gaps).
   let lastPts=null, lastRank=0;
-  const played = lb.filter(r=>r.total>0);
+  const played = lb.filter(r=>r.ranked);
   const rows = !hasScores
     ? `<div class="lb-row" style="grid-template-columns:1fr;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600;padding:24px">Standings will appear once matches are settled.</div>`
     : (played.length ? played.map((r,i)=>{
@@ -2044,7 +2058,7 @@ function computeStatTiles(){
   const correct=lb.reduce((s,r)=>s+r.correct,0);
   const acc= settledPreds? Math.round(correct/settledPreds*100):0;
   // "Players" = only those who've made at least one prediction.
-  const players = lb.filter(r=>r.total>0);
+  const players = lb.filter(r=>r.ranked);
   const avg= players.length? (players.reduce((s,r)=>s+r.points,0)/players.length).toFixed(1):0;
 
   // most predicted team (appearances in predicted fixtures)
@@ -2280,7 +2294,7 @@ function tvHead(eyebrow,title,countdown){
 function tvLeaderboard(lb){
   if(!lb.some(r=>r.settled>0))
     return tvHead("Standings","Leaderboard",false)+`<div class="tv-empty">Standings will appear once matches are settled</div>`;
-  const top=lb.filter(r=>r.total>0).slice(0,24);   // only players with ≥1 prediction
+  const top=lb.filter(r=>r.ranked).slice(0,24);   // only players with ≥1 prediction
   // Dense ranking to match the dashboard standings: players tied on points share a
   // rank number, and the next distinct score is the next number — 1,2,2,3 (no gaps).
   let lastPts=null, rank=0;
@@ -2367,7 +2381,7 @@ function tvPerformers(lb){
     return tvHead("Spotlight","Top Performers",false)+`<div class="tv-empty">Top performers will appear once matches are settled</div>`;
   // Same medal + tied-rank treatment as the home podium: dense ranks (1,2,2,3),
   // one medal per rank, and every tied player's name listed beneath it.
-  const ranked = lb.filter(r=>r.total>0);
+  const ranked = lb.filter(r=>r.ranked);
   const byRank = {1:[],2:[],3:[]};
   { let lastPts=null, rank=0;
     ranked.forEach(r=>{ if(r.points!==lastPts){ rank+=1; lastPts=r.points; } if(rank<=3) byRank[rank].push(r); }); }
@@ -2945,6 +2959,46 @@ function maybeShowWhatsNew(){
   showWhatsNew();
 }
 
+/* ---------- "Congratulations" headstart popup (granted players, once) ---------- */
+function showCongrats(startPoints, isNew){
+  let el=$("#congratsModal");
+  if(!el){
+    el=document.createElement("div");
+    el.id="congratsModal"; el.className="rules-modal"; el.hidden=true;
+    el.innerHTML=`<div class="rules-box cg-box">
+      <button class="rules-close" id="cgClose" aria-label="Close">✕</button>
+      <div class="cg-emoji">🎉</div>
+      <h2 class="rules-title">Congratulations!</h2>
+      <div class="cg-pts"><span id="cgPts"></span><small>points</small></div>
+      <p class="cg-body" id="cgBody"></p>
+      <button class="wn-ok" id="cgOk">Let's go</button></div>`;
+    document.body.appendChild(el);
+    const close=()=>hideCongrats();
+    $("#cgClose").addEventListener("click", close);
+    $("#cgOk").addEventListener("click", close);
+    el.addEventListener("click", e=>{ if(e.target.id==="congratsModal") close(); });
+  }
+  $("#cgPts").textContent = startPoints;
+  $("#cgBody").innerHTML = isNew
+    ? `Welcome to the <b>Calfus FIFA League</b>! You're joining with a <b>${startPoints}-point headstart</b> — right in the mix. Make your knockout picks and climb the board.`
+    : `You're in! You're starting with <b>${startPoints} points</b> on the board. Jump into the knockouts and start climbing.`;
+  el.hidden=false; document.body.style.overflow="hidden";
+}
+function hideCongrats(){
+  const el=$("#congratsModal"); if(el) el.hidden=true; document.body.style.overflow="";
+  try{ localStorage.setItem(CONGRATS_KEY, "1"); }catch(e){}   // once per browser
+}
+// Show once to any player granted a headstart (29 for new joiners, 13 floor for others).
+function maybeShowCongrats(){
+  const me = state.employees.find(e=>e.id===state.currentUserId);
+  const hs = me ? (me.headstart||0) : 0;
+  if(hs<=0) return false;
+  let seen=null; try{ seen=localStorage.getItem(CONGRATS_KEY); }catch(e){}
+  if(seen) return false;
+  showCongrats(hs===29 ? 29 : 13, hs===29);
+  return true;
+}
+
 /* ---------- my predictions (account menu) ---------- */
 function myPredictionsHTML(){
   if(!currentUser || !state) return `<div class="mp-empty">Sign in to see your predictions.</div>`;
@@ -3267,7 +3321,8 @@ async function startSession(){
   await refreshWindow();
   clearInterval(window._winTimer); window._winTimer=setInterval(refreshWindow, 60000);
   startBoardPolling();
-  if(!isCurrentUserAdmin()) maybeShowWhatsNew();   // players see the "What's New" popup once
+  // Granted players get a one-time "Congratulations" popup; everyone else the What's New one.
+  if(!isCurrentUserAdmin() && !maybeShowCongrats()) maybeShowWhatsNew();
 }
 function renderBrand(_name){
   // "Calfus" rendered as the white logo wordmark; "FIFA" highlighted; + "League".

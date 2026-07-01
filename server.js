@@ -48,12 +48,18 @@ function mapEmployee(doc) {
   const joined = [doc.firstName, doc.lastName].filter(Boolean).join(" ");
   const name = doc.Name || doc.name || doc.fullName || doc.employeeName || doc.username ||
     joined || doc.Email || doc.email || "Unknown";
-  return { id: String(doc._id), name, email: doc.Email ?? doc.email ?? null };
+  return { id: String(doc._id), name, email: doc.Email ?? doc.email ?? null, headstart: Number(doc.headstart) || 0 };
 }
 app.get("/api/employees", async (_req, res) => {
   try {
-    const docs = await collections.employees().find({}).toArray();
-    res.json(docs.map(mapEmployee).filter(e => e.id && e.name));
+    const [docs, creds] = await Promise.all([
+      collections.employees().find({}).toArray(),
+      collections.credentials().find({}, { projection: { employeeId: 1, email: 1 } }).toArray(),
+    ]);
+    const regIds = new Set(creds.map(c => String(c.employeeId)));
+    const regEmails = new Set(creds.map(c => String(c.email || "").trim().toLowerCase()));
+    const isReg = e => regIds.has(e.id) || (!!e.email && regEmails.has(e.email.trim().toLowerCase()));
+    res.json(docs.map(d => { const e = mapEmployee(d); e.registered = isReg(e); return e; }).filter(e => e.id && e.name));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

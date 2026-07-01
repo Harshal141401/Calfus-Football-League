@@ -20,14 +20,21 @@ router.get("/teams", async (_req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// GET /api/public/employees -> id + name only (needed for the leaderboard)
+// GET /api/public/employees -> id + name (+ one-time headstart) for the TV leaderboard
 router.get("/employees", async (_req, res) => {
   try {
-    const docs = await collections.employees().find({}).toArray();
+    const [docs, creds] = await Promise.all([
+      collections.employees().find({}).toArray(),
+      collections.credentials().find({}, { projection: { employeeId: 1, email: 1 } }).toArray(),
+    ]);
+    const regIds = new Set(creds.map(c => String(c.employeeId)));
+    const regEmails = new Set(creds.map(c => String(c.email || "").trim().toLowerCase()));
     const mapped = docs.map(d => {
       const joined = [d.firstName, d.lastName].filter(Boolean).join(" ");
       const name = d.Name || d.name || d.fullName || d.employeeName || d.username || joined || "Unknown";
-      return { id: String(d._id), name };
+      const email = String(d.Email || d.email || "").trim().toLowerCase();
+      const registered = regIds.has(String(d._id)) || (!!email && regEmails.has(email));
+      return { id: String(d._id), name, headstart: Number(d.headstart) || 0, registered };
     }).filter(e => e.id && e.name);
     res.json(mapped);
   } catch (e) { res.status(500).json({ error: e.message }); }
