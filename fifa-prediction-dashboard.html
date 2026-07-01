@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Calfus FIFA League — Live Leaderboard</title>
+<title>Calfus FIFA League</title>
 <link rel="icon" type="image/png" href="/assets/football1.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -423,6 +423,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:26px 20px 80px}
 .lb-row.top1{background:linear-gradient(90deg,rgba(232,184,75,.12),transparent 60%)}
 .lb-row.top2{background:linear-gradient(90deg,rgba(200,208,218,.09),transparent 60%)}
 .lb-row.top3{background:linear-gradient(90deg,rgba(224,147,90,.09),transparent 60%)}
+/* the signed-in player's own row — golden border + tag */
+.lb-row.is-you{box-shadow:inset 0 0 0 2px var(--gold);border-radius:9px;background:linear-gradient(90deg,rgba(232,184,75,.16),transparent 72%)}
+.lb-row.is-you .nm{color:var(--gold)}
+.you-tag{font-family:var(--f-sport);font-weight:800;font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  color:#0a0f16;background:var(--gold);padding:1px 7px;border-radius:99px;margin-left:8px;vertical-align:middle}
 .lb-rank{font-family:var(--f-display);font-size:24px;display:flex;align-items:center;gap:6px}
 .lb-rank .mv{font-family:var(--f-sport);font-size:12px;font-weight:700}
 .mv.up{color:var(--accent2)} .mv.down{color:var(--danger)} .mv.same{color:var(--muted-2)}
@@ -529,6 +534,9 @@ select{appearance:none;padding-right:30px;
 .cp-select{width:100%;font-family:var(--f-sport);font-weight:700;font-size:14px;color:var(--ink);
   background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;outline:none}
 .cp-select:focus{border-color:var(--neon)}
+/* Native dropdown list (esp. Windows) renders options white-on-white by default;
+   force a dark background + light text so the names are readable. */
+.cp-select option,.stage-select option{background:#161e29;color:#F4F6F8}
 .cp-val{display:flex;align-items:center;gap:8px;font-family:var(--f-display);text-transform:uppercase;
   letter-spacing:.02em;font-size:18px;color:var(--ink)}
 .cp-lock{margin-left:auto;font-size:14px}
@@ -1375,7 +1383,7 @@ const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","
 const fmtDay = d => `${DOW[d.getDay()]} ${z2(d.getDate())}/${z2(d.getMonth()+1)}`;
 /* ---- all match dates/times are IST; display in 12-hour AM/PM, viewer-timezone-independent ---- */
 const fmtTime12 = t => { let [h,m]=(t||"18:30").split(":").map(Number); const ap=h>=12?"PM":"AM"; h=h%12||12; return `${h}:${z2(m)} ${ap}`; };
-const fmtDayStr = ds => { const [y,mo,da]=ds.split("-").map(Number); return `${DOW[new Date(Date.UTC(y,mo-1,da)).getUTCDay()]} ${z2(da)}/${z2(mo)}`; };
+const fmtDayStr = ds => { const [y,mo,da]=ds.split("-").map(Number); return `${DOW[new Date(Date.UTC(y,mo-1,da)).getUTCDay()]} ${da} ${MON[mo-1]}`; };
 const fmtClock12 = d => { let h=d.getHours(); const ap=h>=12?"PM":"AM"; h=h%12||12; return `${h}:${z2(d.getMinutes())}:${z2(d.getSeconds())} ${ap}`; };
 // outcome from the home(A) perspective, shown as which team wins: win→A wins, lose→B wins, draw→Draw
 const outcomeLabel = (c,A,B) => c==="win" ? `${A.abbr} Win` : c==="draw" ? "Draw" : `${B.abbr} Win`;
@@ -1754,10 +1762,11 @@ function renderHome(){
     if(r.points!==lastPts){ lastRank+=1; lastPts=r.points; }   // new score → next rank number
     const rankTxt = lastRank;
     const mv = r.move>0 ? `<span class="mv up">▲${r.move}</span>` : r.move<0 ? `<span class="mv down">▼${-r.move}</span>` : `<span class="mv same">–</span>`;
-    return `<div class="lb-row${rankTxt<=3?" top3":""}">
+    const you = r.id===state.currentUserId;
+    return `<div class="lb-row${rankTxt<=3?" top3":""}${you?" is-you":""}">
       <div class="lb-rank">${rankTxt}${mv}</div>
       <div class="lb-player"><div class="avatar" style="background:${r.av}">${esc(initials(r.name))}</div>
-        <span class="nm">${esc(r.name)}</span></div>
+        <span class="nm">${esc(r.name)}${you?' <span class="you-tag">(You)</span>':''}</span></div>
       <div class="lb-pts" data-count="${r.points}">${r.points}</div>
       <div class="lb-num good">${r.correct}</div>
       <div class="lb-num bad">${r.wrong}</div>
@@ -1767,6 +1776,12 @@ function renderHome(){
   }).join("") : `<div class="lb-row" style="grid-template-columns:1fr;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600;padding:24px">No predictions yet.</div>`);
   $("#lbTable").innerHTML = head + rows;
   countUpAll($("#lbTable"));
+  // Entering the leaderboard scrolls to the signed-in player's row (once). The 30s poll
+  // calls renderHome directly (flag not set), so it never yanks the scroll.
+  if(window._scrollToMeOnce){
+    window._scrollToMeOnce = false;
+    requestAnimationFrame(()=>{ const me=$("#lbTable .lb-row.is-you"); if(me) me.scrollIntoView({behavior:"smooth", block:"center"}); });
+  }
 }
 const initials = n => n.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
 function formChips(form){
@@ -1803,7 +1818,9 @@ function renderPredict(){
   const sel = $("#userSel");
   if(sel){ sel.innerHTML = `<option>${esc(currentUser ? currentUser.name : "")}</option>`; sel.disabled = true; }
   const uidc = state.currentUserId;
-  const sorted = [...state.fixtures].sort((a,b)=>fixtureDT(a)-fixtureDT(b));
+  // Round of 16 onward is shown as the knockout bracket (shipped separately) — exclude
+  // those matches from the pick cards so they don't appear here.
+  const sorted = [...state.fixtures].filter(f=>!BRACKET_STAGES.includes(stageOf(f.round))).sort((a,b)=>fixtureDT(a)-fixtureDT(b));
   // Predictions are open all the time; show every upcoming unsettled match. Each
   // fixture locks 30 min before its own kickoff (the card reflects that per-fixture).
   const now = windowState ? new Date(windowState.serverTime) : new Date();
@@ -1881,8 +1898,14 @@ function stageOf(round){
   const r=String(round||"").toLowerCase();
   if(r.includes("round of 16")) return "r16";
   if(r.includes("round of 32")) return "r32";
+  if(r.includes("quarter")) return "qf";
+  if(r.includes("third")) return "third";
+  if(r.includes("semi")) return "sf";
+  if(r.includes("final")) return "final";
   return "group";
 }
+// Knockout rounds handled by the bracket (Round of 16 onward) — hidden from the pick cards.
+const BRACKET_STAGES = ["r16","qf","sf","final","third"];
 // The stage currently in play: the next upcoming fixture's stage, else the latest played.
 function currentStage(){
   const up=[...state.fixtures].filter(f=>!f.result).sort((a,b)=>fixtureDT(a)-fixtureDT(b));
@@ -2655,6 +2678,8 @@ function setActive(view){
   if(view==="tv"){ if(!isCurrentUserAdmin()) return; openTV(); return; }   // TV mode is admin-only
   $$("#nav button").forEach(b=>b.classList.toggle("active", b.dataset.view===view));
   $$(".view").forEach(s=>s.classList.toggle("is-active", s.id==="view-"+view));
+  // Entering the leaderboard (via nav or on landing) scrolls to the signed-in player's row once.
+  if(view==="home") window._scrollToMeOnce = true;
   ({home:renderHome,predict:renderPredict,results:renderResults,teams:renderTeams,facts:renderFacts,stats:renderStats,admin:renderAdmin}[view]||(()=>{}))();
   window.scrollTo({top:0,behavior:"smooth"});
 }
