@@ -601,6 +601,10 @@ select{appearance:none;padding-right:30px;
 .score-pred{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 4px}
 /* penalties hedge toggle — bottom-right of a knockout card (sliding switch) */
 .pen-row{display:flex;justify-content:flex-end;margin:8px 0 2px}
+/* penalties toggle in line with the Update/Lock-in button */
+.pen-action{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 2px}
+.pen-action .pen-row{margin:0}
+.pen-action .lockin{flex:none}
 .pen-toggle{display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-family:var(--f-sport);
   font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pen-toggle input{position:absolute;opacity:0;width:0;height:0}   /* hidden; still the source of truth */
@@ -2012,7 +2016,10 @@ function fixtureCard(f,empId,isSettled,live){
       const action = f.predictable
         ? `<button class="btn btn-primary lockin" data-fix="${f.id}">${pred?"Update pick":"Lock in pick"}</button>`
         : `<div class="locked">🔒 Predictions closed (locked 30 min before kickoff)${yourPick}</div>`;
-      bottom=`<div class="pick-row">${picks}</div>${scoreRow}${penRow}${action}`;
+      // For a predictable knockout card, put the penalties toggle in line with the button.
+      const inlinePen = isKO && f.predictable;
+      bottom=`<div class="pick-row">${picks}</div>${scoreRow}`
+        + (inlinePen ? `<div class="pen-action">${penRow}${action}</div>` : `${penRow}${action}`);
     }
   }
   const liveBadge = live ? `<span class="live-badge"><span class="live-pulse"></span>Live</span>` : "";
