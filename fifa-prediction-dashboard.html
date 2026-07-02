@@ -3197,6 +3197,15 @@ function ensureLoginEl(){
     </form>`;
   document.body.appendChild(el);
   $("#loginForm").addEventListener("submit", onLoginSubmit);
+  // Enter submits from anywhere in the overlay (e.g. after the browser autofills the
+  // credentials and focus isn't in a field) — except when a link button is focused.
+  el.addEventListener("keydown", e=>{
+    if(e.key!=="Enter") return;
+    if(e.target && (e.target.id==="lnkLeft" || e.target.id==="lnkRight")) return;
+    e.preventDefault();
+    const f=$("#loginForm");
+    if(f.requestSubmit) f.requestSubmit(); else onLoginSubmit(new Event("submit"));
+  });
   setLoginMode("login");
 }
 function setLoginMode(m){
@@ -3218,7 +3227,9 @@ function setLoginMode(m){
   R.textContent=c.right.t; R.onclick=()=>setLoginMode(c.right.m);
   $("#loginErr").textContent="";
 }
-function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex"; }
+function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex";
+  // Put focus in the form so Enter submits right away (and autofill lands in-form).
+  const em=$("#loginEmail"); if(em) setTimeout(()=>{ try{ em.focus(); }catch(e){} }, 30); }
 function hideLogin(){ const el=$("#loginOverlay"); if(el) el.style.display="none"; }
 async function onLoginSubmit(e){
   e.preventDefault();
