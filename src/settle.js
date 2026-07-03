@@ -4,6 +4,7 @@
    scoreline simply overwrites the previous points (no double counting). */
 const { collections } = require("./db");
 const { resultWithPens, scorePrediction } = require("./scoring");
+const { advanceBracket } = require("./bracket");
 
 async function settleFixture(fixtureId, homeScore, awayScore, penalties, penaltyHome, penaltyAway) {
   const fixtures = collections.fixtures();
@@ -70,6 +71,9 @@ async function settleFixture(fixtureId, homeScore, awayScore, penalties, penalty
     } },
     { upsert: true }
   );
+
+  // This match may feed a later knockout fixture — advance the winner/loser into it.
+  try { await advanceBracket(); } catch (e) { console.warn("[bracket] advance after settle failed:", e.message); }
 
   return { fixtureId: String(fixtureId), result, homeScore: h, awayScore: a, predictionsScored: scored };
 }

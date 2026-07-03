@@ -22,29 +22,17 @@ router.get("/leaderboard", async (_req, res) => {
       } },
     ]).toArray();
 
-    // Fold in each employee's one-time headstart (a permanent base-points grant). A
-    // headstart-only player (no scored predictions) appears only once they've registered;
-    // otherwise they stay stored in the DB but off the board.
-    const [emps, creds] = await Promise.all([
-      collections.employees().find({}).toArray(),
-      collections.credentials().find({}, { projection: { employeeId: 1, email: 1 } }).toArray(),
-    ]);
-    const regIds = new Set(creds.map(c => String(c.employeeId)));
-    const regEmails = new Set(creds.map(c => String(c.email || "").trim().toLowerCase()));
+    // Fold each employee's one-time headstart (a permanent base-points grant) into their
+    // row. Only players who have made a (scored) prediction appear — a headstart alone does
+    // not put someone on the board; non-predictors stay stored in the DB, off the board.
+    const emps = await collections.employees().find({}).toArray();
     const byId = new Map(agg.map(r => [String(r._id), r]));
     for (const d of emps) {
       const hs = Number(d.headstart) || 0;
       if (!hs) continue;
-      const id = String(d._id);
-      const existing = byId.get(id);
-      if (existing) { existing.points += hs; existing.headstart = hs; continue; }   // predictor: registered already
-      const email = String(d.Email || d.email || "").trim().toLowerCase();
-      const registered = regIds.has(id) || (!!email && regEmails.has(email));
-      if (!registered) continue;   // headstart-only + not signed up -> keep hidden
-      const name = d.Name || d.name || d.fullName || d.employeeName || d.username ||
-        [d.firstName, d.lastName].filter(Boolean).join(" ") || "Unknown";
-      byId.set(id, { _id: id, name, email: d.Email ?? d.email ?? null,
-        points: hs, headstart: hs, played: 0, correct: 0, wrong: 0, exactHits: 0 });
+      const existing = byId.get(String(d._id));
+      if (existing) { existing.points += hs; existing.headstart = hs; }   // predictor -> add base points
+      // headstart-only (no scored predictions) -> not shown
     }
 
     const rows = [...byId.values()].sort((a, b) =>

@@ -14,6 +14,7 @@ const cors = require("cors");
 const config = require("./src/config");
 const { connect, collections } = require("./src/db");
 const { startPoller } = require("./src/espnSync");
+const { advanceBracket } = require("./src/bracket");
 
 const authRoutes = require("./src/routes/auth");
 const { router: fixturesRoutes } = require("./src/routes/fixtures");
@@ -85,7 +86,8 @@ app.get("/api/wc/*", async (req, res) => {
 
 // ---- boot --------------------------------------------------------------------
 connect()
-  .then(() => {
+  .then(async () => {
+    await advanceBracket().catch(e => console.warn("[bracket] startup advance failed:", e.message));
     app.listen(config.PORT, () => console.log(`API on http://localhost:${config.PORT}`));
     startPoller();
   })

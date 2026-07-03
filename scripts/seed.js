@@ -12,6 +12,7 @@ const path = require("path");
 const { DateTime } = require("luxon");
 const config = require("../src/config");
 const { connect, collections, client } = require("../src/db");
+const { computeBracketUpdates } = require("../src/bracket");
 
 const ROOT = path.join(__dirname, "..");
 const TEAMS_CSV = path.join(ROOT, "worldcup2026.teams.csv");
@@ -126,24 +127,31 @@ async function main() {
   let inserted = 0, updated = 0;
   for (const g of schedule) {
     const ist = DateTime.fromISO(`${g.date}T${g.time}`, { zone: config.FIXTURE_TZ });
+    const teamA = g.teamAId ? String(g.teamAId) : "";
+    const teamB = g.teamBId ? String(g.teamBId) : "";
     const base = {
       apiId: String(g.apiId),
-      teamAId: String(g.teamAId),
-      teamBId: String(g.teamBId),
       date: g.date,
       time: g.time,
       kickoff: ist.toUTC().toISO(),
       round: g.round, group: g.group || "", md: Number(g.md) || 0,
       venue: g.venue || "",
     };
+    // Knockout-bracket fixtures (R16→Final) advance their teams from feeders. Keep the
+    // feeder refs and DON'T put teams in the update $set, so re-seeding never clobbers
+    // a slot that has already been advanced. Fixed-team rounds carry their teams as usual.
+    if (g.feedA) { base.feedA = g.feedA; base.feedB = g.feedB; }
+    else { base.teamAId = teamA; base.teamBId = teamB; }
     const existing = await collections.fixtures().findOne({ apiId: base.apiId });
     if (!existing) {
-      await collections.fixtures().insertOne({ ...base, status: "scheduled", result: null });
+      await collections.fixtures().insertOne({ ...base, teamAId: teamA, teamBId: teamB, status: "scheduled", result: null });
       inserted++;
     } else if (resetResults) {
+      const reset = { ...base, status: "scheduled", result: null };
+      if (g.feedA) { reset.teamAId = ""; reset.teamBId = ""; }   // full reset clears bracket advancement
       await collections.fixtures().updateOne({ apiId: base.apiId },
-        { $set: { ...base, status: "scheduled", result: null },
-          $unset: { homeScore: "", awayScore: "", settledAt: "" } });
+        { $set: reset,
+          $unset: { homeScore: "", awayScore: "", settledAt: "", penalties: "", penaltyHome: "", penaltyAway: "" } });
       updated++;
     } else {
       await collections.fixtures().updateOne({ apiId: base.apiId }, { $set: base });
@@ -151,6 +159,16 @@ async function main() {
     }
   }
   console.log(`Fixtures: ${inserted} inserted, ${updated} updated${resetResults ? " (results reset)" : ""}`);
+
+  // Fill any knockout-bracket slots whose feeding matches are already settled.
+  const allFx = await collections.fixtures().find({}).toArray();
+  const ups = computeBracketUpdates(allFx);
+  let advanced = 0;
+  for (const [apiId, set] of Object.entries(ups)) {
+    await collections.fixtures().updateOne({ apiId }, { $set: set });
+    advanced += Object.keys(set).length;
+  }
+  console.log(`Bracket: advanced ${advanced} team slot(s) from settled feeders`);
 
   await client.close();
   process.exit(0);

@@ -894,5 +894,309 @@
     "group": "",
     "md": 0,
     "venue": "Dallas Stadium"
+  },
+  {
+    "apiId": "89",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-04",
+    "time": "07:00",
+    "round": "Round of 16",
+    "group": "",
+    "md": 0,
+    "venue": "Houston",
+    "feedA": {
+      "m": "73",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "75",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "90",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-04",
+    "time": "22:30",
+    "round": "Round of 16",
+    "group": "",
+    "md": 0,
+    "venue": "Philadelphia",
+    "feedA": {
+      "m": "74",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "77",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "91",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-05",
+    "time": "02:30",
+    "round": "Round of 16",
+    "group": "",
+    "md": 0,
+    "venue": "New Jersey",
+    "feedA": {
+      "m": "76",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "78",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "92",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-06",
+    "time": "01:30",
+    "round": "Round of 16",
+    "group": "",
+    "md": 0,
+    "venue": "Mexico City",
+    "feedA": {
+      "m": "79",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "80",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "93",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-06",
+    "time": "05:30",
+    "round": "Round of 16",
+    "group": "",
+    "md": 0,
+    "venue": "Arlington",
+    "feedA": {
+      "m": "83",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "84",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "94",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-07",
+    "time": "01:30",
+    "round": "Round of 16",
+    "group": "",
+    "md": 0,
+    "venue": "Seattle",
+    "feedA": {
+      "m": "81",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "82",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "95",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-07",
+    "time": "21:30",
+    "round": "Round of 16",
+    "group": "",
+    "md": 0,
+    "venue": "Atlanta",
+    "feedA": {
+      "m": "86",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "88",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "96",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-08",
+    "time": "01:30",
+    "round": "Round of 16",
+    "group": "",
+    "md": 0,
+    "venue": "Vancouver",
+    "feedA": {
+      "m": "85",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "87",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "97",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-10",
+    "time": "01:30",
+    "round": "Quarter-final",
+    "group": "",
+    "md": 0,
+    "venue": "Foxborough",
+    "feedA": {
+      "m": "89",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "90",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "98",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-11",
+    "time": "00:30",
+    "round": "Quarter-final",
+    "group": "",
+    "md": 0,
+    "venue": "Los Angeles",
+    "feedA": {
+      "m": "93",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "94",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "99",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-12",
+    "time": "02:30",
+    "round": "Quarter-final",
+    "group": "",
+    "md": 0,
+    "venue": "Miami",
+    "feedA": {
+      "m": "91",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "92",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "100",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-12",
+    "time": "06:30",
+    "round": "Quarter-final",
+    "group": "",
+    "md": 0,
+    "venue": "Kansas City",
+    "feedA": {
+      "m": "95",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "96",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "101",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-15",
+    "time": "00:30",
+    "round": "Semi-final",
+    "group": "",
+    "md": 0,
+    "venue": "Arlington",
+    "feedA": {
+      "m": "97",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "98",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "102",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-16",
+    "time": "00:30",
+    "round": "Semi-final",
+    "group": "",
+    "md": 0,
+    "venue": "Atlanta",
+    "feedA": {
+      "m": "99",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "100",
+      "take": "W"
+    }
+  },
+  {
+    "apiId": "103",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-19",
+    "time": "02:30",
+    "round": "Third Place Play-off",
+    "group": "",
+    "md": 0,
+    "venue": "Miami",
+    "feedA": {
+      "m": "101",
+      "take": "L"
+    },
+    "feedB": {
+      "m": "102",
+      "take": "L"
+    }
+  },
+  {
+    "apiId": "104",
+    "teamAId": "",
+    "teamBId": "",
+    "date": "2026-07-20",
+    "time": "00:30",
+    "round": "Final",
+    "group": "",
+    "md": 0,
+    "venue": "New Jersey",
+    "feedA": {
+      "m": "101",
+      "take": "W"
+    },
+    "feedB": {
+      "m": "102",
+      "take": "W"
+    }
   }
 ]
