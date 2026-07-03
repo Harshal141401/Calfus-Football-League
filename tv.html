@@ -866,6 +866,8 @@ select{appearance:none;padding-right:30px;
 .tv-wc-label{font-family:var(--f-sport);font-weight:700;font-size:clamp(11px,1.2vw,17px);color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
 .tv-wc-val{font-family:var(--f-display);font-size:clamp(22px,3.2vw,52px);text-transform:uppercase}
 .tv-wc-val.winner{color:var(--accent2)}
+/* 2026 moment caption (event text instead of host/winner) */
+.tv-wc-event{font-family:var(--f-display);font-size:clamp(20px,2.8vw,44px);line-height:1.12;color:var(--ink);max-width:14ch}
 
 /* TV World Cup facts slide — a single random, decade-wise fact */
 .tv-fact-scene{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(18px,3vh,40px);
@@ -2061,6 +2063,18 @@ const WC_HISTORY = [
   { file:"2014 Brazil.png",    date:"2014",               host:"Brazil",           winner:"Germany" },
   { file:"July 15 2018.png",   date:"July 15, 2018",      host:"Russia",           winner:"France" },
   { file:"December 18 2022.png",date:"December 18, 2022", host:"Qatar",            winner:"Argentina" },
+  // 2026 tournament moments — the event is shown as a caption (no host/winner).
+  { file:"June 29 - CAN end the brave RSA run.png",                              date:"June 29, 2026", event:"Canada end the brave South Africa run" },
+  { file:"June 30 2026 - Brazil Win a Thriller against Japan.png",               date:"June 30, 2026", event:"Brazil win a thriller against Japan" },
+  { file:"June 30 2026 - Heartbreak of the German fans as they Lose to Paraguay.png", date:"June 30, 2026", event:"Heartbreak for German fans as they lose to Paraguay" },
+  { file:"June 30 2026 - MAR beat NED 3-2 on penalties.png",                     date:"June 30, 2026", event:"Morocco beat Netherlands 3–2 on penalties" },
+  { file:"July 1 2026 - England Beat Congo to get in the round of 16.png",       date:"July 1, 2026",  event:"England beat Congo to reach the Round of 16" },
+  { file:"July 1 2026 - FRA beat SWE to enter the Round of 16.png",              date:"July 1, 2026",  event:"France beat Sweden to reach the Round of 16" },
+  { file:"July 1 2026 - MEX eliminates ECU on home soil.png",                    date:"July 1, 2026",  event:"Mexico eliminate Ecuador on home soil" },
+  { file:"July 2 2026 - BEL beat SEN in a last min Nailbitter.png",              date:"July 2, 2026",  event:"Belgium beat Senegal in a last-minute nailbiter" },
+  { file:"July 2 2026 - US Victory Against BIH.png",                             date:"July 2, 2026",  event:"USA beat Bosnia & Herzegovina" },
+  { file:"July 3 2026 - ESP eliminates AUT.png",                                 date:"July 3, 2026",  event:"Spain eliminate Austria" },
+  { file:"July 3 2026 - Tribute to Diogo Jota.png",                              date:"July 3, 2026",  event:"Tribute to Diogo Jota" },
 ];
 let _wcMode = "image";        // "image" | "fact"
 let _wcPick = null;           // chosen WC_HISTORY entry (image mode)
@@ -2286,18 +2300,22 @@ function tvWorldCup(){
       </div>
     </div>`;
   }
-  // Image mode — a past final's photo with host/winner info.
+  // Image mode — a past final's photo (host/winner), or a 2026 tournament moment (caption).
   const wc = _wcPick || WC_HISTORY[0];
+  const info = wc.event
+    ? `<div class="eyebrow">FIFA World Cup 2026</div>
+      <div class="tv-wc-year">${esc(wc.date)}</div>
+      <div class="tv-wc-event">${esc(wc.event)}</div>`
+    : `<div class="eyebrow">FIFA World Cup History</div>
+      <div class="tv-wc-year">${esc(wc.date)}</div>
+      <div class="tv-wc-row"><span class="tv-wc-label">Host</span><span class="tv-wc-val">${esc(wc.host)}</span></div>
+      <div class="tv-wc-row"><span class="tv-wc-label">Winner</span><span class="tv-wc-val winner">${esc(wc.winner)}</span></div>`;
   return `
   <div class="tv-wc-scene">
     <div class="tv-wc-img-wrap">
-      <img class="tv-wc-img" src="assets/${encodeURIComponent(wc.file)}" alt="${esc(wc.host)} ${esc(wc.date)}" onerror="this.style.opacity='0.15'">
+      <img class="tv-wc-img" src="assets/${encodeURIComponent(wc.file)}" alt="${esc(wc.event||wc.host)} ${esc(wc.date)}" onerror="this.style.opacity='0.15'">
     </div>
-    <div class="tv-wc-info">
-      <div class="eyebrow">FIFA World Cup History</div>
-      <div class="tv-wc-year">${esc(wc.date)}</div>
-      <div class="tv-wc-row"><span class="tv-wc-label">Host</span><span class="tv-wc-val">${esc(wc.host)}</span></div>
-      <div class="tv-wc-row"><span class="tv-wc-label">Winner</span><span class="tv-wc-val winner">${esc(wc.winner)}</span></div>
+    <div class="tv-wc-info">${info}
     </div>
   </div>`;
 }
