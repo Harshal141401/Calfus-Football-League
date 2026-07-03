@@ -847,6 +847,11 @@ select{appearance:none;padding-right:30px;
 .tvmov-2col .tvmov-name{font-size:clamp(15px,1.5vw,26px)}
 .tvmov-2col .tvmov-delta{font-size:clamp(11px,1.1vw,18px)}
 .tvmov-2col .tvmov-rank{font-size:clamp(14px,1.4vw,24px)}
+/* up / down column headers for the movers scene */
+.tvmov-col-h{font-family:var(--f-sport);font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  font-size:clamp(12px,1.3vw,18px);padding:0 4px 4px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.tvmov-col-h.up{color:var(--accent2)} .tvmov-col-h.down{color:var(--danger)}
+.tvmov-none{font-family:var(--f-sport);font-weight:600;color:var(--muted-2);font-size:clamp(12px,1.3vw,18px);padding:8px 4px}
 .tv-empty{display:grid;place-items:center;flex:1;text-align:center;color:var(--muted);
   font-family:var(--f-sport);font-weight:700;font-size:clamp(18px,2.4vw,34px);letter-spacing:.1em;text-transform:uppercase}
 
@@ -2251,24 +2256,20 @@ function tvPerformers(lb){
   return tvHead("Spotlight","Top Performers",false)+`<div class="tvpod">${pod}</div>`;
 }
 function tvMovers(lb){
-  // Show every player who changed rank (not just a top handful), capped only at what
-  // fits legibly on screen. Beyond 8 we split into two columns like the leaderboard.
-  const movers=lb.filter(r=>r.move!==0).sort((a,b)=>b.move-a.move).slice(0,24);   // descending: top climbers → biggest fallers
-  if(!movers.length) return tvHead("Momentum","Biggest Movers",false)+`<div class="tv-empty">Standings unchanged — enter a result to see movement</div>`;
-  const row=r=>{ const rank=r.rank;
-    const up=r.move>0;
-    return `<div class="tvmov-row"><div class="tvmov-arrow ${up?"up":"down"}">${up?"▲":"▼"}</div>
+  // Left column = everyone who moved UP, right column = everyone who moved DOWN;
+  // each sorted by the number of places moved, biggest first.
+  const up   = lb.filter(r=>r.move>0).sort((a,b)=>b.move-a.move).slice(0,12);
+  const down = lb.filter(r=>r.move<0).sort((a,b)=>a.move-b.move).slice(0,12);   // most negative (biggest drop) first
+  if(!up.length && !down.length) return tvHead("Momentum","Biggest Movers",false)+`<div class="tv-empty">Standings unchanged — enter a result to see movement</div>`;
+  const row=r=>{ const isup=r.move>0;
+    return `<div class="tvmov-row"><div class="tvmov-arrow ${isup?"up":"down"}">${isup?"▲":"▼"}</div>
       <div class="tvmov-name">${esc(r.name)}</div>
-      <div class="tvmov-delta">${up?"+":""}${r.move} place${Math.abs(r.move)>1?"s":""}</div>
-      <div class="tvmov-rank">#${rank}</div></div>`; };
-  if(movers.length<=8){
-    return tvHead("Momentum","Biggest Movers",false)+`<div class="tvmov">${movers.map(row).join("")}</div>`;
-  }
-  const half=Math.ceil(movers.length/2);
-  const left=movers.slice(0,half).map(row).join("");
-  const right=movers.slice(half).map(row).join("");
+      <div class="tvmov-delta">${isup?"+":""}${r.move} place${Math.abs(r.move)>1?"s":""}</div>
+      <div class="tvmov-rank">#${r.rank}</div></div>`; };
+  const col=(title,cls,arr)=>`<div class="tvmov"><div class="tvmov-col-h ${cls}">${title}</div>`
+    + (arr.length ? arr.map(row).join("") : `<div class="tvmov-none">No movement</div>`) + `</div>`;
   return tvHead("Momentum","Biggest Movers",false)+
-    `<div class="tvmov-2col"><div class="tvmov">${left}</div><div class="tvmov">${right}</div></div>`;
+    `<div class="tvmov-2col">${col("▲ Moved up","up",up)}${col("▼ Moved down","down",down)}</div>`;
 }
 function tvWorldCup(){
   // Fact mode — a single random, decade-wise World Cup fact.
@@ -3014,6 +3015,15 @@ function ensureLoginEl(){
     </form>`;
   document.body.appendChild(el);
   $("#loginForm").addEventListener("submit", onLoginSubmit);
+  // Enter submits from anywhere in the overlay (e.g. after the browser autofills the
+  // credentials and focus isn't in a field) — except when a link button is focused.
+  el.addEventListener("keydown", e=>{
+    if(e.key!=="Enter") return;
+    if(e.target && (e.target.id==="lnkLeft" || e.target.id==="lnkRight")) return;
+    e.preventDefault();
+    const f=$("#loginForm");
+    if(f.requestSubmit) f.requestSubmit(); else onLoginSubmit(new Event("submit"));
+  });
   setLoginMode("login");
 }
 function setLoginMode(m){
@@ -3035,7 +3045,9 @@ function setLoginMode(m){
   R.textContent=c.right.t; R.onclick=()=>setLoginMode(c.right.m);
   $("#loginErr").textContent="";
 }
-function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex"; }
+function showLogin(){ ensureLoginEl(); $("#loginOverlay").style.display="flex";
+  // Put focus in the form so Enter submits right away (and autofill lands in-form).
+  const em=$("#loginEmail"); if(em) setTimeout(()=>{ try{ em.focus(); }catch(e){} }, 30); }
 function hideLogin(){ const el=$("#loginOverlay"); if(el) el.style.display="none"; }
 async function onLoginSubmit(e){
   e.preventDefault();
