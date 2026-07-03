@@ -1,12 +1,13 @@
 /* One-time headstart grant.
 
    • Adds the new joiners to the employees collection with a 29-point headstart.
-   • Every OTHER employee gets NO headstart (0): existing players keep their real,
-     prediction-based score. Re-running also REVERSES any earlier floor-to-13.
+   • Floors every OTHER employee to 13: headstart = max(0, 13 - current points) so anyone
+     below 13 (including those who never predicted) starts at 13; players already ≥13 are
+     left unchanged (headstart 0).
 
-   The headstart is a permanent base — prediction points add on top of it. Scoring is
-   otherwise unchanged, and the leaderboard only shows players who have predicted.
-   Idempotent: re-running produces the same result.
+   The headstart is a permanent base — prediction points add on top of it — and the
+   leaderboard only shows a player once they REGISTER (see the `registered` gate). Scoring
+   is otherwise unchanged. Idempotent: re-running recomputes the same values.
 
    Usage:
      node scripts/headstart-grant.js --dry-run   # preview, writes nothing
@@ -15,6 +16,7 @@
 const { connect, collections, client } = require("../src/db");
 
 const NEW_HEADSTART = 29;
+const FLOOR = 13;
 const norm = s => String(s || "").trim().toLowerCase();
 const esc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -85,21 +87,26 @@ async function main() {
     else { await collections.employees().insertOne({ Name: cleanName, Email: email, headstart: NEW_HEADSTART }); added++; }
   }
 
-  // 2) Everyone else -> no headstart (0). Existing players keep their real score; this
-  //    also reverses any earlier floor-to-13.
+  // 2) Everyone else -> floor to 13 based on current (scored) prediction points.
   const emps = await collections.employees().find({}).toArray();
-  let reset = 0;
+  const agg = await collections.predictions().aggregate([
+    { $match: { scored: true } },
+    { $group: { _id: "$employeeId", points: { $sum: "$points" } } },
+  ]).toArray();
+  const ptsById = new Map(agg.map(r => [String(r._id), r.points || 0]));
+  let floored = 0, cleared = 0;
   for (const d of emps) {
-    if (newEmails.has(norm(d.Email || d.email || ""))) continue;   // new joiners keep 29
-    if (!(Number(d.headstart) || 0)) continue;                     // already 0 — nothing to do
-    if (dryRun) { console.log(`[reset] ${d.Name || d.name || d.Email || d.email} headstart ${d.headstart} -> 0`); continue; }
-    await collections.employees().updateOne({ _id: d._id }, { $set: { headstart: 0 } });
-    reset++;
+    if (newEmails.has(norm(d.Email || d.email || ""))) continue;   // new joiners handled above
+    const pts = ptsById.get(String(d._id)) || 0;
+    const hs = pts < FLOOR ? FLOOR - pts : 0;
+    if (dryRun) { if (hs) console.log(`[floor] ${d.Name || d.name || d.Email || d.email} pts=${pts} -> headstart ${hs}`); continue; }
+    await collections.employees().updateOne({ _id: d._id }, { $set: { headstart: hs } });
+    if (hs) floored++; else cleared++;
   }
 
   console.log(dryRun
     ? "(dry run — nothing written)"
-    : `New joiners: ${added} inserted, ${updatedNew} updated (headstart ${NEW_HEADSTART}). Existing: ${reset} reset to headstart 0.`);
+    : `New joiners: ${added} inserted, ${updatedNew} updated (headstart ${NEW_HEADSTART}). Existing: ${floored} floored to ${FLOOR}, ${cleared} left at/above ${FLOOR}.`);
   await client.close();
   process.exit(0);
 }
