@@ -1187,17 +1187,13 @@ footer b{color:var(--muted)}
         <p class="predict-note">⏱ Each match's prediction locks <b>30 minutes before kickoff</b>.</p>
       </div>
       <div class="spacer"></div>
-      <select id="predictStage" class="stage-select" aria-label="Choose round">
-        <option value="r32">Round of 32</option>
-        <option value="r16">Round of 16</option>
-      </select>
       <div class="champion-pick" id="championPick"></div>
     </div>
-    <div id="cardsWrap">
+    <div id="cardsWrap" hidden>
       <h3 style="font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;font-size:18px;margin:18px 0 12px;color:var(--neon)">Open Fixtures</h3>
       <div class="fix-grid" id="openFixtures"></div>
     </div>
-    <div id="bracketSection" hidden>
+    <div id="bracketSection">
       <p class="predict-note" style="margin:0 0 8px">🏆 Tap any match with both teams set to pick the winner, score &amp; penalties. Winners advance automatically.</p>
       <div id="koBracket"></div>
     </div>
@@ -1906,32 +1902,14 @@ function upcomingFixtures(){
   const now=Date.now();
   return [...state.fixtures].filter(f=>!f.result && fixtureDT(f).getTime()>=now).sort((a,b)=>fixtureDT(a)-fixtureDT(b));
 }
-let predictStage = null;   // "r32" (pick cards) | "r16" (bracket); null -> pick the current stage
 function renderPredict(){
   const sel = $("#userSel");
   if(sel){ sel.innerHTML = `<option>${esc(currentUser ? currentUser.name : "")}</option>`; sel.disabled = true; }
-  const uidc = state.currentUserId;
-  if(predictStage===null) predictStage = BRACKET_STAGES.includes(currentStage()) ? "r16" : "r32";
-  const stEl=$("#predictStage"); if(stEl) stEl.value=predictStage;
-  const showBracket = predictStage==="r16";
+  // Round of 32 is over — the knockout bracket is the picking surface now.
   const cw=$("#cardsWrap"), bs=$("#bracketSection");
-  if(cw) cw.hidden = showBracket;
-  if(bs) bs.hidden = !showBracket;
-
-  if(showBracket){
-    renderBracket();
-  } else {
-    // "Round of 32" view: the existing pick cards for the R32 (and any earlier) matches
-    // still to play. Each card locks 30 min before its own kickoff.
-    const now = windowState ? new Date(windowState.serverTime) : new Date();
-    const isLive = f => !f.result && new Date(f.kickoff).getTime() <= now.getTime();
-    const sorted = [...state.fixtures].filter(f=>!BRACKET_STAGES.includes(stageOf(f.round))).sort((a,b)=>fixtureDT(a)-fixtureDT(b));
-    const open = sorted.filter(f=> !f.result && new Date(f.kickoff).getTime() > now.getTime());
-    const live = sorted.filter(isLive);
-    const openAndLive = [...live, ...open];   // live matches first
-    $("#openFixtures").innerHTML = openAndLive.length ? openAndLive.map(f=>fixtureCard(f,uidc,false,isLive(f))).join("")
-      : `<div class="card panel" style="grid-column:1/-1;color:var(--muted);text-align:center;font-family:var(--f-sport);font-weight:600">No upcoming matches right now.</div>`;
-  }
+  if(cw) cw.hidden = true;
+  if(bs) bs.hidden = false;
+  renderBracket();
   renderChampionPick();
 }
 
@@ -3044,7 +3022,6 @@ function wireEvents(){
   window._handlePredictClick = handlePredictClick;   // used by the bracket pick modal
 
   // Predict tab: Round of 32 (cards) ↔ Round of 16 (bracket)
-  $("#predictStage").addEventListener("change",e=>{ predictStage=e.target.value; renderPredict(); });
   // Bracket: tap/Enter a pickable match to open its pick modal.
   $("#koBracket").addEventListener("click",e=>{ const box=e.target.closest(".kb.pickable"); if(box) openKoPick(box.dataset.fix); });
   $("#koBracket").addEventListener("keydown",e=>{ if(e.key!=="Enter"&&e.key!==" ") return;
