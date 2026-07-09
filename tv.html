@@ -2467,8 +2467,11 @@ function tvPerformers(lb){
   return tvHead("Spotlight","Top Performers",false)+`<div class="tvpod">${pod}</div>`;
 }
 function tvMovers(){
-  // Movement over the last 24 hours (not just since the most recent match).
-  const lb = leaderboardMovement24h();
+  // Movement over the last 24 hours (not just since the most recent match). If nothing
+  // moved in the last 24h, keep the previous movement (since the most recent settled match)
+  // rather than showing an empty scene.
+  let lb = leaderboardMovement24h();
+  if(!lb.some(r=>r.move!==0)) lb = leaderboardWithMovement();
   // Left column = everyone who moved UP, right column = everyone who moved DOWN;
   // each sorted by the number of places moved, biggest first.
   const up   = lb.filter(r=>r.move>0).sort((a,b)=>b.move-a.move).slice(0,12);
