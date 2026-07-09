@@ -856,6 +856,8 @@ select{appearance:none;padding-right:30px;
 .tvfix .vs{font-size:clamp(28px,3.6vw,56px)}
 .tvfix-pens{font-family:var(--f-sport);font-weight:600;font-size:clamp(10px,1.1vw,15px);color:var(--muted);letter-spacing:.04em;margin-top:4px}
 .tvfix-pens .pw{color:var(--ink);font-weight:800}
+/* penalty-only score on a TV result card ("Penalties 3-2") — smaller than the FT score so it fits */
+.tvfix-pensonly{font-family:var(--f-sport);font-weight:800;font-size:clamp(11px,1.4vw,19px);white-space:nowrap}
 .pens-line{text-align:center;font-family:var(--f-sport);font-weight:600;font-size:12px;color:var(--muted);letter-spacing:.04em;margin:-4px 0 10px}
 .pens-line .pw{color:var(--ink);font-weight:800}
 
@@ -2404,11 +2406,14 @@ function tvResults(){
   if(!done.length) return tvHead("Full-time","Recent Results",false)+`<div class="tv-empty">No results yet</div>`;
   const cards=done.map(f=>{ const A=teamById(f.teamAId),B=teamById(f.teamBId);
     const hs=f.homeScore!=null?f.homeScore:"–", as=f.awayScore!=null?f.awayScore:"–";
-    const pens=f.penalties && f.penaltyHome!=null && f.penaltyAway!=null
-      ? `<div class="tvfix-pens">Penalties: <span class="${f.penaltyHome>f.penaltyAway?"pw":""}">${f.penaltyHome}</span> - <span class="${f.penaltyAway>f.penaltyHome?"pw":""}">${f.penaltyAway}</span></div>` : "";
+    // Penalty finishes show only the shootout score ("Penalties 3-2"); otherwise the FT score.
+    const isPens=f.penalties && f.penaltyHome!=null && f.penaltyAway!=null;
+    const vsInner=isPens
+      ? `<span class="tvfix-pensonly">Penalties ${f.penaltyHome}-${f.penaltyAway}</span>`
+      : `${hs}–${as}`;
     return `<div class="tvfix"><div class="when">${fmtDayStr(f.date)} · ${esc(f.round||"")}</div>
       <div class="team">${badge(A)}<span class="tname">${esc(A.abbr)}</span></div>
-      <div class="vs" style="color:var(--gold);font-family:var(--f-display);font-size:clamp(18px,2.4vw,30px)">${hs}–${as}${pens}</div>
+      <div class="vs" style="color:var(--gold);font-family:var(--f-display);font-size:clamp(18px,2.4vw,30px)">${vsInner}</div>
       <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; }).join("");
   return tvHead("Full-time","Recent Results",false)+`<div class="tvfix-grid">${cards}</div>`;
 }
