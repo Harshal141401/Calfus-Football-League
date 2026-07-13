@@ -2145,11 +2145,12 @@ function currentStage(){
   const done=[...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a));
   return done.length ? stageOf(done[0].round) : "group";
 }
-let resultsStage = null;   // null until first render -> defaults to the current stage
+let resultsStage = null;   // null until first render
 function renderResults(){
   const uidc = state.currentUserId;
   const cur = currentStage();
-  if(resultsStage===null) resultsStage = cur;
+  // Default to the current stage if it's one the filter offers, else Round of 16.
+  if(resultsStage===null) resultsStage = ["group","r32","r16"].includes(cur) ? cur : "r16";
   // mark the active stage with "(Current)" in the dropdown, and reflect the selection
   const sel=$("#resultsStage");
   if(sel){
