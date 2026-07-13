@@ -581,9 +581,14 @@ select{appearance:none;padding-right:30px;
 /* per-team final score on its row (settled matches) */
 .kb-score{margin-left:auto;font-family:var(--f-sport);font-weight:800;font-size:clamp(11px,1vw,15px);color:var(--ink);flex:none}
 .kb-score small{font-weight:700;font-size:.72em;color:var(--muted);margin-left:1px}
-/* the team that advanced — golden-bordered box */
+/* the team that advanced — golden-bordered box (neutral / no pick) */
 .kb-team.win{background:rgba(232,184,75,.16);box-shadow:inset 0 0 0 1.5px var(--gold)}
 .kb-team.win .kb-nm,.kb-team.win .kb-score{color:var(--gold)}
+/* winner box recoloured by the player's own pick: green = picked right, red = picked wrong */
+.kb-team.win.correct{background:rgba(52,199,123,.18);box-shadow:inset 0 0 0 1.5px var(--accent2)}
+.kb-team.win.correct .kb-nm,.kb-team.win.correct .kb-score{color:var(--accent2)}
+.kb-team.win.wrong{background:rgba(229,84,78,.16);box-shadow:inset 0 0 0 1.5px var(--danger)}
+.kb-team.win.wrong .kb-nm,.kb-team.win.wrong .kb-score{color:var(--danger)}
 .kb-team.mypick{background:rgba(224,174,62,.12)} .kb-team.mypick .kb-nm{color:var(--neon)}
 .kb-team.tbd{opacity:.55}
 .kb-ph{font-family:var(--f-sport);font-weight:600;font-size:clamp(8px,.85vw,11px);color:var(--muted);font-style:italic}
@@ -1777,10 +1782,15 @@ function koBox(n){
   const pickable = !_koTV && !!(f && f.predictable && teamsKnown && !f.result && !live);
   const pred = f ? userPrediction(state.currentUserId, f.id) : null;
   const settled = !!(f && f.result && f.homeScore!=null && f.awayScore!=null);
+  // Did the signed-in player pick the team that actually advanced? (dashboard only)
+  const userPickedId = pred ? (pred.choice==="win" ? String(aId) : String(bId)) : null;
+  const pickCorrect = (!_koTV && res && userPickedId) ? (userPickedId===String(res.winner)) : null;
   const slot=(tid,feeder,isA)=>{
     if(tid){ const t=teamById(tid);
       const advanced = res && res.winner===tid;                                   // actually went through
       const myPick = !_koTV && !res && pred && ((isA && pred.choice==="win")||(!isA && pred.choice==="lose"));
+      // The winner's box turns green (player picked right) or red (picked wrong); gold if no pick.
+      const winCls = advanced ? ("win"+(pickCorrect===true?" correct":pickCorrect===false?" wrong":"")) : (myPick?"mypick":"");
       // Final score on the team's own row once the match is settled (+ shootout in parens).
       let score="";
       if(settled){
@@ -1788,7 +1798,7 @@ function koBox(n){
         const pen = (f.penalties && f.penaltyHome!=null && f.penaltyAway!=null) ? (isA ? f.penaltyHome : f.penaltyAway) : null;
         score = `<span class="kb-score">${g}${pen!=null?`<small>(${pen})</small>`:""}</span>`;
       }
-      return `<div class="kb-team${advanced?" win":myPick?" mypick":""}">${badge(t,18)}<span class="kb-nm">${esc(t.abbr||t.name)}</span>${score}</div>`; }
+      return `<div class="kb-team${winCls?" "+winCls:""}">${badge(t,18)}<span class="kb-nm">${esc(t.abbr||t.name)}</span>${score}</div>`; }
     const lbl = `${feeder.win!=null?"Winner":"Loser"} M${feeder.win!=null?feeder.win:feeder.lose}`;
     return `<div class="kb-team tbd"><span class="kb-ph">${esc(lbl)}</span></div>`;
   };
