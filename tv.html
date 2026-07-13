@@ -558,6 +558,9 @@ select{appearance:none;padding-right:30px;
 #koBracket{overflow:hidden;position:relative}
 .kwrap{display:flex;align-items:stretch;gap:clamp(12px,1.3vw,22px);width:100%;position:relative;z-index:1;
   height:calc(100vh - var(--topbar-h,64px) - 178px);min-height:360px;max-height:680px}
+/* TV bracket scene — fill the whole scene below the header (no fixed dashboard height) */
+#tvKoBracket{flex:1;min-height:0;position:relative;overflow:hidden}
+.tv-kwrap{height:100%;max-height:none;min-height:0}
 .kcol{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:space-around;gap:clamp(3px,.6vh,9px)}
 .kb{position:relative;background:var(--card-2);border:1px solid var(--line);border-radius:9px;
   padding:clamp(3px,.6vh,7px) clamp(5px,.6vw,9px);display:flex;flex-direction:column;gap:clamp(2px,.4vh,4px);
@@ -1763,6 +1766,7 @@ function koMatchTeams(n){
   if(f && f.teamAId && f.teamBId) return { aId:String(f.teamAId), bId:String(f.teamBId) };
   return { aId:koFeederTeamId(node.a), bId:koFeederTeamId(node.b) };
 }
+let _koTV=false;   // when true, render display-only boxes for TV (no pick chips / "your pick" highlight)
 function koBox(n){
   const node=KO_TREE[n], {aId,bId}=koMatchTeams(n), res=koResultTeams(n);
   const f=koFixtureByNo(n);
@@ -1770,13 +1774,13 @@ function koBox(n){
   const now = windowState ? new Date(windowState.serverTime).getTime() : Date.now();
   const live = !!(f && !f.result && teamsKnown && new Date(f.kickoff).getTime()<=now);
   // Pickable: a real, predictable fixture with both teams set and not yet kicked off.
-  const pickable = !!(f && f.predictable && teamsKnown && !f.result && !live);
+  const pickable = !_koTV && !!(f && f.predictable && teamsKnown && !f.result && !live);
   const pred = f ? userPrediction(state.currentUserId, f.id) : null;
   const settled = !!(f && f.result && f.homeScore!=null && f.awayScore!=null);
   const slot=(tid,feeder,isA)=>{
     if(tid){ const t=teamById(tid);
       const advanced = res && res.winner===tid;                                   // actually went through
-      const myPick = !res && pred && ((isA && pred.choice==="win")||(!isA && pred.choice==="lose"));
+      const myPick = !_koTV && !res && pred && ((isA && pred.choice==="win")||(!isA && pred.choice==="lose"));
       // Final score on the team's own row once the match is settled (+ shootout in parens).
       let score="";
       if(settled){
@@ -1804,8 +1808,8 @@ function koBox(n){
    from the rendered box positions, so it stays correct at any size (redrawn on resize). */
 const KO_FEEDS = [[97,89,90],[98,93,94],[99,91,92],[100,95,96],[101,97,98],[102,99,100],[104,101,102]];
 const KO_FEEDS_LOSER = [[103,101,102]];   // third place — drawn dashed
-function drawKoLines(){
-  const host=$("#koBracket"); if(!host || !host.querySelector) return;
+function drawKoLines(host){
+  host = host || $("#koBracket"); if(!host || !host.querySelector) return;
   const wrap=host.querySelector(".kwrap"); if(!wrap || !host.getBoundingClientRect) return;
   const old=host.querySelector(".ko-lines"); if(old) old.remove();
   const H=host.getBoundingClientRect();
@@ -2339,7 +2343,7 @@ function renderTV(){
   const lb=leaderboardWithMovement();
   const scenes={
     leaderboard: tvLeaderboard(lb),
-    fixtures: tvFixtures(),
+    fixtures: tvBracket(),
     results: tvResults(),
     stats: tvStats(),
     today: tvToday(),
@@ -2350,6 +2354,9 @@ function renderTV(){
   stage.innerHTML = TV_SCENES.map(name=>`<div class="tv-scene" data-scene="${name}">${scenes[name]}</div>`).join("");
   const active=TV_SCENES[tvScene];
   const node=stage.querySelector(`[data-scene="${active}"]`); if(node) node.classList.add("show");
+  // Draw the bracket connector lines once the (now visible) fixtures scene is laid out.
+  if(active==="fixtures"){ const bh=stage.querySelector("#tvKoBracket");
+    if(bh && typeof requestAnimationFrame==="function") requestAnimationFrame(()=>drawKoLines(bh)); }
   $$("#tvDots i").forEach((d,i)=>d.classList.toggle("on",i===tvScene));
   tickCountdown();
 }
@@ -2380,7 +2387,7 @@ function tvLeaderboard(lb){
   return tvHead("Standings","Leaderboard",false)+
     `<div class="tvlb-2col"><div class="tvlb">${left}</div><div class="tvlb">${right}</div></div>`;
 }
-function tvFixtures(){
+function tvFixturesCards(){
   const now=Date.now();
   const live=[...state.fixtures].filter(f=>!f.result && fixtureDT(f).getTime()<=now).sort((a,b)=>fixtureDT(a)-fixtureDT(b));
   const up=upcomingFixtures();   // shared with the Predict page so both stay in sync
@@ -2400,6 +2407,25 @@ function tvFixtures(){
       <div class="team">${badge(B)}<span class="tname">${esc(B.abbr)}</span></div></div>`; };
   const cards=live.map(liveCard).join("")+up.map(upCard).join("");
   return tvHead("Schedule", live.length?"Live &amp; Upcoming":"Upcoming Fixtures", true)+`<div class="tvfix-grid">${cards}</div>`;
+}
+/* The knockout bracket as a full-screen TV scene (trophy in the centre). Falls back to
+   the fixture-card list before the knockout stage exists. Display-only (no picking). */
+function tvBracket(){
+  const hasR32 = state.fixtures.some(f=>stageOf(f.round)==="r32");
+  if(!hasR32) return tvFixturesCards();
+  _koTV=true;
+  const col=(cls,ids)=>`<div class="kcol ${cls}">${ids.map(n=>koBox(n)).join("")}</div>`;
+  const body=`<div class="kwrap tv-kwrap">
+    ${col("left",[89,90,93,94])}${col("left",[97,98])}${col("left",[101])}
+    <div class="kc-center">
+      <div class="kc-lab">Final</div>${koBox(104)}
+      <img class="kc-trophy" src="/assets/wc-trophy.png" alt="World Cup Trophy" onerror="this.style.display='none'">
+      <div class="kc-lab">Third Place</div>${koBox(103)}
+    </div>
+    ${col("right",[102])}${col("right",[99,100])}${col("right",[91,92,95,96])}
+  </div>`;
+  _koTV=false;
+  return tvHead("Knockout","The Bracket",true)+`<div id="tvKoBracket">${body}</div>`;
 }
 function tvResults(){
   const done=[...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a)).slice(0,12);
