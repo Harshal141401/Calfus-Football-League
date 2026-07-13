@@ -1860,9 +1860,10 @@ function renderBracket(){
     ${col("right",[99,100])}
     ${col("right",[91,92,95,96])}
   </div>`;
-  // Draw the connector lines once the boxes have been laid out.
-  if(typeof requestAnimationFrame==="function") requestAnimationFrame(drawKoLines);
-  else setTimeout(drawKoLines,0);
+  // Draw the connector lines once the boxes have been laid out. Wrap in an arrow so the
+  // rAF timestamp isn't passed as the `host` argument (which would skip the default).
+  if(typeof requestAnimationFrame==="function") requestAnimationFrame(()=>drawKoLines());
+  else setTimeout(()=>drawKoLines(),0);
 }
 /* The distinct teams playing in the Round of 32 (valid tournament-winner picks). */
 function r32Teams(){
