@@ -2626,7 +2626,7 @@ function tvBracket(){
     ${col("right",[102])}${col("right",[99,100])}${col("right",[91,92,95,96])}
   </div>`;
   _koTV=false;
-  return tvHead("Knockout","The Bracket",true)+`<div id="tvKoBracket">${body}</div>`;
+  return tvHead("Play-offs","Bracket",true)+`<div id="tvKoBracket">${body}</div>`;
 }
 function tvResults(){
   const done=[...state.fixtures].filter(f=>f.result).sort((a,b)=>fixtureDT(b)-fixtureDT(a)).slice(0,12);
